@@ -10,10 +10,10 @@ function NavBar() {
         className="deGooseLogo"
       />
       <ul className="menu">
-        <li>Software Engineering</li>
-        <li>Photography</li>        
+        <li>Software Engineering</li>     
         <li>Albums</li>
         <li>About</li>
+        <li>Back to Top</li>
       </ul>
     </div>
   );
