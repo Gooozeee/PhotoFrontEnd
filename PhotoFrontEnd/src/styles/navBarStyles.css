@@ -1,0 +1,41 @@
+.toggle-button {
+    color: white;
+    background-color: black;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+}
+  
+.menu {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+  
+.menu li {
+    font-size: 120%;
+    padding: 40px;
+    color: white;
+    cursor: pointer;
+    opacity: 100%;
+}
+
+.topBanner {
+    z-index: 1;
+    position: fixed; 
+    width: 100%;
+    border: none;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background: linear-gradient(to bottom, rgba(1, 1, 1, 0.6), rgba(1, 1, 14, 0.01));
+}
+  
+.deGooseLogo {
+    max-height: 15%;
+    max-width: 200px;
+    padding-top: 15px;
+    padding-left: 15px;
+    opacity: 100%;
+}
