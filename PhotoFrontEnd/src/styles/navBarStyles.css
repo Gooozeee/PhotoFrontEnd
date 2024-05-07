@@ -15,7 +15,7 @@
   
 .menu li {
     margin: 45px;
-    font-size: 130%;
+    font-size: 20px;
     color: white;
     cursor: pointer;
     opacity: 100%;
@@ -28,7 +28,7 @@
 .menu li:hover {
     color: rgba(1, 1, 1, 1);
     font-weight: 350;
-    transform: scale(1.2);
+    transform: scale(1.02);
 }
 
 .topBanner {
@@ -43,9 +43,8 @@
 }
   
 .deGooseLogo {
-    max-height: 15%;
-    max-width: 200px;
-    padding-top: 5px;
-    padding-left: 15px;
+    height: 15%;
+    width: 250px;
+    padding-left: 40px;
     opacity: 100%;
 }

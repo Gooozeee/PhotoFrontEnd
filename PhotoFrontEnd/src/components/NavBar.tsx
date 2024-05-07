@@ -1,4 +1,4 @@
-import '../styles/navBarStyles.css'
+import '../styles/NavBarStyles.css'
 import degooseLogoWhite from "../assets/degooseLogoWhite.png";
 
 function NavBar() {
