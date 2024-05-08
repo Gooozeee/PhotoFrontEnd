@@ -1,20 +1,54 @@
+.gallery-banner-container {
+    position: relative;
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
 .image-scroll-container {
-    overflow: auto;
+    width: 100%;
+    overflow: hidden;
     white-space: nowrap;
-    padding: 10px;
-    justify-content: center;
 }
 
 .title-text {
     font-family: "Playfair Display";
     text-align: center;
     font-weight: 500;
-    margin-top: 20px;
-    font-size: 100px;
-    text-decoration: underline;
+    font-size: 70px;
+    padding-bottom: 40px;
+    font-style: italic;
 }
 
 .image-scroll-container img {
-    padding: 10px;
-    width: 80vh;
+    border-radius: 20px;
+    padding: 15px;
+    width: 60vh;
+    display: inline-block;
+    vertical-align: middle;
+    animation: scrollImages 25s linear infinite;
+    transition: 0.2s;
+}
+
+.image-scroll-container:hover img {
+    animation-play-state: paused; 
+    width: 70vh;
+}
+
+.scrolling-images:not(:hover) img {
+    animation-play-state: running;
+}
+
+@keyframes scrollImages {
+    0%, 95%, 100% {
+        transform: translateX(0%); 
+    }
+    5% {
+        transform: translateX(0%); 
+    }
+    50% {
+        transform: translateX(-100%); 
+    }
+    45% {
+        transform: translateX(-100%); 
+    }
 }

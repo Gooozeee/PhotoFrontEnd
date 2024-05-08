@@ -39,7 +39,7 @@
     position: fixed; 
     width: 100%;
     border: none;
-display: flex; 
+    display: flex; 
     justify-content: space-between; 
     align-items: center; 
     background: linear-gradient(to bottom, rgba(1, 1, 1, 0.6), rgba(1, 1, 14, 0.01));

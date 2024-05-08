@@ -8,7 +8,11 @@ function App() {
     <div className="App">
       <NavBar />
       <WelcomeImage />
-      <GalleryBanner />
+      <h1>Michal</h1>
+      <h1>Something about me</h1>
+      <GalleryBanner title="Birds"/>
+      <GalleryBanner title="Animals"/>
+      <GalleryBanner title="Racecars"/>
     </div>
   );
 }
