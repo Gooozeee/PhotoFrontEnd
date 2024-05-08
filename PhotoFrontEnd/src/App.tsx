@@ -1,4 +1,5 @@
 import "./App.css";
+import GalleryBanner from "./components/GalleryBanner";
 import NavBar from "./components/NavBar";
 import WelcomeImage from "./components/WelcomeImage";
 
@@ -7,7 +8,7 @@ function App() {
     <div className="App">
       <NavBar />
       <WelcomeImage />
-      <h1>More content down here</h1>
+      <GalleryBanner />
     </div>
   );
 }
