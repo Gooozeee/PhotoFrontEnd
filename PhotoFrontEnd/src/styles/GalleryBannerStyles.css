@@ -1,54 +1,65 @@
 .gallery-banner-container {
-    position: relative;
-    padding-top: 40px;
-    padding-bottom: 40px;
+    background-color: black;
 }
 
-.image-scroll-container {
+.image-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+  
+.image-gallery .column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+  
+.image-item img {
     width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
+    border-radius: 5px;
+    height: 100%;
+    object-fit: cover;
+}
+    
+.image-item {
+    position: relative;
+    cursor: pointer;
+}
+  
+.overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(57, 57, 57, 0.502);
+    top: 0;
+    left: 0;
+    transform: scale(0);
+    transition: all 0.2s 0.1s ease-in-out;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+  
+.image-item:hover .overlay {
+    transform: scale(1);
 }
 
 .title-text {
     font-family: "Playfair Display";
-    text-align: center;
+    padding-left: 30px;
+    color: white;
+    padding-top: 30px;
     font-weight: 500;
-    font-size: 70px;
-    padding-bottom: 40px;
+    font-size: 10vh;
+    padding-bottom: 30px;
     font-style: italic;
 }
 
-.image-scroll-container img {
-    border-radius: 20px;
-    padding: 15px;
-    width: 60vh;
-    display: inline-block;
-    vertical-align: middle;
-    animation: scrollImages 25s linear infinite;
-    transition: 0.2s;
-}
-
-.image-scroll-container:hover img {
-    animation-play-state: paused; 
-    width: 70vh;
-}
-
-.scrolling-images:not(:hover) img {
-    animation-play-state: running;
-}
-
-@keyframes scrollImages {
-    0%, 95%, 100% {
-        transform: translateX(0%); 
-    }
-    5% {
-        transform: translateX(0%); 
-    }
-    50% {
-        transform: translateX(-100%); 
-    }
-    45% {
-        transform: translateX(-100%); 
+@media only screen and (min-width: 768px) {
+    .image-gallery {
+      flex-direction: row;
     }
 }
