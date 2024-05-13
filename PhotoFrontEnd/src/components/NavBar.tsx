@@ -2,6 +2,7 @@ import "../styles/NavBarStyles.css";
 import degooseLogoWhite from "../assets/degooseLogoWhite.png";
 import { useEffect, useState } from "react";
 import Hamburger from "./Hamburger";
+import { Link } from "react-router-dom";
 
 function NavBar() {
   const [scrolledDown, setScrolledDown] = useState(false);
@@ -37,10 +38,12 @@ function NavBar() {
       />
       <div className={`menu${hamburgerOpen ? "__display" : "__nodisplay"}`}>
         <ul>
+          <li>
+            <Link to="/" className="link">Home</Link>
+          </li>
           <li>Software Engineering</li>
           <li>Albums</li>
           <li>About</li>
-          <li>Back to Top</li>
         </ul>
       </div>
       <div

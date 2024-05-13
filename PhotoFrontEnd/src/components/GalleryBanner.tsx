@@ -18,13 +18,13 @@ const GalleryBanner = ({ title }: Props) => {
           <div className="image-item">
             <img src={bird1} alt="Bird 1" />
             <div className="overlay">
-              <span>Bird 1</span>
+              <span>Seagull, Northern Ireland, 2020</span>
             </div>
           </div>
           <div className="image-item">
             <img src={bird3} alt="Bird 3" />
             <div className="overlay">
-              <span>Bird 3</span>
+              <span>Robin, Northern Ireland, 2021</span>
             </div>
           </div>
         </div>
@@ -32,13 +32,13 @@ const GalleryBanner = ({ title }: Props) => {
           <div className="image-item">
             <img src={bird4} alt="Bird 4" />
             <div className="overlay">
-              <span>Bird 4</span>
+              <span>Seagull, Rathlin Island, 2023</span>
             </div>
           </div>
           <div className="image-item">
             <img src={bird5} alt="Bird 5" />
             <div className="overlay">
-              <span>Bird 5</span>
+              <span>Seagull, Rathlin Island, 2023</span>
             </div>
           </div>
           </div>

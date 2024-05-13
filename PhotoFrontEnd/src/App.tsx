@@ -1,14 +1,18 @@
 import "./App.css";
-import GalleryBanner from "./components/GalleryBanner";
-import NavBar from "./components/NavBar";
-import WelcomeImage from "./components/WelcomeImage";
+import HomePage from "./Pages/HomePage";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import NotFoundPage from "./Pages/NotFoundPage";
 
 function App() {
+  const router = createBrowserRouter([{
+    path: '/',
+    element: <HomePage />,
+    errorElement: <NotFoundPage />
+  }]);
+
   return (
     <div className="App">
-      <NavBar />
-      <WelcomeImage />
-      <GalleryBanner title="Birds"/>
+      <RouterProvider router={router} />
     </div>
   );
 }

@@ -1,5 +1,4 @@
 .toggle-button {
-    color: white;
     background-color: black;
     border: none;
     padding: 5px;
@@ -33,6 +32,10 @@
     text-underline-offset: 6px;
     font-weight: 250;
     transition: all 0.3s linear;
+}
+
+.link {
+    color: inherit;
 }
 
 .menu__nodisplay ul li {
