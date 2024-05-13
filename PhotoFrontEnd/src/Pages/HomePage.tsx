@@ -6,7 +6,11 @@ const HomePage = () => {
   return (
     <>
       <NavBar />
-      <WelcomeImage />
+      <WelcomeImage
+        heading="Michal Guzy"
+        subHeadingOne="Photographer"
+        subHeadingTwo="Software Engineer"
+      />
       <GalleryBanner title="Birds" />
     </>
   );

@@ -1,13 +1,19 @@
 import paiPanorama from "../assets/paiMountains.jpg";
 import "../styles/WelcomeImageStyles.css";
 
-function WelcomeImage() {
+interface Props {
+  heading: string;
+  subHeadingOne: string;
+  subHeadingTwo?: string;
+}
+
+function WelcomeImage({ heading, subHeadingOne, subHeadingTwo }: Props) {
   return (
     <div className="imageContainer">
       <ul className="mainText">
-        <li>Michal Guzy</li>
-        <li className="subHeading">Photographer</li>
-        <li className="subHeading">Software Engineer</li>
+        <li>{heading}</li>
+        <li className="subHeading">{subHeadingOne}</li>
+        <li className="subHeading">{subHeadingTwo}</li>
       </ul>
       <img
         src={paiPanorama}

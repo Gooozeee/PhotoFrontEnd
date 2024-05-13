@@ -1,10 +1,11 @@
-import { Link } from "react-router-dom";
+import NavBar from "../components/NavBar";
+import WelcomeImage from "../components/WelcomeImage";
 
 const NotFoundPage = () => {
   return (
     <>
-      <div>404 not found</div>
-      <Link to="/">Home</Link>
+        <NavBar />
+        <WelcomeImage heading="404 Page Not Found" subHeadingOne="Come back for more information"/>
     </>
   );
 };

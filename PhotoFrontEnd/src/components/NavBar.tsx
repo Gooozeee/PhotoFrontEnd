@@ -1,7 +1,7 @@
 import "../styles/NavBarStyles.css";
 import degooseLogoWhite from "../assets/degooseLogoWhite.png";
 import { useEffect, useState } from "react";
-import Hamburger from "./Hamburger";
+import { Twirl as Hamburger } from "hamburger-react";
 import { Link } from "react-router-dom";
 
 function NavBar() {
@@ -39,18 +39,36 @@ function NavBar() {
       <div className={`menu${hamburgerOpen ? "__display" : "__nodisplay"}`}>
         <ul>
           <li>
-            <Link to="/" className="link">Home</Link>
+            <Link to="/" className="link">
+              Home
+            </Link>
           </li>
-          <li>Software Engineering</li>
-          <li>Albums</li>
-          <li>About</li>
+          <li>
+            <Link to="/construction" className="link">
+              Software Engineering
+            </Link>
+          </li>
+          <li>
+            <Link to="/construction" className="link">
+              Albums
+            </Link>
+          </li>
+          <li>
+            <Link to="/construction" className="link">
+              About
+            </Link>
+          </li>
         </ul>
       </div>
-      <div
-        className='hamburger'
-        onClick={() => toggleHamburger()}
-      >
-        <Hamburger isOpen={hamburgerOpen}/>
+      <div className="hamburger" onClick={() => toggleHamburger()}>
+        <Hamburger
+          toggled={hamburgerOpen}
+          toggle={setHamburgerOpen}
+          direction="right"
+          color="white"
+          label="Show menu"
+          rounded
+        />
       </div>
     </div>
   );
