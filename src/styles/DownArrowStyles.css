@@ -1,0 +1,19 @@
+.down-arrow {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.7rem;
+    cursor: pointer;
+    z-index: 1000;
+    color: white;
+    transition: color 0.3s;
+  }
+
+  .down-arrow-disabled {
+    display: none;
+  }
+  
+  .down-arrow:hover {
+    color: gray;
+  }
