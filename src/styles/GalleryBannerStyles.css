@@ -59,7 +59,7 @@
     font-style: italic;
 }
 
-@media only screen and (min-width: 400px) {
+@media screen and (min-width: 800px) {
     .image-gallery {
       flex-direction: row;
     }
