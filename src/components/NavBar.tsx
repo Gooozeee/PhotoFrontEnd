@@ -50,11 +50,6 @@ function NavBar() {
           </li>
           <li>
             <Link to="/construction" className="link">
-              Albums
-            </Link>
-          </li>
-          <li>
-            <Link to="/construction" className="link">
               About
             </Link>
           </li>

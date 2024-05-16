@@ -12,7 +12,7 @@ const HomePage = () => {
         subHeadingOne="Photographer"
         subHeadingTwo="Software Engineer"
       />
-      <GalleryBanner title="Birds" />
+      <GalleryBanner title="Image Gallery" />
       <DownArrow />
     </>
   );
