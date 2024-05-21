@@ -1,9 +1,9 @@
 import "./App.css";
-import HomePage from "./Pages/HomePage";
+import HomePage from "./pages/HomePage";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import NotFoundPage from "./Pages/NotFoundPage";
-import UnderConstructionPage from "./Pages/UnderConstructionPage";
-import SingleAlbumPage from "./Pages/SingleAlbumPage";
+import NotFoundPage from "./pages/NotFoundPage";
+import UnderConstructionPage from "./pages/UnderConstructionPage";
+import SingleAlbumPage from "./pages/SingleAlbumPage";
 
 function App() {
   const router = createBrowserRouter([{
