@@ -1,4 +1,43 @@
 .album-page-container {
     background-color: black;
-    height: 100vh;
+    display: fixed;
+}
+
+.gallery-banner-container {
+    background-color: black;
+}
+
+.image-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+  
+.image-gallery .column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.title-text {
+    padding-left: 30px;
+    color: white;
+    font-weight: 300;
+    font-size: 6vw;
+    text-align: center;
+}
+
+.subheading {
+    font-size: 3vw;
+    padding-bottom: 20px;
+}
+
+@media screen and (min-width: 800px) {
+    .image-gallery {
+      flex-direction: row;
+      padding-left: 30px;
+      padding-right: 30px;
+    }
 }
