@@ -1,6 +1,6 @@
 import "../styles/GalleryBannerStyles.css";
-import bird1 from "../assets/Birds/Seagull, Northern Ireland, 2022.webp";
-import rallySide2 from "../assets/Rally/Yellow Escort Pan, Kirkistown, 2023.webp";
+import bird1 from "../assets/Birds/Seagull Northern Ireland 2022.webp";
+import rallySide2 from "../assets/Rally/Yellow Escort Pan Kirkistown 2023.webp";
 import GalleryImage from "./GalleryImage";
 
 interface Props {
