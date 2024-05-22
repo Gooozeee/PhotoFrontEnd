@@ -2,6 +2,7 @@ import NavBar from "../components/NavBar";
 import WelcomeImage from "../components/WelcomeImage";
 import GalleryBanner from "../components/GalleryBanner";
 import DownArrow from "../components/DownArrow";
+import Footer from "../components/Footer";
 
 const HomePage = () => {
   return (
@@ -14,6 +15,7 @@ const HomePage = () => {
       />
       <GalleryBanner title="Image Gallery" />
       <DownArrow />
+      <Footer />
     </>
   );
 };

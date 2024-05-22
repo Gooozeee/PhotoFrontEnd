@@ -3,6 +3,7 @@ import NavBar from "../components/NavBar";
 import "../styles/SingleAlbumPageStyles.css";
 import SingleAlbumImage from "../components/SingleAlbumImage";
 import { generateImageCaptionFromFilePath } from "../utils/RetrieveNameFromFilePath";
+import Footer from "../components/Footer";
 
 const SingleAlbumPage = () => {
   const queryParameters = new URLSearchParams(window.location.search);
@@ -75,6 +76,7 @@ const SingleAlbumPage = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
