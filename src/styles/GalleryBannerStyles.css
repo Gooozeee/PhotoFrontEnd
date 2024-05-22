@@ -1,14 +1,6 @@
 .gallery-banner-container {
     background-color: black;
 }
-
-.image-gallery {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-left: 10px;
-    padding-right: 10px;
-}
   
 .image-gallery .column {
     display: flex;
@@ -32,7 +24,5 @@
 @media screen and (min-width: 800px) {
     .image-gallery {
       flex-direction: row;
-      padding-left: 30px;
-      padding-right: 30px;
     }
 }

@@ -3,22 +3,20 @@
     display: fixed;
 }
 
-.gallery-banner-container {
+.image-gallery {
+    flex-direction: column;
+    display: flex;
     background-color: black;
+    gap: 10px;
 }
 
-.image-gallery {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-left: 10px;
-    padding-right: 10px;
+.image-gallery-container {
+    padding-top: 100px;
+    height: 100vh;
 }
   
 .image-gallery .column {
-    display: flex;
     flex-direction: column;
-    gap: 10px;
 }
 
 .title-text {
