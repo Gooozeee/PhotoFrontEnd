@@ -1,5 +1,5 @@
 import "../styles/NavBarStyles.css";
-import degooseLogoWhite from "../assets/degooseLogoWhite.png";
+import degooseLogoWhite from "../assets/degooseLogoWhite.webp";
 import { useEffect, useState } from "react";
 import { Twirl as Hamburger } from "hamburger-react";
 import { Link } from "react-router-dom";
