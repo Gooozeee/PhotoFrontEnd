@@ -9,16 +9,18 @@
 }
 
 .title-text {
-    padding-left: 30px;
     color: white;
     font-weight: 300;
-    font-size: 6vw;
+    font-size: 8vw;
     text-align: center;
 }
 
 .subheading {
-    font-size: 3vw;
     padding-bottom: 20px;
+    color: white;
+    font-size: 5vw;
+    font-weight: 300;
+    text-align: center;
 }
 
 @media screen and (min-width: 800px) {

@@ -12,24 +12,18 @@
 
 .image-gallery-container {
     padding-top: 100px;
-    height: 100vh;
 }
   
 .image-gallery .column {
     flex-direction: column;
+    padding-top: 10px;
 }
 
 .title-text {
-    padding-left: 30px;
     color: white;
     font-weight: 300;
-    font-size: 6vw;
+    font-size: 12vw;
     text-align: center;
-}
-
-.subheading {
-    font-size: 3vw;
-    padding-bottom: 20px;
 }
 
 @media screen and (min-width: 800px) {
@@ -37,5 +31,13 @@
       flex-direction: row;
       padding-left: 30px;
       padding-right: 30px;
+    }
+
+    .title-text {
+        font-size: 6vw;
+    }
+
+    .subheading {
+        font-size: 3vw;
     }
 }

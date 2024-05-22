@@ -11,22 +11,22 @@ const GalleryBanner = ({ title }: Props) => {
   return (
     <div className="gallery-banner-container">
       <h1 className="title-text">{title}</h1>
-      <h2 className="title-text subheading">
+      <h2 className="subheading">
         Choose a photo below to see similar images
       </h2>
       <div className="image-gallery">
         <div className="column">
           <GalleryImage
-            imageSource={bird1}
-            imageDescription="Birds in Flight"
-            albumName="Birds"
+            imageSource={rallySide2}
+            imageDescription="Kirkistown Rally 2022"
+            albumName="Rally"
           />
         </div>
         <div className="column">
           <GalleryImage
-            imageSource={rallySide2}
-            imageDescription="Kirkistown Rally 2022"
-            albumName="Rally"
+            imageSource={bird1}
+            imageDescription="Birds in Flight"
+            albumName="Birds"
           />
         </div>
       </div>
