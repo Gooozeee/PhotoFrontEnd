@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import NavBar from "../components/NavBar";
 import "../styles/SingleAlbumPageStyles.css";
 import SingleAlbumImage from "../components/SingleAlbumImage";
+import { generateImageCaptionFromFilePath } from "../utils/RetrieveNameFromFilePath";
 
 const SingleAlbumPage = () => {
   const queryParameters = new URLSearchParams(window.location.search);
@@ -47,29 +48,31 @@ const SingleAlbumPage = () => {
   return (
     <div className="album-page-container">
       <NavBar />
-
-      <div className="image-gallery">
-        <div className="column">
-          {images.map((src, index) =>
-            index % 2 === 1 ? (
-              <SingleAlbumImage
-                key={index}
-                imageSource={src}
-                imageDescription={`Image ${index}`}
-              />
-            ) : null
-          )}
-        </div>
-        <div className="column">
-          {images.map((src, index) =>
-            index % 2 === 0 ? (
-              <SingleAlbumImage
-                key={index}
-                imageSource={src}
-                imageDescription={`Image ${index}`}
-              />
-            ) : null
-          )}
+      <div className="image-gallery-container">
+        <h1 className="title-text">{albumName}</h1>
+        <div className="image-gallery">
+          <div className="column">
+            {images.map((src, index) =>
+              index % 2 === 1 ? (
+                <SingleAlbumImage
+                  key={index}
+                  imageSource={src}
+                  imageDescription={generateImageCaptionFromFilePath(src)}
+                />
+              ) : null
+            )}
+          </div>
+          <div className="column">
+            {images.map((src, index) =>
+              index % 2 === 0 ? (
+                <SingleAlbumImage
+                  key={index}
+                  imageSource={src}
+                  imageDescription={generateImageCaptionFromFilePath(src)}
+                />
+              ) : null
+            )}
+          </div>
         </div>
       </div>
     </div>
