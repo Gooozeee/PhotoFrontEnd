@@ -1,11 +1,22 @@
-.gallery-banner-container {
+.album-page-container {
     background-color: black;
+    display: fixed;
+}
+
+.image-gallery {
+    flex-direction: column;
+    display: flex;
+    background-color: black;
+    gap: 10px;
+}
+
+.image-gallery-container {
+    padding-top: 100px;
+    height: 100vh;
 }
   
 .image-gallery .column {
-    display: flex;
     flex-direction: column;
-    gap: 10px;
 }
 
 .title-text {
@@ -24,5 +35,7 @@
 @media screen and (min-width: 800px) {
     .image-gallery {
       flex-direction: row;
+      padding-left: 30px;
+      padding-right: 30px;
     }
 }

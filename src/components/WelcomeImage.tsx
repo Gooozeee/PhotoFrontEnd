@@ -1,4 +1,4 @@
-import paiPanorama from "../assets/paiMountains.jpg";
+import paiPanorama from "../assets/paiMountains.webp";
 import "../styles/WelcomeImageStyles.css";
 
 interface Props {

@@ -1,5 +1,5 @@
 import "../styles/NavBarStyles.css";
-import degooseLogoWhite from "../assets/degooseLogoWhite.png";
+import degooseLogoWhite from "../assets/degooseLogoWhite.webp";
 import { useEffect, useState } from "react";
 import { Twirl as Hamburger } from "hamburger-react";
 import { Link } from "react-router-dom";
@@ -46,11 +46,6 @@ function NavBar() {
           <li>
             <Link to="/construction" className="link">
               Software Engineering
-            </Link>
-          </li>
-          <li>
-            <Link to="/construction" className="link">
-              Albums
             </Link>
           </li>
           <li>
