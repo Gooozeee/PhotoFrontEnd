@@ -13,10 +13,10 @@
 .image-gallery-container {
     padding-top: 100px;
 }
-  
-.image-gallery .column {
-    flex-direction: column;
-    padding-top: 10px;
+
+.column {
+    flex: 1;
+    object-fit: contain;
 }
 
 .title-text {
