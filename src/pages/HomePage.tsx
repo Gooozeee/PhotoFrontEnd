@@ -10,8 +10,7 @@ const HomePage = () => {
       <NavBar />
       <WelcomeImage
         heading="Michal Guzy"
-        subHeadingOne="Photographer"
-        subHeadingTwo="Software Engineer"
+        subHeadingOne="Photographer, Software Engineer"
       />
       <GalleryBanner title="Image Gallery" />
       <DownArrow />

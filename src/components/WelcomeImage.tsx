@@ -7,11 +7,11 @@ interface Props {
   subHeadingTwo?: string;
 }
 
-function WelcomeImage({ heading, subHeadingOne, subHeadingTwo }: Props) {
+function WelcomeImage({ heading, subHeadingOne, subHeadingTwo }: Readonly<Props>) {
   return (
     <div className="imageContainer">
-      <ul className="mainText">
-        <li>{heading}</li>
+      <ul className="textContainer">
+        <li className="mainText">{heading}</li>
         <li className="subHeading">{subHeadingOne}</li>
         <li className="subHeading">{subHeadingTwo}</li>
       </ul>

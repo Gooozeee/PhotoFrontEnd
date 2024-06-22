@@ -1,11 +1,16 @@
 .gallery-banner-container {
     background-color: black;
 }
+
+.image-gallery {
+    margin-left: 20px;
+    margin-right: 20px;
+}
   
 .image-gallery .column {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 20px;
 }
 
 .title-text {
@@ -26,5 +31,7 @@
 @media screen and (min-width: 800px) {
     .image-gallery {
       flex-direction: row;
+      margin-left: 0px;
+      margin-right: 0px;
     }
 }

@@ -7,7 +7,7 @@
     flex-direction: column;
     display: flex;
     background-color: black;
-    gap: 10px;
+    gap: 20px;
 }
 
 .image-gallery-container {
