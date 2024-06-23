@@ -15,7 +15,7 @@
     width: 100%;
     list-style-type: none;
     position: absolute;
-    top: 40%;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
@@ -23,7 +23,7 @@
 
 .mainText {
     list-style-type: none;
-    font-size: 80px;
+    font-size: 8vw;
     font-weight: 600;
     color: white;
     background: rgba(1, 1, 14, 0.01);
@@ -31,19 +31,20 @@
 }
 
 .subHeading {
-    font-size: 60px;
+    font-size: 28px;
     margin-top: -10px;
     font-weight: 500;
 }
 
 @media only screen and (max-width: 770px) {
     .mainText {
-        padding-top: 80px;
-        font-size: 48px;
+        font-size: 50px;
     }
 
     .subHeading {
         padding-top: 15px;
-        font-size: 35px;
+        font-size: 20px;
+        letter-spacing: 1.6px;
+        line-height: 1.3em;
     }
 }

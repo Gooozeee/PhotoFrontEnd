@@ -6,7 +6,7 @@ const UnderConstructionPage = () => {
   return (
     <>
       <NavBar />
-      <WelcomeImage heading="Page Under construction" subHeadingOne="Come back for more information"/>
+      <WelcomeImage heading="Page Under Construction" subHeadingOne="Come back for more information"/>
       <Footer />
     </>
   );

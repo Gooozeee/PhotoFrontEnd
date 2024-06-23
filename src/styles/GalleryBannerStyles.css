@@ -1,4 +1,5 @@
 .gallery-banner-container {
+    padding-top: 40px;
     background-color: black;
 }
 
@@ -14,6 +15,7 @@
 }
 
 .title-text {
+    padding-bottom: 15px;
     color: white;
     font-weight: 300;
     font-size: 8vw;
@@ -23,9 +25,24 @@
 .subheading {
     padding-bottom: 20px;
     color: white;
-    font-size: 5vw;
+    font-size: 4vw;
     font-weight: 300;
     text-align: center;
+}
+
+.subheading-two {
+    color: white;
+    font-size: 20px;
+    font-weight: 300;
+    padding: 2px;
+    text-align: center;
+    transition: color 0.1s;
+}
+
+.subheading-two:hover {
+    color: black;
+    transition: color 0.3s;
+    color: rgb(151, 151, 151);
 }
 
 @media screen and (min-width: 800px) {
