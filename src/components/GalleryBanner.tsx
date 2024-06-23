@@ -13,7 +13,7 @@ const GalleryBanner = ({ title }: Props) => {
   return (
     <div className="gallery-banner-container">
       <h1 className="title-text">{title}</h1>
-      <h2 className="subheading">Choose a photo below to see similar images</h2>
+      <h2 className="subheading">Choose a photo below to see the album</h2>
       <div className="image-gallery">
         <div className="column">
           <GalleryImage
@@ -30,7 +30,7 @@ const GalleryBanner = ({ title }: Props) => {
         <div className="column">
           <GalleryImage
             imageSource={koTao}
-            imageDescription="Landscapes Around the World"
+            imageDescription="Landscapes"
             albumName="Landscapes"
           />
           <GalleryImage

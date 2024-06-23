@@ -7,7 +7,7 @@
     flex-direction: column;
     display: flex;
     background-color: black;
-    gap: 10px;
+    gap: 20px;
 }
 
 .image-gallery-container {
@@ -22,7 +22,7 @@
 .title-text {
     color: white;
     font-weight: 300;
-    font-size: 12vw;
+    font-size: 10vw;
     text-align: center;
 }
 
