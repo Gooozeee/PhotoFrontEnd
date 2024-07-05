@@ -18,7 +18,7 @@
     padding-bottom: 15px;
     color: white;
     font-weight: 300;
-    font-size: 8vw;
+    font-size: 6vw;
     text-align: center;
 }
 
@@ -40,7 +40,6 @@
 }
 
 .subheading-two:hover {
-    color: black;
     transition: color 0.3s;
     color: rgb(151, 151, 151);
 }

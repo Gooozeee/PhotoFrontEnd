@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import NotFoundPage from "./pages/NotFoundPage";
 import UnderConstructionPage from "./pages/UnderConstructionPage";
 import SingleAlbumPage from "./pages/SingleAlbumPage";
+import SoftwareEngineeringPage from "./pages/SoftwareEngineeringPage";
 
 function App() {
   const router = createBrowserRouter([{
@@ -17,6 +18,10 @@ function App() {
   }, {
     path: '/singleAlbum',
     element: <SingleAlbumPage />,
+    errorElement: <NotFoundPage />
+  }, {
+    path: '/software',
+    element: <SoftwareEngineeringPage />,
     errorElement: <NotFoundPage />
   }]);
 

@@ -24,7 +24,9 @@
      background-color: black;
      text-align: center;
      padding-top: 20px;
+     margin-top: 0px;
      margin-bottom: 0;
+     font-weight: 400;
 }
 
 .footer-copyright {
@@ -32,4 +34,5 @@
     text-align: center;
     font-size: 10px;
     padding-top: 20px;
+    margin-top: 0px;
 }

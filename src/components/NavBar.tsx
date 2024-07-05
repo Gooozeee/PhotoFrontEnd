@@ -31,11 +31,13 @@ function NavBar() {
     <div
       className={scrolledDown ? "top-banner-black-background" : "top-banner"}
     >
-      <img
-        src={degooseLogoWhite}
-        alt="Panorama of Pai, Thailand"
-        className="deGooseLogo"
-      />
+      <Link to="/" className="link">
+        <img
+          src={degooseLogoWhite}
+          alt="Panorama of Pai, Thailand"
+          className="deGooseLogo"
+        />
+      </Link>
       <div className={`menu${hamburgerOpen ? "__display" : "__nodisplay"}`}>
         <ul>
           <li>
@@ -44,7 +46,7 @@ function NavBar() {
             </Link>
           </li>
           <li>
-            <Link to="/construction" className="link">
+            <Link to="/software" className="link">
               Software Engineering
             </Link>
           </li>

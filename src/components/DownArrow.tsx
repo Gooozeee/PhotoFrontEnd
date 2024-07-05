@@ -23,7 +23,7 @@ const DownArrow = () => {
 
   const handleScroll = () => {
     window.scrollBy({
-      top: 600,
+      top: 1200,
       left: 0,
       behavior: "smooth",
     });

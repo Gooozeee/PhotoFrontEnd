@@ -23,7 +23,7 @@
 
 .mainText {
     list-style-type: none;
-    font-size: 8vw;
+    font-size: 95px;
     font-weight: 600;
     color: white;
     background: rgba(1, 1, 14, 0.01);
@@ -36,14 +36,50 @@
     font-weight: 500;
 }
 
-@media only screen and (max-width: 770px) {
+.button-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.button {
+    display: inline-block; 
+    background-color: rgb(231, 135, 26);
+    color: white;
+    text-align: center;
+    padding: 12px 24px;
+    font-size: 28px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 20px;
+    width: 200px;
+    margin: 20px 10px;
+    transition: 0.5s;
+    top: 0px;
+    position: relative;
+}
+
+.button:hover {
+    background-color: rgb(165, 92, 8);
+    transition: 0.5s;
+    top: -5px;
+}
+
+
+@media only screen and (max-width: 1000px) {
     .mainText {
-        font-size: 50px;
+        font-size: 40px;
+    }
+
+    .button {
+        font-size: 20px;
+        padding: 8px 20px;
+        width: 150px;
     }
 
     .subHeading {
         padding-top: 15px;
-        font-size: 20px;
+        font-size: 15px;
         letter-spacing: 1.6px;
         line-height: 1.3em;
     }
