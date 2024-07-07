@@ -11,10 +11,11 @@
 }
 
 .image-gallery-container {
-    padding-top: 100px;
+    padding-top: 150px;
 }
 
 .column {
+    margin-top: 20px;
     flex: 1;
     object-fit: contain;
 }

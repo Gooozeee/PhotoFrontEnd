@@ -21,10 +21,24 @@ const SoftwareEngineeringPage = () => {
         </h2>
         <div className="intro-container">
           <div className="intro-item">
-            <h2 className="subheading">Introduction</h2>
+            <h2 className="subheading software-subheading">
+              <b>Get to Know Me!</b>
+            </h2>
+            <p>
+              I'm a <b>Backend Focused Developer</b> currently working at PwC as
+              a Senior Associate software engineer. Check out some of my work in
+              the Projects section.
+            </p>
+            <p>
+              I specialise in <b>C# ASP .Net Core</b> but have university 
+              experience in other languages and frameworks, and I'm 
+              building out front ends in my spare time to develop these skills.
+            </p>
           </div>
           <div className="intro-item">
-            <h2 className="subheading">Skills</h2>
+            <h2 className="subheading software-subheading">
+              <b>Skills</b>
+            </h2>
           </div>
         </div>
       </div>

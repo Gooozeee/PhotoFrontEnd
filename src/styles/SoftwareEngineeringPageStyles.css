@@ -1,24 +1,31 @@
 .about-container {
     padding-top: 30px;
     padding-top: 50px;
-    background-color: black;
+    background-color: rgb(12, 12, 12);
     display: flex;
-    justify-content: center;
     align-items: center;
     flex-direction: column;
 }
 
 .subheading-container {
     padding-top: 20px;
-    width: 70%;
+    width: 65%;
+    text-align: center;
 }
 
 .intro-container {
-    width: 70%;
+    width: 90%;
     padding-top: 60px;
+    gap: 100px;
     display: flex;
-    justify-content: center;
-    align-items: center;
+}
+
+b {
+    font-weight: 500;
+}
+
+.software-subheading {
+    text-align: left;
 }
 
 .intro-item {
@@ -28,11 +35,13 @@
 
 @media screen and (max-width: 800px) {
     .subheading-container {
-        width: 400px;
-        font-size: 15px;
+        width: 70%;
+        font-size: 12px;
     }
 
     .intro-container {
         width: 100%;
+        padding-top: 40px;
+        flex-direction: column;
     }
 }
