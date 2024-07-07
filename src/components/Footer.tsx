@@ -14,9 +14,9 @@ const Footer = () => {
           <a href="https://github.com/Gooozeee" target="_blank">
             <h3 className="subheading-two"><FaGithub /> Github</h3>
           </a>
-          <Link to={`/construction`}>
-            <h3 className="subheading-two"><MdEmail /> Email me</h3>
-          </Link>
+          <div onClick={() => window.location.href = 'mailto:michalguzym@gmail.com'}>
+            <h3 className="subheading-two point"><MdEmail /> Email me</h3>
+          </div>
         </div>
       </footer>
       <p className="footer-copyright">

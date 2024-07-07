@@ -20,6 +20,27 @@ h3 {
     margin: 0;
 }
 
+.subheading {
+    padding-bottom: 20px;
+    color: white;
+    font-size: 17px;
+    font-weight: 300;
+    text-align: center;
+}
+
+.point {
+    cursor: pointer;
+}
+
+.subheading-two {
+    color: white;
+    font-size: 20px;
+    font-weight: 300;
+    padding: 2px;
+    text-align: center;
+    transition: color 0.1s;
+}
+
 .footer a {
     text-decoration: none;
 }
