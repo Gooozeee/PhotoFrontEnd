@@ -34,14 +34,14 @@ function NavBar() {
     navigate(path);
     setTimeout(() => {
       scrollToPosition(yPosition);
-    }, 100)
-  }
+    }, 100);
+  };
 
   return (
     <div
       className={scrolledDown ? "top-banner-black-background" : "top-banner"}
     >
-      <div className="link" onClick={() => handleClick('/', 0)}>
+      <div className="deGooseLogo" onClick={() => handleClick("/", 0)}>
         <img
           src={degooseLogoWhite}
           alt="De Goose Productions Logo"
@@ -61,9 +61,17 @@ function NavBar() {
             </Link>
           </li>
           <li>
-            <Link to="/construction" className="link">
+            <div className="link" onClick={() => handleClick("/software", 600)}>
               About
-            </Link>
+            </div>
+          </li>
+          <li>
+            <div
+              className="link"
+              onClick={() => handleClick("/software", 1200)}
+            >
+              Projects
+            </div>
           </li>
         </ul>
       </div>
