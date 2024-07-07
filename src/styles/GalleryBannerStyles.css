@@ -6,6 +6,7 @@
 .image-gallery {
     margin-left: 20px;
     margin-right: 20px;
+    margin-top: 20px;
 }
   
 .image-gallery .column {
@@ -14,18 +15,10 @@
     gap: 20px;
 }
 
-.title-text {
-    padding-bottom: 15px;
-    color: white;
-    font-weight: 300;
-    font-size: 6vw;
-    text-align: center;
-}
-
 .subheading {
     padding-bottom: 20px;
     color: white;
-    font-size: 4vw;
+    font-size: 17px;
     font-weight: 300;
     text-align: center;
 }
@@ -37,11 +30,6 @@
     padding: 2px;
     text-align: center;
     transition: color 0.1s;
-}
-
-.subheading-two:hover {
-    transition: color 0.3s;
-    color: rgb(151, 151, 151);
 }
 
 @media screen and (min-width: 800px) {

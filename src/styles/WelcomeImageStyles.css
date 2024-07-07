@@ -30,12 +30,6 @@
     border-radius: 20%;
 }
 
-.subHeading {
-    font-size: 28px;
-    margin-top: -10px;
-    font-weight: 500;
-}
-
 .button-container {
     margin-top: 20px;
     text-align: center;
@@ -43,17 +37,17 @@
 
 .button {
     display: inline-block; 
-    background-color: rgb(231, 135, 26);
+    background-color: rgb(218, 165, 32);
     color: white;
     text-align: center;
     padding: 12px 24px;
     font-size: 28px;
     text-decoration: none;
     border: none;
+    border-radius: 5px;
     cursor: pointer;
-    border-radius: 20px;
-    width: 200px;
-    margin: 20px 10px;
+    width: 250px;
+    margin: 30px 10px;
     transition: 0.5s;
     top: 0px;
     position: relative;
@@ -62,6 +56,7 @@
 .button:hover {
     background-color: rgb(165, 92, 8);
     transition: 0.5s;
+    border-radius: 10px;
     top: -5px;
 }
 
@@ -74,13 +69,6 @@
     .button {
         font-size: 20px;
         padding: 8px 20px;
-        width: 150px;
-    }
-
-    .subHeading {
-        padding-top: 15px;
-        font-size: 15px;
-        letter-spacing: 1.6px;
-        line-height: 1.3em;
+        width: 180px;
     }
 }

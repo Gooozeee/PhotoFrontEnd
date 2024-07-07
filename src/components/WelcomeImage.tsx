@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
 import paiPanorama from "../assets/paiMountains.webp";
 import "../styles/WelcomeImageStyles.css";
+import scrollToPosition from "../utils/scrollToPosition";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   heading: string;
@@ -13,27 +14,28 @@ function WelcomeImage({
   subHeadingOne,
   subHeadingTwo,
 }: Readonly<Props>) {
-  const handleScroll = () => {
-    window.scrollBy({
-      top: 1200,
-      left: 0,
-      behavior: "smooth",
-    });
-  };
+  const navigate = useNavigate();
+
+  const handleClick = (path: string, yPosition: number) => {
+    navigate(path);
+    setTimeout(() => {
+      scrollToPosition(yPosition);
+    }, 100)
+  }
 
   return (
     <div className="imageContainer">
       <ul className="textContainer">
         <li className="mainText">{heading}</li>
-        <li className="subHeading">{subHeadingOne}</li>
-        <li className="subHeading">{subHeadingTwo}</li>
+        <li className="subheading">{subHeadingOne}</li>
+        <li className="subheading">{subHeadingTwo}</li>
         <div className="button-container">
-          <div className="button" onClick={handleScroll}>
+          <button className="button" onClick={() => handleClick('/software', 1200)}>
             Projects
-          </div>
-          <div className="button" onClick={handleScroll}>
+          </button>
+          <button className="button" onClick={() => handleClick('/', 1200)}>
             Photography
-          </div>
+          </button>
         </div>
       </ul>
       <img
