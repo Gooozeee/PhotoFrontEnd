@@ -58,22 +58,18 @@
 
 .menu__display ul li:hover {
     color: rgb(151, 151, 151);
-    font-weight: 350;
-    transform: scale(1.02);
     transition: all 0.3s linear;
 }
 
 .menu__nodisplay ul li:hover {
     color: rgb(151, 151, 151);
-    font-weight: 350;
-    transform: scale(1.02);
     transition: all 0.3s linear;
 }
 
 .top-banner-black-background {
     top: 0px;
     height: fit-content;
-    z-index: 2;
+    z-index: 3;
     position: fixed; 
     width: 100%;
     border: none;
@@ -86,7 +82,7 @@
 }
 
 .top-banner {
-    z-index: 2;
+    z-index: 3;
     position: fixed; 
     width: 100%;
     border: none;
@@ -98,6 +94,7 @@
 }
   
 .deGooseLogo {
+    cursor: pointer;
     z-index: 999;
     margin-top: 15px;
     margin-bottom: 15px;
