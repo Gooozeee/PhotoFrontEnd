@@ -14,7 +14,7 @@
 }
 
 .intro-container {
-    width: 90%;
+    width: 95%;
     padding-top: 60px;
     gap: 100px;
     display: flex;
@@ -32,10 +32,39 @@ b {
     width: 50%;
 }
 
+.skills {
+    display: inline-block;
+    width: auto;
+    font-size: 16px;
+    margin: 5px;
+    font-weight: 400;
+}
+
+.skills:hover {
+    top: 0px;
+}
+
 
 @media screen and (max-width: 800px) {
     .subheading-container {
-        width: 70%;
+        font-size: 12px;
+    }
+
+    .software-subheading {
+        text-align: center;
+    }
+
+    .about-container {
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .intro-item {
+        width: 100%;
+    }
+
+    .skills {
+        margin: 5px;
         font-size: 12px;
     }
 
@@ -43,5 +72,6 @@ b {
         width: 100%;
         padding-top: 40px;
         flex-direction: column;
+        gap: 50px;
     }
 }

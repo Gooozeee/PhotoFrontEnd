@@ -30,15 +30,27 @@ const SoftwareEngineeringPage = () => {
               the Projects section.
             </p>
             <p>
-              I specialise in <b>C# ASP .Net Core</b> but have university 
-              experience in other languages and frameworks, and I'm 
-              building out front ends in my spare time to develop these skills.
+              I specialise in <b>C# ASP .Net Core</b> but have university
+              experience in other languages and frameworks, and I'm building out
+              front ends in my spare time to develop these skills.
             </p>
           </div>
           <div className="intro-item">
             <h2 className="subheading software-subheading">
               <b>Skills</b>
             </h2>
+            <div>
+              <div className="button skills">C#</div>
+              <div className="button skills">Asp.Net Core</div>
+              <div className="button skills">SQL</div>
+              <div className="button skills">Git</div>
+              <div className="button skills">Azure Service Bus</div>
+              <div className="button skills">RabbitMQ</div>
+              <div className="button skills">Serverless</div>
+              <div className="button skills">Kubernetes</div>
+              <div className="button skills">JavaScript</div>
+              <div className="button skills">React</div>
+            </div>
           </div>
         </div>
       </div>
