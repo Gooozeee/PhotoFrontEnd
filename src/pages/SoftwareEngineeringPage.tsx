@@ -3,8 +3,13 @@ import WelcomeImage from "../components/WelcomeImage";
 import Footer from "../components/Footer";
 import DownArrow from "../components/DownArrow";
 import "../styles/SoftwareEngineeringPageStyles.css";
+import HomePage from "../assets/Projects/Website/HomePage.png";
+import LandscapePage from "../assets/Projects/Website/LandscapePage.png";
+import ImageSwitcher from "../components/ImageSwitcher";
 
 const SoftwareEngineeringPage = () => {
+  const images = [HomePage, LandscapePage];
+
   return (
     <>
       <NavBar />
@@ -54,11 +59,19 @@ const SoftwareEngineeringPage = () => {
           </div>
         </div>
       </div>
-      <div className="about-container">
+      <div className="about-container project">
         <h1 className="title-text">Projects</h1>
         <h2 className="subheading-two subheading-container">
           Here you will find out more about my programming projects
         </h2>
+      </div>
+      <div className="projects-container project">
+        <div className="image-container">
+          <ImageSwitcher images={images} />
+        </div>
+        <div className="text-container">
+          <h1 className="title-text">Photography Portfolio</h1>
+        </div>
       </div>
       <Footer />
     </>
