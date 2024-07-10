@@ -18,13 +18,13 @@ const SoftwareEngineeringPage = () => {
         subHeadingOne="A Full-Stack Software Engineer, Specialising in Backend"
       />
       <DownArrow />
-      <div className="about-container">
+      <div className="about-container black">
         <h1 className="title-text">About Me</h1>
         <h2 className="subheading-two subheading-container">
           Here you will find out more about me, and my projects in terms of
           programming and technology
         </h2>
-        <div className="intro-container">
+        <div className="section-container">
           <div className="intro-item">
             <h2 className="subheading software-subheading">
               <b>Get to Know Me!</b>
@@ -59,19 +59,40 @@ const SoftwareEngineeringPage = () => {
           </div>
         </div>
       </div>
-      <div className="about-container project">
-        <h1 className="title-text">Projects</h1>
-        <h2 className="subheading-two subheading-container">
-          Here you will find out more about my programming projects
-        </h2>
-      </div>
-      <div className="projects-container project">
-        <div className="image-container">
-          <ImageSwitcher images={images} />
+      <div className="about-container gray">
+        <div className="project">
+          <h1 className="title-text">Projects</h1>
+          <h2 className="subheading-two subheading-container">
+            Here you will find out more about my programming projects
+          </h2>
         </div>
-        <div className="text-container">
-          <h1 className="title-text">Photography Portfolio</h1>
+        <div className="projects-container project">
+          <div className="image-container">
+            <ImageSwitcher images={images} />
+          </div>
+          <div className="text-container">
+            <h1 className="title-text project-heading">
+              Photography Portfolio
+            </h1>
+            <p className="project-text">
+              Custom website built in <b>React Typescript</b> with the use of
+              Vite to practice and showcase my skills in front end development.
+              I have plans to extend the system further and include a backend
+              for storing the images in blob storage, and including liking,
+              commenting and sorting functionality on the website.
+            </p>
+            <a href="https://github.com/Gooozeee/PhotoFrontEnd" target="_blank">
+              <div className="button project-button">Github Repository</div>
+            </a>
+            <a href="https://www.michalguzy.com" target="_blank">
+              <div className="button project-button">Live URL</div>
+            </a>
+          </div>
         </div>
+        <h1 className="title-text final-message">
+          Head to my GitHub to see more projects! (I will be bringing more here
+          soon)
+        </h1>
       </div>
       <Footer />
     </>
