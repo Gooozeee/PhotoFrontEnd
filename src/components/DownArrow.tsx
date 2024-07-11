@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "../styles/DownArrowStyles.css";
 import { SlArrowDown } from "react-icons/sl";
+import scrollToPosition from "../utils/scrollToPosition";
 
 const DownArrow = () => {
   const [isOnTop, setIsOnTop] = useState(true);
@@ -21,18 +22,10 @@ const DownArrow = () => {
     }
   }, []);
 
-  const handleScroll = () => {
-    window.scrollBy({
-      top: 600,
-      left: 0,
-      behavior: "smooth",
-    });
-  };
-
   return (
     <div
       className={isOnTop ? "down-arrow" : "down-arrow-disabled"}
-      onClick={handleScroll}
+      onClick={() => scrollToPosition(1200)}
     >
       <SlArrowDown />
     </div>

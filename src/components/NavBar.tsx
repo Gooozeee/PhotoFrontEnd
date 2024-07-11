@@ -2,7 +2,8 @@ import "../styles/NavBarStyles.css";
 import degooseLogoWhite from "../assets/degooseLogoWhite.webp";
 import { useEffect, useState } from "react";
 import { Twirl as Hamburger } from "hamburger-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import scrollToPosition from "../utils/scrollToPosition";
 
 function NavBar() {
   const [scrolledDown, setScrolledDown] = useState(false);
@@ -27,15 +28,26 @@ function NavBar() {
     return () => window.removeEventListener("scroll", listenScrollEvent);
   }, []);
 
+  const navigate = useNavigate();
+
+  const handleClick = (path: string, yPosition: number) => {
+    navigate(path);
+    setTimeout(() => {
+      scrollToPosition(yPosition);
+    }, 100);
+  };
+
   return (
     <div
       className={scrolledDown ? "top-banner-black-background" : "top-banner"}
     >
-      <img
-        src={degooseLogoWhite}
-        alt="Panorama of Pai, Thailand"
-        className="deGooseLogo"
-      />
+      <div className="deGooseLogo" onClick={() => handleClick("/", 0)}>
+        <img
+          src={degooseLogoWhite}
+          alt="De Goose Productions Logo"
+          className="deGooseLogo"
+        />
+      </div>
       <div className={`menu${hamburgerOpen ? "__display" : "__nodisplay"}`}>
         <ul>
           <li>
@@ -44,14 +56,22 @@ function NavBar() {
             </Link>
           </li>
           <li>
-            <Link to="/construction" className="link">
+            <Link to="/software" className="link">
               Software Engineering
             </Link>
           </li>
           <li>
-            <Link to="/construction" className="link">
+            <div className="link" onClick={() => handleClick("/software", 600)}>
               About
-            </Link>
+            </div>
+          </li>
+          <li>
+            <div
+              className="link"
+              onClick={() => handleClick("/software", 1200)}
+            >
+              Projects
+            </div>
           </li>
         </ul>
       </div>

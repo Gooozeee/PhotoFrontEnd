@@ -1,0 +1,181 @@
+.about-container {
+    padding-top: 30px;
+    padding-top: 50px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.black {
+    background-color: rgb(12, 12, 12);
+}
+
+.gray {
+    background-color: rgb(25, 25, 25);
+}
+
+.project {
+    width: 95%;
+}
+
+.subheading-container {
+    padding-top: 20px;
+    text-align: center;
+    padding-bottom: 30px;
+}
+
+.section-container {
+    width: 95%;
+    padding-top: 50px;
+    padding-bottom: 60px;
+    gap: 100px;
+    display: flex;
+}
+
+.project-text {
+    padding-top: 20px;
+}
+
+.project-button {
+    margin-left: 0px;
+    margin-right: 20px;
+    font-size: 19px;
+    width: 170px;
+}
+
+b {
+    font-weight: 500;
+}
+
+.software-subheading {
+    text-align: left;
+}
+
+.projects-container {
+    height: 600px;
+    gap: 100px;
+    display: flex;
+}
+  
+.text-container {
+    width: 100%;
+    padding-top: 60px;
+}
+
+.final-message {
+    width: 70%;
+    padding-bottom: 50px;
+}
+
+.project-heading {
+    text-align: left;
+}
+
+.image-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    margin-top: -20px;
+}
+  
+.image {
+    width: 700px;
+    transition: opacity 1s ease-in-out;
+    opacity: 0;
+    position: absolute;
+}
+  
+.image.visible {
+    opacity: 1;
+}
+  
+
+.intro-item {
+    width: 50%;
+}
+
+.skills {
+    display: inline-block;
+    width: auto;
+    font-size: 16px;
+    margin: 5px;
+    font-weight: 400;
+}
+
+.skills:hover {
+    top: 0px;
+}
+
+
+@media screen and (max-width: 800px) {
+    .subheading-container {
+        font-size: 12px;
+    }
+
+    .software-subheading {
+        text-align: center;
+    }
+
+    .about-container {
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .section-container {
+        flex-direction: column;
+        gap: 30px;
+        padding-top: 30px;
+    }
+
+    .projects-container {
+        flex-direction: column;
+        gap: 0px;
+        height: 500px;
+    }
+
+    .intro-item {
+        width: 100%;
+    }
+
+    .text-container {
+        padding-top: 10px;
+    }
+
+    .image {
+        max-width: 80%;
+    }
+
+    .image-container {
+        height: 250px;
+    }
+
+    .project-button {
+        width: 110px;
+        margin: 10px;
+        margin-bottom: 20px;
+        font-size: 12px;
+    }
+
+    .project-heading {
+        text-align: center;
+    }
+
+    .final-message {
+        text-align: center;
+        font-size: 19px;
+    }
+
+    .skills {
+        margin: 5px;
+        font-size: 12px;
+    }
+
+    .intro-container {
+        width: 100%;
+        padding-top: 40px;
+        flex-direction: column;
+        gap: 50px;
+    }
+}

@@ -7,8 +7,9 @@
 .image-item {
     position: relative;
     cursor: pointer;
-    object-fit: cover;
+    object-fit:contain;
     flex-grow: 1;
+    transition: 0.5s;
 }
   
 .overlay {
@@ -32,6 +33,12 @@
   
 .image-item:hover .overlay {
     transform: scale(1);
+}
+
+.image-item:hover {
+    transform: scale(1.03);
+    transition: 0.5s;
+    z-index: 2;
 }
 
 @media screen and (min-width: 800px) {

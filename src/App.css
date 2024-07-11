@@ -8,6 +8,39 @@
     height: 100vh;
 }
 
+h1 {
+    margin: 0;
+}
+
+h2 {
+    margin: 0;
+}
+
+h3 {
+    margin: 0;
+}
+
+.subheading {
+    padding-bottom: 20px;
+    color: white;
+    font-size: 17px;
+    font-weight: 300;
+    text-align: center;
+}
+
+.point {
+    cursor: pointer;
+}
+
+.subheading-two {
+    color: white;
+    font-size: 20px;
+    font-weight: 300;
+    padding: 2px;
+    text-align: center;
+    transition: color 0.1s;
+}
+
 .footer a {
     text-decoration: none;
 }
@@ -16,7 +49,7 @@
     display: flex;
     justify-content: center;
     font-size: 10px;
-    padding-top: 10px;
+    padding-top: 20px;
     background-color: black;
 }
 
@@ -24,7 +57,10 @@
      background-color: black;
      text-align: center;
      padding-top: 20px;
+     margin-top: 0px;
+     padding-top: 30px;
      margin-bottom: 0;
+     font-weight: 400;
 }
 
 .footer-copyright {
@@ -32,4 +68,9 @@
     text-align: center;
     font-size: 10px;
     padding-top: 20px;
+    margin-top: 0px;
+}
+
+.footer h3:hover {
+    color: rgb(151,151,151);
 }
