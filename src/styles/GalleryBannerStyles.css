@@ -1,24 +1,83 @@
 .gallery-banner-container {
-    padding-top: 40px;
     background-color: black;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.gallery-banner-container .masonry-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+.gallery-banner-container .masonry-grid .image-item {
+    width: 100%;
+    height: 500px;
 }
 
 .image-gallery {
-    margin-left: 20px;
-    margin-right: 20px;
-    margin-top: 20px;
+    margin-left: 15px;
+    margin-right: 15px;
+    margin-top: 15px;
 }
   
 .image-gallery .column {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
 }
 
-@media screen and (min-width: 800px) {
+.masonry-grid {
+    display: grid;
+    gap: 15px;
+    grid-auto-flow: dense;
+    grid-auto-rows: auto;
+}
+
+@media screen and (max-width: 800px) {
+    .gallery-banner-container {
+        padding: 40px 10px;
+    }
+
+    .gallery-banner-container .masonry-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .gallery-banner-container .masonry-grid .image-item {
+        height: 300px;
+    }
+
     .image-gallery {
-      flex-direction: row;
-      margin-left: 0px;
-      margin-right: 0px;
+        margin-left: 5px;
+        margin-right: 5px;
+    }
+}
+
+@media screen and (min-width: 801px) and (max-width: 1200px) {
+    .gallery-banner-container .masonry-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+
+    .gallery-banner-container .masonry-grid .image-item {
+        height: 400px;
+    }
+}
+
+@media screen and (min-width: 1201px) {
+    .gallery-banner-container .masonry-grid {
+        grid-template-columns: repeat(12, 1fr);
+        gap: 15px;
+        max-width: 1800px;
+        margin: 0 auto;
+    }
+
+    .gallery-banner-container .masonry-grid .image-item {
+        grid-column: span 3;
+        height: min(30vw, 500px);
     }
 }

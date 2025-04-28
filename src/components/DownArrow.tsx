@@ -25,7 +25,7 @@ const DownArrow = () => {
   return (
     <div
       className={isOnTop ? "down-arrow" : "down-arrow-disabled"}
-      onClick={() => scrollToPosition(1200)}
+      onClick={() => scrollToPosition(600)}
     >
       <SlArrowDown />
     </div>

@@ -1,23 +1,18 @@
 .album-page-container {
     background-color: black;
-    display: fixed;
-}
-
-.image-gallery {
-    flex-direction: column;
-    display: flex;
-    background-color: black;
-    gap: 20px;
+    min-height: 100vh;
 }
 
 .image-gallery-container {
-    padding-top: 150px;
+    padding: 150px 20px 40px;
+    max-width: 1800px;
+    margin: 0 auto;
 }
 
-.column {
-    margin-top: 20px;
-    flex: 1;
-    object-fit: contain;
+.masonry-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 15px;
 }
 
 .title-text {
@@ -25,21 +20,63 @@
     font-weight: 300;
     font-size: 25px;
     text-align: center;
+    margin-bottom: 40px;
 }
 
+.masonry-grid .image-item {
+    width: 100%;
+    height: 500px;
+}
 
-@media screen and (min-width: 800px) {
-    .image-gallery {
-      flex-direction: row;
-      padding-left: 30px;
-      padding-right: 30px;
+/* Override any preset size classes */
+.masonry-grid .image-item.normal,
+.masonry-grid .image-item.wide,
+.masonry-grid .image-item.full {
+    grid-column: span 4;
+    height: 500px;
+}
+
+/* Override any orientation classes */
+.masonry-grid .image-item.landscape,
+.masonry-grid .image-item.portrait {
+    grid-column: span 4;
+    height: 500px;
+}
+
+@media screen and (max-width: 800px) {
+    .image-gallery-container {
+        padding: 100px 10px 20px;
     }
 
-    .title-text {
-        font-size: 50px;
+    .masonry-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
     }
 
-    .subheading {
-        font-size: 25px;
+    .masonry-grid .image-item,
+    .masonry-grid .image-item.landscape,
+    .masonry-grid .image-item.portrait,
+    .masonry-grid .image-item.normal,
+    .masonry-grid .image-item.wide,
+    .masonry-grid .image-item.full {
+        grid-column: span 2;
+        height: 300px;
+    }
+}
+
+@media screen and (min-width: 801px) and (max-width: 1200px) {
+    .masonry-grid {
+        grid-template-columns: repeat(8, 1fr);
+        gap: 15px;
+    }
+
+    .masonry-grid .image-item,
+    .masonry-grid .image-item.landscape,
+    .masonry-grid .image-item.portrait,
+    .masonry-grid .image-item.normal,
+    .masonry-grid .image-item.wide,
+    .masonry-grid .image-item.full {
+        grid-column: span 4;
+        height: 400px;
     }
 }
