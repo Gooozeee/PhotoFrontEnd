@@ -35,12 +35,18 @@ const optimizeImageLayout = (images: ImageInfo[]): ImageInfo[] => {
     return optimizedImages;
   }
 
-  if (totalImages < 4) return optimizedImages;
+  if (totalImages === 2) {
+    optimizedImages[0].size = "wide";
+    optimizedImages[1].size = "wide";
+    return optimizedImages;
+  }
 
-  // Sort images while preserving original order within each group
-  const portraitImages = optimizedImages.filter((img) => img.isPortrait);
-  const landscapeImages = optimizedImages.filter((img) => !img.isPortrait);
-  optimizedImages = [...portraitImages, ...landscapeImages];
+  if (totalImages === 3) {
+    optimizedImages[0].size = "wide";
+    optimizedImages[1].size = "normal";
+    optimizedImages[2].size = "normal";
+    return optimizedImages;
+  }
 
   // Handle the remaining images layout optimization
   const remainingImages = totalImages % 4;
