@@ -7,16 +7,16 @@ interface Props {
   imageSource: string;
   imageDescription: string;
   albumName?: string;
-  presetOrientation?: "portrait" | "landscape";
-  size?: "normal" | "wide" | "full" | "half" | "third";
+  unitWidth: number; // Added unitWidth prop
+  unitHeight: number; // Added unitHeight prop
 }
 
 const SingleAlbumImage = ({
   imageSource,
   imageDescription,
   albumName,
-  presetOrientation,
-  size,
+  unitWidth, // Destructure unitWidth
+  unitHeight, // Destructure unitHeight
 }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showModal, setShowModal] = useState(false);
@@ -26,35 +26,28 @@ const SingleAlbumImage = ({
     const container = containerRef.current;
     if (!container) return;
 
+    // Remove old size/orientation classes
     container.classList.remove(
       "portrait",
       "landscape",
       "normal",
       "wide",
-      "full"
+      "full",
+      "tall"
     );
 
-    if (presetOrientation) {
-      container.classList.add(presetOrientation);
+    // Add classes based on unit dimensions for CSS styling
+    if (unitWidth === 1 && unitHeight === 2) {
+      container.classList.add("portrait-unit");
+    } else if (unitWidth === 2 && unitHeight === 1) {
+      container.classList.add("landscape-unit");
     } else {
-      const image = new Image();
-      image.src = imageSource;
-
-      image.onload = () => {
-        const aspectRatio = image.width / image.height;
-        if (Math.abs(aspectRatio - 1) <= 0.05) {
-          container.classList.add("landscape");
-        } else {
-          const isPortrait = aspectRatio < 0.95;
-          container.classList.add(isPortrait ? "portrait" : "landscape");
-        }
-      };
+      // Default or other sizes if needed
+      container.classList.add("normal-unit");
     }
 
-    if (size) {
-      container.classList.add(size);
-    }
-  }, [imageSource, presetOrientation, size]);
+    // Removed the image loading logic and calculatedSize logic
+  }, [unitWidth, unitHeight]); // Dependencies on unit dimensions
 
   const handleImageLoad = () => {
     setImageLoaded(true);

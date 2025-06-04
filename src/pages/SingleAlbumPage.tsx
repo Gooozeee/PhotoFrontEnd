@@ -8,15 +8,22 @@ import Footer from "../components/Footer";
 interface ImageInfo {
   url: string;
   id: string;
+  width: number;
+  height: number;
+  orientation: "portrait" | "landscape";
+  unitWidth: number; // Units of width for the puzzle layout
+  unitHeight: number; // Units of height for the puzzle layout
 }
+
+const MAX_ROW_UNITS = 4; // Maximum width units for a row
 
 const SingleAlbumPage = () => {
   const queryParameters = new URLSearchParams(window.location.search);
   const albumName = queryParameters.get("album");
-  const [images, setImages] = useState<ImageInfo[]>([]);
+  const [images, setImages] = useState<ImageInfo[]>([]); // State to store all images
 
   useEffect(() => {
-    const loadImages = async () => {
+    const loadAndProcessImages = async () => {
       let imagesGlob: Record<string, () => Promise<{ default: string }>>;
 
       switch (albumName) {
@@ -46,24 +53,51 @@ const SingleAlbumPage = () => {
           break;
         default:
           console.log("Not found folder");
+          setImages([]); // Set to empty if album not found
           return;
       }
 
-      const imagePromises = Object.keys(imagesGlob).map(async (key) => {
-        const module = await imagesGlob[key]();
-        return module.default;
-      });
+      const imageUrls = await Promise.all(
+        Object.keys(imagesGlob).map(async (key) => {
+          const module = await imagesGlob[key]();
+          return module.default;
+        })
+      );
 
-      const imageUrls = await Promise.all(imagePromises);
-      const imageInfos: ImageInfo[] = imageUrls.map(url => ({
-        url,
-        id: generateImageCaptionFromFilePath(url),
-      }));
+      const imageInfos: ImageInfo[] = await Promise.all(
+        imageUrls.map(async (url) => {
+          const img = new Image();
+          img.src = url;
+          await img.decode(); // Wait for image to load and decode
 
+          const aspectRatio = img.width / img.height;
+          const orientation = aspectRatio < 1 ? "portrait" : "landscape";
+
+          // Define unit dimensions based on orientation
+          const unitWidth = orientation === "portrait" ? 1 : 2;
+          const unitHeight = orientation === "portrait" ? 2 : 1;
+
+          return {
+            url,
+            id: generateImageCaptionFromFilePath(url),
+            width: img.width,
+            height: img.height,
+            orientation,
+            unitWidth,
+            unitHeight,
+          };
+        })
+      );
+
+      // Sort images to potentially help with packing (e.g., put larger items first)
+      // This is a simple sort, more complex packing algorithms exist but might be overkill
+      imageInfos.sort((a, b) => b.unitWidth - a.unitWidth);
+
+      // We no longer need to arrange into rows in state for the CSS Grid approach
       setImages(imageInfos);
     };
 
-    loadImages();
+    loadAndProcessImages();
   }, [albumName]);
 
   return (
@@ -71,15 +105,15 @@ const SingleAlbumPage = () => {
       <NavBar />
       <div className="image-gallery-container">
         <h1 className="title-text">{albumName}</h1>
-        <div className="flex-gallery-grid">
+        <div className="puzzle-gallery-container"> {/* Grid container */}
           {images.map((img) => (
-            <div className="image-item">
-              <SingleAlbumImage
-                key={img.id}
-                imageSource={img.url}
-                imageDescription={generateImageCaptionFromFilePath(img.url)}
-              />
-            </div>
+            <SingleAlbumImage
+              key={img.id}
+              imageSource={img.url}
+              imageDescription={generateImageCaptionFromFilePath(img.url)}
+              unitWidth={img.unitWidth} // Pass unit dimensions
+              unitHeight={img.unitHeight} // Pass unit dimensions
+            />
           ))}
         </div>
       </div>

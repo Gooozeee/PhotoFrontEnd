@@ -17,28 +17,62 @@
     margin-bottom: 40px;
 }
 
-.flex-gallery-grid {
-    display: flex;
-    flex-wrap: wrap;
+.puzzle-gallery-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns based on MAX_ROW_UNITS */
+    grid-auto-rows: auto; /* Allow row height to be determined by content */
     gap: 15px;
-    justify-content: center; /* Center images when they don't fill the row */
+    width: 100%;
+    margin: 0 auto;
 }
 
-.flex-gallery-grid .image-item {
-    flex: 1 1 300px; /* Flex-grow, flex-shrink, basis */
-    max-width: 400px; /* Optional: limit max width */
-    aspect-ratio: 4 / 3; /* Maintain 4:3 aspect ratio */
+/* Styles for the image container within the grid */
+.image-item {
     position: relative;
     overflow: hidden;
     border-radius: 5px;
     cursor: pointer;
 }
 
-.flex-gallery-grid .image-item img {
+.image-item img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Cover the container while maintaining aspect ratio */
+    object-fit: cover;
     object-position: center;
+}
+
+/* Classes based on unit dimensions with aspect ratio */
+.image-item.portrait-unit {
+    grid-column: span 1; /* 1 unit width */
+    grid-row: span 2;    /* 2 units height */
+    aspect-ratio: 1 / 2; /* Maintain 1:2 aspect ratio for the container */
+}
+
+.image-item.landscape-unit {
+    grid-column: span 2; /* 2 units width */
+    grid-row: span 1;    /* 1 unit height */
+    aspect-ratio: 2 / 1; /* Maintain 2:1 aspect ratio for the container */
+}
+
+.image-item.normal-unit {
+    grid-column: span 1; /* Default 1 unit width */
+    grid-row: span 1;    /* Default 1 unit height */
+    aspect-ratio: 1 / 1; /* Default 1:1 aspect ratio */
+}
+
+/* Styling for rows - removed as items are direct children of the grid */
+/* Centering the last row in a grid is complex. We are relying on the grid's
+   auto-placement and the aspect-ratio property to fill space. Perfect centering
+   of the last row might require adding empty placeholder items in the React component. */
+
+/* Media query for smaller screens */
+@media screen and (max-width: 768px) { /* Adjust breakpoint as needed */
+    .puzzle-gallery-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust columns for smaller screens */
+        grid-auto-rows: auto; /* Allow row height to adjust */
+    }
+
+    /* Aspect ratios already defined for unit classes will apply */
 }
 
 /* Modal styles */
