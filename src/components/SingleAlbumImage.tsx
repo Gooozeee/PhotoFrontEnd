@@ -8,7 +8,7 @@ interface Props {
   imageDescription: string;
   albumName?: string;
   presetOrientation?: "portrait" | "landscape";
-  size?: "normal" | "wide" | "full";
+  size?: "normal" | "wide" | "full" | "half" | "third";
 }
 
 const SingleAlbumImage = ({

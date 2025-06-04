@@ -7,66 +7,8 @@ import Footer from "../components/Footer";
 
 interface ImageInfo {
   url: string;
-  isPortrait: boolean;
   id: string;
-  size?: "normal" | "wide" | "full";
 }
-
-const determineImageOrientation = async (url: string): Promise<ImageInfo> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      resolve({
-        url,
-        isPortrait: img.height > img.width,
-        id: generateImageCaptionFromFilePath(url),
-      });
-    };
-    img.src = url;
-  });
-};
-
-const optimizeImageLayout = (images: ImageInfo[]): ImageInfo[] => {
-  let optimizedImages = [...images];
-  const totalImages = images.length;
-
-  if (totalImages === 1) {
-    optimizedImages[0].size = "full";
-    return optimizedImages;
-  }
-
-  if (totalImages === 2) {
-    optimizedImages[0].size = "wide";
-    optimizedImages[1].size = "wide";
-    return optimizedImages;
-  }
-
-  if (totalImages === 3) {
-    optimizedImages[0].size = "wide";
-    optimizedImages[1].size = "normal";
-    optimizedImages[2].size = "normal";
-    return optimizedImages;
-  }
-
-  // Handle the remaining images layout optimization
-  const remainingImages = totalImages % 4;
-  if (remainingImages === 0) return optimizedImages;
-
-  const startIndex = totalImages - remainingImages - 2;
-  if (remainingImages === 2) {
-    for (let i = startIndex; i < totalImages; i++) {
-      optimizedImages[i].size = "normal";
-    }
-  } else if (remainingImages === 1) {
-    optimizedImages[totalImages - 1].size = "full";
-  } else if (remainingImages === 3) {
-    for (let i = totalImages - 3; i < totalImages; i++) {
-      optimizedImages[i].size = "wide";
-    }
-  }
-
-  return optimizedImages;
-};
 
 const SingleAlbumPage = () => {
   const queryParameters = new URLSearchParams(window.location.search);
@@ -113,12 +55,12 @@ const SingleAlbumPage = () => {
       });
 
       const imageUrls = await Promise.all(imagePromises);
-      const imageInfos = await Promise.all(
-        imageUrls.map(determineImageOrientation)
-      );
+      const imageInfos: ImageInfo[] = imageUrls.map(url => ({
+        url,
+        id: generateImageCaptionFromFilePath(url),
+      }));
 
-      const optimizedImages = optimizeImageLayout(imageInfos);
-      setImages(optimizedImages);
+      setImages(imageInfos);
     };
 
     loadImages();
@@ -129,17 +71,13 @@ const SingleAlbumPage = () => {
       <NavBar />
       <div className="image-gallery-container">
         <h1 className="title-text">{albumName}</h1>
-        <div className="masonry-grid">
+        <div className="flex-gallery-grid">
           {images.map((img) => (
-            <div
-              className={img.size ? `image-item ${img.size}` : `image-item ${img.isPortrait ? 'portrait' : 'landscape'}`}
-            >
+            <div className="image-item">
               <SingleAlbumImage
                 key={img.id}
                 imageSource={img.url}
                 imageDescription={generateImageCaptionFromFilePath(img.url)}
-                presetOrientation={img.isPortrait ? "portrait" : "landscape"}
-                size={img.size}
               />
             </div>
           ))}
