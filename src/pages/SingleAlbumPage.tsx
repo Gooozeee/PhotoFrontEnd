@@ -32,21 +32,23 @@ const optimizeImageLayout = (images: ImageInfo[]): ImageInfo[] => {
 
   if (totalImages < 4) return optimizedImages;
 
+  // Sort images while preserving original order within each group
+  const portraitImages = optimizedImages.filter((img) => img.isPortrait);
+  const landscapeImages = optimizedImages.filter((img) => !img.isPortrait);
+  optimizedImages = [...portraitImages, ...landscapeImages];
+
+  // Handle the remaining images layout optimization
   const remainingImages = totalImages % 4;
   if (remainingImages === 0) return optimizedImages;
 
-  // If we have remaining images, adjust the layout of the last few images
   const startIndex = totalImages - remainingImages - 2;
   if (remainingImages === 2) {
-    // For 2 remaining images, make the last 4 images equal width
     for (let i = startIndex; i < totalImages; i++) {
       optimizedImages[i].size = "normal";
     }
   } else if (remainingImages === 1) {
-    // For 1 remaining image, make it full width
     optimizedImages[totalImages - 1].size = "full";
   } else if (remainingImages === 3) {
-    // For 3 remaining images, make last 3 equal width
     for (let i = totalImages - 3; i < totalImages; i++) {
       optimizedImages[i].size = "wide";
     }

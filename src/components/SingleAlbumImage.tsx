@@ -38,8 +38,15 @@ const SingleAlbumImage = ({
       image.src = imageSource;
 
       image.onload = () => {
-        const isPortrait = image.height > image.width;
-        container.classList.add(isPortrait ? "portrait" : "landscape");
+        const aspectRatio = image.width / image.height;
+        // Handle square or near-square images (tolerance of 5%)
+        if (Math.abs(aspectRatio - 1) <= 0.05) {
+          container.classList.add("landscape"); // Treat squares as landscape
+        } else {
+          // For non-square images, use stricter ratio checks
+          const isPortrait = aspectRatio < 0.95;
+          container.classList.add(isPortrait ? "portrait" : "landscape");
+        }
       };
     }
 
@@ -49,12 +56,12 @@ const SingleAlbumImage = ({
   }, [imageSource, presetOrientation, size]);
 
   const content = (
-    <>
+    <div className="image-wrapper">
       <img src={imageSource} alt={imageDescription} />
       <div className="overlay">
         <span>{imageDescription}</span>
       </div>
-    </>
+    </div>
   );
 
   return (
