@@ -30,6 +30,11 @@ const optimizeImageLayout = (images: ImageInfo[]): ImageInfo[] => {
   let optimizedImages = [...images];
   const totalImages = images.length;
 
+  if (totalImages === 1) {
+    optimizedImages[0].size = "full";
+    return optimizedImages;
+  }
+
   if (totalImages < 4) return optimizedImages;
 
   // Sort images while preserving original order within each group
@@ -120,13 +125,17 @@ const SingleAlbumPage = () => {
         <h1 className="title-text">{albumName}</h1>
         <div className="masonry-grid">
           {images.map((img) => (
-            <SingleAlbumImage
-              key={img.id}
-              imageSource={img.url}
-              imageDescription={generateImageCaptionFromFilePath(img.url)}
-              presetOrientation={img.isPortrait ? "portrait" : "landscape"}
-              size={img.size}
-            />
+            <div
+              className={img.size ? `image-item ${img.size}` : `image-item ${img.isPortrait ? 'portrait' : 'landscape'}`}
+            >
+              <SingleAlbumImage
+                key={img.id}
+                imageSource={img.url}
+                imageDescription={generateImageCaptionFromFilePath(img.url)}
+                presetOrientation={img.isPortrait ? "portrait" : "landscape"}
+                size={img.size}
+              />
+            </div>
           ))}
         </div>
       </div>

@@ -10,10 +10,10 @@
 }
 
 .masonry-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 25px;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: 300px;
+    gap: 15px;
 }
 
 .title-text {
@@ -27,20 +27,21 @@
 /* Base image item styles */
 .masonry-grid .image-item {
     position: relative;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
     border-radius: 5px;
-    flex-grow: 0;
-    flex-shrink: 0;
+    cursor: pointer;
 }
 
 .masonry-grid .image-item.portrait {
-    width: calc(25% - 19px);  /* 25% width minus the gap */
-    height: 625px;  /* Fixed height for portraits */
+    grid-column: span 4;
+    grid-row: span 2;
 }
 
 .masonry-grid .image-item.landscape {
-    width: calc(50% - 19px);  /* 50% width minus the gap */
-    height: 300px;  /* Fixed height for landscapes */
+    grid-column: span 6;
+    grid-row: span 1;
 }
 
 .masonry-grid .image-item img {
@@ -52,11 +53,96 @@
 
 /* Size variations */
 .masonry-grid .image-item.wide {
-    width: calc(66.66% - 19px);
+    grid-column: span 8;
 }
 
 .masonry-grid .image-item.full {
-    width: calc(100% - 19px);
+    grid-column: span 12;
+}
+
+/* Modal styles */
+.modal-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.3); /* Reduced opacity to 30% */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 0;
+    margin: 0;
+    border: none;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    max-width: 100vw;
+    max-height: 100vh;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Remove default dialog styles */
+.modal-overlay::-webkit-scrollbar {
+    display: none;
+}
+
+.modal-overlay::backdrop {
+    background: rgba(0, 0, 0, 0.3); /* Also update backdrop opacity */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Override default dialog padding and border */
+dialog.modal-overlay {
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    z-index: 1001;
+}
+
+.modal-close-button:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-image-container {
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.modal-image {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.modal-image.loaded {
+    opacity: 1;
 }
 
 @media screen and (max-width: 800px) {
@@ -65,37 +151,59 @@
     }
 
     .masonry-grid {
-        gap: 15px;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+        grid-auto-rows: auto; /* Let the grid adjust rows automatically */
+    }
+
+    .masonry-grid .image-item {
+        min-height: 0; /* Reset any minimum height */
     }
 
     .masonry-grid .image-item.portrait {
-        width: calc(50% - 8px);  /* Two portraits side by side on mobile */
-        height: 400px;
+        grid-column: span 3;
+        aspect-ratio: 2/3; /* Force portrait aspect ratio */
     }
 
     .masonry-grid .image-item.landscape {
-        width: 100%;  /* Full width on mobile */
-        height: 200px;
+        grid-column: span 6;
+        aspect-ratio: 3/2; /* Force landscape aspect ratio */
     }
 
-    .masonry-grid .image-item.wide,
+    /* Size variations for mobile */
+    .masonry-grid .image-item.wide {
+        grid-column: span 6;
+        aspect-ratio: 16/9;
+    }
+
     .masonry-grid .image-item.full {
+        grid-column: span 6;
+        aspect-ratio: 16/9;
+    }
+
+    /* Ensure images fill their containers properly */
+    .masonry-grid .image-item img {
         width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
     }
 }
 
 @media screen and (min-width: 801px) and (max-width: 1200px) {
     .masonry-grid {
-        gap: 20px;
+        grid-template-columns: repeat(8, 1fr);
+        grid-auto-rows: 300px;
+        gap: 15px;
     }
 
     .masonry-grid .image-item.portrait {
-        width: calc(33.33% - 14px);  /* Three portraits side by side on tablet */
-        height: 500px;
+        grid-column: span 2;
+        grid-row: span 2;
     }
 
     .masonry-grid .image-item.landscape {
-        width: calc(66.66% - 14px);
-        height: 250px;
+        grid-column: span 4;
+        grid-row: span 1;
     }
 }

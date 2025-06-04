@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "../styles/GalleryImageStyles.css";
 import { Link } from "react-router-dom";
+import ImageModal from "./ImageModal";
 
 interface Props {
   imageSource: string;
@@ -18,6 +19,8 @@ const SingleAlbumImage = ({
   size,
 }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -39,11 +42,9 @@ const SingleAlbumImage = ({
 
       image.onload = () => {
         const aspectRatio = image.width / image.height;
-        // Handle square or near-square images (tolerance of 5%)
         if (Math.abs(aspectRatio - 1) <= 0.05) {
-          container.classList.add("landscape"); // Treat squares as landscape
+          container.classList.add("landscape");
         } else {
-          // For non-square images, use stricter ratio checks
           const isPortrait = aspectRatio < 0.95;
           container.classList.add(isPortrait ? "portrait" : "landscape");
         }
@@ -55,13 +56,50 @@ const SingleAlbumImage = ({
     }
   }, [imageSource, presetOrientation, size]);
 
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
+  const handleInteraction = (e: React.MouseEvent | React.KeyboardEvent) => {
+    if (!albumName && !showModal) {
+      e.preventDefault();
+      e.stopPropagation();
+      setShowModal(true);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      handleInteraction(e);
+    }
+  };
+
   const content = (
-    <div className="image-wrapper">
-      <img src={imageSource} alt={imageDescription} />
-      <div className="overlay">
-        <span>{imageDescription}</span>
-      </div>
-    </div>
+    <>
+      <button
+        className="image-wrapper"
+        onClick={handleInteraction}
+        onKeyDown={handleKeyDown}
+        aria-label={`View full size image of ${imageDescription}`}
+        disabled={showModal}
+      >
+        <img
+          src={imageSource}
+          alt={imageDescription}
+          onLoad={handleImageLoad}
+          className={imageLoaded ? "loaded" : ""}
+        />
+        <div className="overlay">
+          <span>{imageDescription}</span>
+        </div>
+      </button>
+      {showModal && (
+        <ImageModal
+          imageUrl={imageSource}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+    </>
   );
 
   return (
