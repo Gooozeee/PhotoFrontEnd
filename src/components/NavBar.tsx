@@ -51,14 +51,14 @@ function NavBar() {
       <div className={`menu${hamburgerOpen ? "__display" : "__nodisplay"}`}>
         <ul>
           <li>
-            <Link to="/" className="link">
+            <div className="link" onClick={() => handleClick("/", 0)}>
               Home
-            </Link>
+            </div>
           </li>
           <li>
-            <Link to="/software" className="link">
+            <div className="link" onClick={() => handleClick("/software", 0)}>
               Software Engineering
-            </Link>
+            </div>
           </li>
           <li>
             <div className="link" onClick={() => handleClick("/software", 600)}>
@@ -66,10 +66,7 @@ function NavBar() {
             </div>
           </li>
           <li>
-            <div
-              className="link"
-              onClick={() => handleClick("/software", 1200)}
-            >
+            <div className="link" onClick={() => handleClick("/software", 1100)}>
               Projects
             </div>
           </li>

@@ -1,23 +1,12 @@
 .album-page-container {
     background-color: black;
-    display: fixed;
-}
-
-.image-gallery {
-    flex-direction: column;
-    display: flex;
-    background-color: black;
-    gap: 20px;
+    min-height: 100vh;
 }
 
 .image-gallery-container {
-    padding-top: 150px;
-}
-
-.column {
-    margin-top: 20px;
-    flex: 1;
-    object-fit: contain;
+    padding: 150px 20px 40px;
+    max-width: 1800px;
+    margin: 0 auto;
 }
 
 .title-text {
@@ -25,21 +14,157 @@
     font-weight: 300;
     font-size: 25px;
     text-align: center;
+    margin-bottom: 40px;
 }
 
+.puzzle-gallery-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns based on MAX_ROW_UNITS */
+    grid-auto-rows: auto; /* Allow row height to be determined by content */
+    gap: 15px;
+    width: 100%;
+    margin: 0 auto;
+}
 
-@media screen and (min-width: 800px) {
-    .image-gallery {
-      flex-direction: row;
-      padding-left: 30px;
-      padding-right: 30px;
+/* Styles for the image container within the grid */
+.image-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Classes based on unit dimensions with aspect ratio */
+.image-item.portrait-unit {
+    grid-column: span 1; /* 1 unit width */
+    grid-row: span 2;    /* 2 units height */
+    aspect-ratio: 1 / 2; /* Maintain 1:2 aspect ratio for the container */
+}
+
+.image-item.landscape-unit {
+    grid-column: span 2; /* 2 units width */
+    grid-row: span 1;    /* 1 unit height */
+    aspect-ratio: 2 / 1; /* Maintain 2:1 aspect ratio for the container */
+}
+
+.image-item.normal-unit {
+    grid-column: span 1; /* Default 1 unit width */
+    grid-row: span 1;    /* Default 1 unit height */
+    aspect-ratio: 1 / 1; /* Default 1:1 aspect ratio */
+}
+
+/* Styling for rows - removed as items are direct children of the grid */
+/* Centering the last row in a grid is complex. We are relying on the grid's
+   auto-placement and the aspect-ratio property to fill space. Perfect centering
+   of the last row might require adding empty placeholder items in the React component. */
+
+/* Media query for smaller screens */
+@media screen and (max-width: 768px) { /* Adjust breakpoint as needed */
+    .puzzle-gallery-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust columns for smaller screens */
+        grid-auto-rows: auto; /* Allow row height to adjust */
     }
 
-    .title-text {
-        font-size: 50px;
-    }
+    /* Aspect ratios already defined for unit classes will apply */
+}
 
-    .subheading {
-        font-size: 25px;
+/* Modal styles */
+.modal-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.3); /* Reduced opacity to 30% */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 0;
+    margin: 0;
+    border: none;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    max-width: 100vw;
+    max-height: 100vh;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Remove default dialog styles */
+.modal-overlay::-webkit-scrollbar {
+    display: none;
+}
+
+.modal-overlay::backdrop {
+    background: rgba(0, 0, 0, 0.3); /* Also update backdrop opacity */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Override default dialog padding and border */
+dialog.modal-overlay {
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    z-index: 1001;
+}
+
+.modal-close-button:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-image-container {
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.modal-image {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.modal-image.loaded {
+    opacity: 1;
+}
+
+/* No need for complex media queries for layout with flexbox */
+/* Adjust gap or flex-basis if needed for different screen sizes */
+@media screen and (max-width: 600px) {
+    .flex-gallery-grid .image-item {
+        flex-basis: 100%; /* Stack images on small screens */
+        max-width: none;
     }
 }

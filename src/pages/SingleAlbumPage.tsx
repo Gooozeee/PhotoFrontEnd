@@ -4,27 +4,28 @@ import "../styles/SingleAlbumPageStyles.css";
 import SingleAlbumImage from "../components/SingleAlbumImage";
 import { generateImageCaptionFromFilePath } from "../utils/RetrieveNameFromFilePath";
 import Footer from "../components/Footer";
-import { splitArray } from "../utils/SplitArrayIntoParts";
+
+interface ImageInfo {
+  url: string;
+  id: string;
+  width: number;
+  height: number;
+  orientation: "portrait" | "landscape";
+  unitWidth: number; // Units of width for the puzzle layout
+  unitHeight: number; // Units of height for the puzzle layout
+}
+
+const MAX_ROW_UNITS = 4; // Maximum width units for a row
 
 const SingleAlbumPage = () => {
   const queryParameters = new URLSearchParams(window.location.search);
   const albumName = queryParameters.get("album");
-
-  const [imagesForFirstColumn, setImagesForFirstColumn] = useState<string[]>(
-    []
-  );
-  const [imagesForSecondColumn, setImagesForSecondColum] = useState<string[]>(
-    []
-  );
-  const [imagesForThirdColumn, setImagesForThirdColumn] = useState<string[]>(
-    []
-  );
+  const [images, setImages] = useState<ImageInfo[]>([]); // State to store all images
 
   useEffect(() => {
-    const loadImages = async () => {
+    const loadAndProcessImages = async () => {
       let imagesGlob: Record<string, () => Promise<{ default: string }>>;
 
-      // Have to use switch case as import.meta.glob does not accept dynamic parameters
       switch (albumName) {
         case "Birds":
           imagesGlob = import.meta.glob("../assets/Birds/*") as Record<
@@ -52,6 +53,7 @@ const SingleAlbumPage = () => {
           break;
         default:
           console.log("Not found folder");
+          setImages([]); // Set to empty if album not found
           return;
       }
 
@@ -62,14 +64,40 @@ const SingleAlbumPage = () => {
         })
       );
 
-      var imagesForColumns: string[][] = splitArray(imageUrls, 3);
+      const imageInfos: ImageInfo[] = await Promise.all(
+        imageUrls.map(async (url) => {
+          const img = new Image();
+          img.src = url;
+          await img.decode(); // Wait for image to load and decode
 
-      setImagesForFirstColumn(imagesForColumns[0]);
-      setImagesForSecondColum(imagesForColumns[1]);
-      setImagesForThirdColumn(imagesForColumns[2]);
+          const aspectRatio = img.width / img.height;
+          const orientation = aspectRatio < 1 ? "portrait" : "landscape";
+
+          // Define unit dimensions based on orientation
+          const unitWidth = orientation === "portrait" ? 1 : 2;
+          const unitHeight = orientation === "portrait" ? 2 : 1;
+
+          return {
+            url,
+            id: generateImageCaptionFromFilePath(url),
+            width: img.width,
+            height: img.height,
+            orientation,
+            unitWidth,
+            unitHeight,
+          };
+        })
+      );
+
+      // Sort images to potentially help with packing (e.g., put larger items first)
+      // This is a simple sort, more complex packing algorithms exist but might be overkill
+      imageInfos.sort((a, b) => b.unitWidth - a.unitWidth);
+
+      // We no longer need to arrange into rows in state for the CSS Grid approach
+      setImages(imageInfos);
     };
 
-    loadImages();
+    loadAndProcessImages();
   }, [albumName]);
 
   return (
@@ -77,34 +105,16 @@ const SingleAlbumPage = () => {
       <NavBar />
       <div className="image-gallery-container">
         <h1 className="title-text">{albumName}</h1>
-        <div className="image-gallery">
-          <div className="column">
-            {imagesForFirstColumn.map((src, index) => (
-              <SingleAlbumImage
-                key={index}
-                imageSource={src}
-                imageDescription={generateImageCaptionFromFilePath(src)}
-              />
-            ))}
-          </div>
-          <div className="column">
-            {imagesForSecondColumn.map((src, index) => (
-              <SingleAlbumImage
-                key={index}
-                imageSource={src}
-                imageDescription={generateImageCaptionFromFilePath(src)}
-              />
-            ))}
-          </div>
-          <div className="column">
-            {imagesForThirdColumn.map((src, index) => (
-              <SingleAlbumImage
-                key={index}
-                imageSource={src}
-                imageDescription={generateImageCaptionFromFilePath(src)}
-              />
-            ))}
-          </div>
+        <div className="puzzle-gallery-container"> {/* Grid container */}
+          {images.map((img) => (
+            <SingleAlbumImage
+              key={img.id}
+              imageSource={img.url}
+              imageDescription={generateImageCaptionFromFilePath(img.url)}
+              unitWidth={img.unitWidth} // Pass unit dimensions
+              unitHeight={img.unitHeight} // Pass unit dimensions
+            />
+          ))}
         </div>
       </div>
       <Footer />
