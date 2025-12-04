@@ -85,14 +85,6 @@ const SoftwareEngineeringPage = () => {
               for storing the images in blob storage, and including liking,
               commenting and sorting functionality on the website.
             </p>
-            <a href="https://github.com/Gooozeee/PhotoFrontEnd" target="_blank">
-              <div className="project-button-link project-button">
-                Github Repository
-              </div>
-            </a>
-            <a href="https://www.michalguzy.com" target="_blank">
-              <div className="project-button-link project-button">Live URL</div>
-            </a>
           </div>
         </div>
         <h1 className="title-text final-message">
