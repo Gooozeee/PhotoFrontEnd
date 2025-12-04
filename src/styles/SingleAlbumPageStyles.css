@@ -1,12 +1,18 @@
 .album-page-container {
     background-color: black;
     min-height: 100vh;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    width: 100%;
 }
 
 .image-gallery-container {
     padding: 150px 20px 40px;
-    max-width: 1800px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .title-text {
@@ -23,7 +29,8 @@
     grid-auto-rows: auto; /* Allow row height to be determined by content */
     gap: 15px;
     width: 100%;
-    margin: 0 auto;
+    margin: 0;
+    padding: 0;
 }
 
 /* Styles for the image container within the grid */
@@ -32,13 +39,6 @@
     overflow: hidden;
     border-radius: 5px;
     cursor: pointer;
-}
-
-.image-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
 }
 
 /* Classes based on unit dimensions with aspect ratio */
@@ -64,16 +64,6 @@
 /* Centering the last row in a grid is complex. We are relying on the grid's
    auto-placement and the aspect-ratio property to fill space. Perfect centering
    of the last row might require adding empty placeholder items in the React component. */
-
-/* Media query for smaller screens */
-@media screen and (max-width: 768px) { /* Adjust breakpoint as needed */
-    .puzzle-gallery-container {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust columns for smaller screens */
-        grid-auto-rows: auto; /* Allow row height to adjust */
-    }
-
-    /* Aspect ratios already defined for unit classes will apply */
-}
 
 /* Modal styles */
 .modal-overlay {

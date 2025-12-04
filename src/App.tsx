@@ -1,33 +1,29 @@
 import "./App.css";
+import { Routes, Route, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import NotFoundPage from "./pages/NotFoundPage";
 import UnderConstructionPage from "./pages/UnderConstructionPage";
 import SingleAlbumPage from "./pages/SingleAlbumPage";
 import SoftwareEngineeringPage from "./pages/SoftwareEngineeringPage";
+import { AnimatePresence } from "framer-motion";
+import Layout from "./components/Layout";
 
 function App() {
-  const router = createBrowserRouter([{
-    path: '/',
-    element: <HomePage />,
-    errorElement: <NotFoundPage />
-  }, {
-    path: '/construction',
-    element: <UnderConstructionPage />,
-    errorElement: <NotFoundPage />
-  }, {
-    path: '/singleAlbum',
-    element: <SingleAlbumPage />,
-    errorElement: <NotFoundPage />
-  }, {
-    path: '/software',
-    element: <SoftwareEngineeringPage />,
-    errorElement: <NotFoundPage />
-  }]);
+  const location = useLocation();
 
   return (
     <div className="App">
-      <RouterProvider router={router} />
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route element={<Layout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/construction" element={<UnderConstructionPage />} />
+            <Route path="/singleAlbum" element={<SingleAlbumPage />} />
+            <Route path="/software" element={<SoftwareEngineeringPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+      </AnimatePresence>
     </div>
   );
 }

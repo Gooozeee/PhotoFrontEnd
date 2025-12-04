@@ -7,47 +7,49 @@ interface Props {
   imageSource: string;
   imageDescription: string;
   albumName?: string;
-  unitWidth: number; // Added unitWidth prop
-  unitHeight: number; // Added unitHeight prop
+  unitWidth: number;
+  unitHeight: number;
+  useUnitSizing?: boolean;
 }
 
 const SingleAlbumImage = ({
   imageSource,
   imageDescription,
   albumName,
-  unitWidth, // Destructure unitWidth
-  unitHeight, // Destructure unitHeight
+  unitWidth,
+  unitHeight,
+  useUnitSizing = false,
 }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showModal, setShowModal] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    if (useUnitSizing) {
+      const container = containerRef.current;
+      if (!container) return;
 
-    // Remove old size/orientation classes
-    container.classList.remove(
-      "portrait",
-      "landscape",
-      "normal",
-      "wide",
-      "full",
-      "tall"
-    );
+      // Remove old size/orientation classes
+      container.classList.remove(
+        "portrait",
+        "landscape",
+        "normal",
+        "wide",
+        "full",
+        "tall"
+      );
 
-    // Add classes based on unit dimensions for CSS styling
-    if (unitWidth === 1 && unitHeight === 2) {
-      container.classList.add("portrait-unit");
-    } else if (unitWidth === 2 && unitHeight === 1) {
-      container.classList.add("landscape-unit");
-    } else {
-      // Default or other sizes if needed
-      container.classList.add("normal-unit");
+      // Add classes based on unit dimensions for CSS styling
+      if (unitWidth === 1 && unitHeight === 2) {
+        container.classList.add("portrait-unit");
+      } else if (unitWidth === 2 && unitHeight === 1) {
+        container.classList.add("landscape-unit");
+      } else {
+        // Default or other sizes if needed
+        container.classList.add("normal-unit");
+      }
     }
-
-    // Removed the image loading logic and calculatedSize logic
-  }, [unitWidth, unitHeight]); // Dependencies on unit dimensions
+  }, [unitWidth, unitHeight, useUnitSizing]); // Dependencies on unit dimensions
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -67,8 +69,29 @@ const SingleAlbumImage = ({
     }
   };
 
-  const content = (
-    <>
+  if (albumName) {
+    // For album gallery - use Link wrapper
+    return (
+      <div ref={containerRef} className="image-item">
+        <Link to={`/singleAlbum?album=${albumName}`} className="image-wrapper">
+          <img
+            src={imageSource}
+            alt={imageDescription}
+            onLoad={handleImageLoad}
+            className={imageLoaded ? "loaded" : ""}
+            loading="lazy"
+          />
+          <div className="overlay">
+            <span>{albumName}</span>
+          </div>
+        </Link>
+      </div>
+    );
+  }
+
+  // For single images in albums - use button
+  return (
+    <div ref={containerRef} className="image-item">
       <button
         className="image-wrapper"
         onClick={handleInteraction}
@@ -91,18 +114,6 @@ const SingleAlbumImage = ({
           imageUrl={imageSource}
           onClose={() => setShowModal(false)}
         />
-      )}
-    </>
-  );
-
-  return (
-    <div ref={containerRef} className="image-item">
-      {albumName ? (
-        <Link to={`/singleAlbum?album=${albumName}`} className="link">
-          {content}
-        </Link>
-      ) : (
-        content
       )}
     </div>
   );

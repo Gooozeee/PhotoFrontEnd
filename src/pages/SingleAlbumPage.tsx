@@ -18,7 +18,7 @@ interface ImageInfo {
 const MAX_ROW_UNITS = 4; // Maximum width units for a row
 
 const SingleAlbumPage = () => {
-  const queryParameters = new URLSearchParams(window.location.search);
+  const queryParameters = new URLSearchParams(globalThis.location.search);
   const albumName = queryParameters.get("album");
   const [images, setImages] = useState<ImageInfo[]>([]); // State to store all images
 
@@ -105,7 +105,9 @@ const SingleAlbumPage = () => {
       <NavBar />
       <div className="image-gallery-container">
         <h1 className="title-text">{albumName}</h1>
-        <div className="puzzle-gallery-container"> {/* Grid container */}
+        <div className="puzzle-gallery-container">
+          {" "}
+          {/* Grid container */}
           {images.map((img) => (
             <SingleAlbumImage
               key={img.id}
@@ -113,6 +115,7 @@ const SingleAlbumPage = () => {
               imageDescription={generateImageCaptionFromFilePath(img.url)}
               unitWidth={img.unitWidth} // Pass unit dimensions
               unitHeight={img.unitHeight} // Pass unit dimensions
+              useUnitSizing={true}
             />
           ))}
         </div>
