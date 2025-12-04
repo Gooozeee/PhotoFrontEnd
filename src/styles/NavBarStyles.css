@@ -260,3 +260,21 @@
 .deGooseLogo:active {
     transform: scale(0.98);
 }
+
+/* Nudge the header content inward so the nav text isn't flush to the right edge */
+.top-banner,
+.top-banner-black-background {
+    padding-left: 28px;
+    padding-right: 28px;
+}
+
+/* Hide native scrollbars visually while preserving scroll behavior */
+html, body {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
