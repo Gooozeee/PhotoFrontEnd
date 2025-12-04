@@ -9,11 +9,11 @@ function NavBar() {
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
 
   const listenScrollEvent = useCallback(() => {
-    if (window.scrollY < 20) {
-      setScrolledDown(false);
-    } else if (window.scrollY > 10) {
-      setScrolledDown(true);
-    }
+    // simple threshold check — treat anything over 20px as scrolled
+    const isScrolled = window.scrollY > 20;
+    // use console.log so output is visible in browsers with filters
+    console.log("[NavBar] scrollY:", window.scrollY, "isScrolled:", isScrolled);
+    setScrolledDown(isScrolled);
   }, []);
 
   useEffect(() => {
@@ -31,15 +31,21 @@ function NavBar() {
 
     window.addEventListener("scroll", onScroll, { passive: true });
 
+    // run once on mount in case the page is already scrolled
+    listenScrollEvent();
+
     return () => {
       window.removeEventListener("scroll", onScroll);
     };
   }, [listenScrollEvent]);
 
+  // mount-time log to confirm the component is rendered
+  useEffect(() => {
+    console.log("[NavBar] mounted");
+  }, []);
+
   return (
-    <div
-      className={scrolledDown ? "top-banner-black-background" : "top-banner"}
-    >
+    <div data-scrolled={scrolledDown} className={`top-banner ${scrolledDown ? "top-banner-black-background" : ""}`}>
       <Link to="/" className="deGooseLogo">
         <img
           src={degooseLogoWhite}

@@ -40,8 +40,13 @@ const DownArrow = ({ targetRef }: Props) => {
 
   const handleClick = () => {
     if (targetRef.current) {
-      const yPosition = targetRef.current.offsetTop;
-      scrollToPosition(yPosition);
+      // use scrollIntoView for more robust scrolling (accounts for layout)
+      if (typeof targetRef.current.scrollIntoView === "function") {
+        targetRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        const yPosition = targetRef.current.offsetTop;
+        scrollToPosition(yPosition);
+      }
     }
   };
 

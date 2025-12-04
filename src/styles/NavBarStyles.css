@@ -232,14 +232,14 @@
     justify-content: space-between; 
     align-items: center; 
     background: transparent;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: background-color 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                height 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                padding 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
     height: 100px;
     will-change: background-color;
 }
   
-.top-banner-black-background .deGooseLogo {
-    width: 150px;
-}
+ 
 
 .deGooseLogo {
     cursor: pointer;
@@ -249,8 +249,17 @@
     width: 200px;
     padding-left: 20px;
     opacity: 100%;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: width 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                margin 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
     will-change: transform, width;
+}
+
+/* make the logo shrink smoothly when header becomes black */
+.top-banner-black-background .deGooseLogo {
+    width: 150px;
+    margin-top: 7px;
+    margin-bottom: 7px;
 }
 
 .deGooseLogo:hover {
