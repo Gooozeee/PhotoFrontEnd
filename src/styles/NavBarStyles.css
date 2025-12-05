@@ -83,6 +83,11 @@
         margin: 0;
         width: 100%;
         text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
     }
 
     /* menu items animate in with a subtle upward motion and stagger */
