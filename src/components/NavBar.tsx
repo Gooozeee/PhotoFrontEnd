@@ -37,7 +37,11 @@ function NavBar() {
   }, [listenScrollEvent]);
 
   return (
-    <div className={`top-banner ${scrolledDown ? "top-banner-black-background" : ""}`}>
+    <div
+      className={`top-banner ${
+        scrolledDown ? "top-banner-black-background" : ""
+      }`}
+    >
       <Link to="/" className="deGooseLogo">
         <img
           src={degooseLogoWhite}

@@ -39,7 +39,14 @@
     overflow: hidden;
     border-radius: 5px;
     cursor: pointer;
+    background: linear-gradient(135deg, rgba(50,50,50,0.6) 0%, rgba(30,30,30,0.4) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
 }
+
+/* Removed shimmer effect - caused white bar across images */
 
 /* Classes based on unit dimensions with aspect ratio */
 .image-item.portrait-unit {
