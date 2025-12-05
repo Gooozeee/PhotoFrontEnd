@@ -1,5 +1,7 @@
+import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/GalleryImageStyles.css";
+import { motion } from "framer-motion";
 
 interface Props {
   imageSource: string;
@@ -8,15 +10,31 @@ interface Props {
 }
 
 const GalleryImage = ({ imageSource, imageDescription, albumName }: Props) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const handleImageLoad = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
+
   return (
-    <div className="image-item">
-      <Link to={`/singleAlbum?album=${albumName}`} className="link">
-        <img src={imageSource} alt={imageDescription} />
+    <motion.div
+      className="image-item"
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+    >
+      <Link to={`/singleAlbum?album=${albumName}`} className="image-wrapper">
+        <img
+          src={imageSource}
+          alt={imageDescription}
+          className={isLoaded ? "loaded" : ""}
+          onLoad={handleImageLoad}
+          loading="lazy"
+        />
         <div className="overlay">
           <span>{imageDescription}</span>
         </div>
       </Link>
-    </div>
+    </motion.div>
   );
 };
 

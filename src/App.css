@@ -2,10 +2,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 .App {
-    font-family: "Poppins"; 
+    font-family: "Poppins", sans-serif;
     color: white;
     background-color: black;
-    height: 100vh;
+    /* removed height: 100vh to allow natural scrolling on window */
+    min-height: 100vh;
 }
 
 h1 {
@@ -38,7 +39,8 @@ h3 {
     font-weight: 300;
     padding: 2px;
     text-align: center;
-    transition: color 0.1s;
+    transition: color 0.2s ease-out;
+    will-change: color;
 }
 
 .footer a {
@@ -56,9 +58,8 @@ h3 {
 .footer-title {
      background-color: black;
      text-align: center;
-     padding-top: 20px;
-     margin-top: 0px;
      padding-top: 30px;
+     margin-top: 0px;
      margin-bottom: 0;
      font-weight: 400;
 }
@@ -73,4 +74,107 @@ h3 {
 
 .footer h3:hover {
     color: rgb(151,151,151);
+}
+
+/* Modal Styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-overlay[open] {
+    display: flex;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(4px);
+    }
+}
+
+.modal-image-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 90vw;
+    max-height: 90vh;
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+}
+
+.modal-image.loaded {
+    opacity: 1;
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 1);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-out;
+    will-change: background-color, border-color;
+    z-index: 10000;
+}
+
+.modal-close-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.05);
+}
+
+.modal-close-button:active {
+    transform: scale(0.95);
+}
+
+.modal-close-button:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
 }

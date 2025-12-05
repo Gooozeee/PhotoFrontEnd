@@ -1,46 +1,191 @@
-.toggle-button {
-    background-color: black;
-    border: none;
-    padding: 5px;
+.hamburger {
+    display: none;
+    padding-right: 30px;
     cursor: pointer;
-}
-  
-.menu__display ul {
-    list-style-type: none;
-    padding: 0;
-    margin-right: 50px;
-    display: flex;
-    transition: all 0.3s linear;
+    transition: transform 0.3s ease-out;
+    will-change: transform;
+    position: relative;
+    z-index: 2001; /* ensure it's above logo and overlays */
+    pointer-events: auto; /* make sure taps reach it */
 }
 
-.menu__nodisplay ul {
-    list-style-type: none;
-    padding: 0;
-    margin-right: 50px;
+/* Desktop nav: keep menu visible and laid out horizontally */
+.menu__display,
+.menu__nodisplay {
     display: flex;
-    transition: all 0.3s linear;
+    align-items: center;
+    gap: 28px;
 }
-  
-.menu__display ul li {
-    margin-left: 45px;
-    margin-right: 45px;
-    font-size: 20px;
-    color: white;
-    cursor: pointer;
-    opacity: 100%;
-    text-decoration: underline;
-    text-underline-offset: 6px;
-    font-weight: 250;
-    transition: all 0.3s linear;
+
+.menu__display ul,
+.menu__nodisplay ul {
+    display: flex;
+    gap: 24px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+}
+
+.menu__display ul li,
+.menu__nodisplay ul li {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* mobile */
+@media (max-width: 1100px) {
+    .menu__display {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: rgba(0,0,0,0.95);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 24px;
+        z-index: 2000;
+        transform: translateY(0);
+        opacity: 1;
+        transition: transform 360ms cubic-bezier(.22,.98,.33,1), opacity 260ms ease;
+    }
+
+    /* Instead of removing the menu from layout with display:none, keep it present
+         and hide via transform/opacity so we can animate opening/closing smoothly. */
+    .menu__nodisplay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        background: rgba(0,0,0,0.95);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 24px;
+        z-index: 2000;
+        transform: translateY(-6%);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 300ms cubic-bezier(.22,.98,.33,1), opacity 220ms ease;
+    }
+
+    .menu__display ul,
+    .menu__nodisplay ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
+    }
+
+    /* menu items animate in with a subtle upward motion and stagger */
+    .menu__display ul li {
+        margin: 12px 0;
+        font-size: 22px;
+        font-weight: 600;
+        color: #fff;
+        padding: 12px 0;
+        width: 100%;
+        opacity: 1;
+        transform: translateY(0);
+        transition: transform 360ms cubic-bezier(.22,.98,.33,1), opacity 260ms ease;
+    }
+
+    .menu__nodisplay ul li {
+        margin: 12px 0;
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--dark);
+        padding: 12px 0;
+        width: 100%;
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    /* Staggered delays for nicer feel */
+    .menu__display ul li:nth-child(1) { transition-delay: 40ms; }
+    .menu__display ul li:nth-child(2) { transition-delay: 80ms; }
+    .menu__display ul li:nth-child(3) { transition-delay: 120ms; }
+    .menu__display ul li:nth-child(4) { transition-delay: 160ms; }
+    .menu__display ul li:nth-child(5) { transition-delay: 200ms; }
+
+    .menu__nodisplay ul li:nth-child(1) { transition-delay: 0ms; }
+    .menu__nodisplay ul li:nth-child(2) { transition-delay: 0ms; }
+    .menu__nodisplay ul li:nth-child(3) { transition-delay: 0ms; }
+    .menu__nodisplay ul li:nth-child(4) { transition-delay: 0ms; }
+    .menu__nodisplay ul li:nth-child(5) { transition-delay: 0ms; }
+
+    .hamburger {
+        display: inline-block;
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        z-index: 2100;
+        padding: 6px;
+        margin-right: 8px;
+    }
+
+    /* When the hamburger is open we set a dark background to match previous style */
+    .hamburger[aria-expanded="true"] {
+        background-color: rgba(0,0,0,0.95);
+        border-radius: 6px;
+        padding: 8px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    }
 }
 
 .link {
     color: inherit;
+    position: relative;
+    transition: color 0.2s ease-out;
+    will-change: color;
 }
 
-.hamburger {
-    display: none;
-    padding-right: 30px;
+.link::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    transform: scaleX(0) translateZ(0);
+    height: 2px;
+    bottom: -6px;
+    left: 0;
+    background: linear-gradient(90deg, transparent, white, transparent);
+    transform-origin: bottom right;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
+}
+
+.link:hover::after,
+.link:focus-visible::after {
+    transform: scaleX(1) translateZ(0);
+    transform-origin: bottom left;
+}
+
+.link.active::after {
+    transform: scaleX(1) translateZ(0);
+    transform-origin: bottom left;
+}
+
+.link:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 4px;
+    color: #ccc;
 }
 
 .menu__nodisplay ul li {
@@ -53,35 +198,22 @@
     text-decoration: underline;
     text-underline-offset: 6px;
     font-weight: 250;
-    transition: all 0.3s linear;
+    transition: all 0.2s ease-out;
+    will-change: color;
 }
 
 .menu__display ul li:hover {
     color: rgb(151, 151, 151);
-    transition: all 0.3s linear;
+    transition: all 0.2s ease-out;
 }
 
 .menu__nodisplay ul li:hover {
     color: rgb(151, 151, 151);
-    transition: all 0.3s linear;
-}
-
-.top-banner-black-background {
-    top: 0px;
-    height: fit-content;
-    z-index: 3;
-    position: fixed; 
-    width: 100%;
-    border: none;
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    background: linear-gradient(to bottom, rgba(1, 1, 1, 0.6), rgba(1, 1, 14, 0.01));
-    background-color: black;
-    transition: 0.4s;
+    transition: all 0.2s ease-out;
 }
 
 .top-banner {
+    top: 0;
     z-index: 3;
     position: fixed; 
     width: 100%;
@@ -89,72 +221,62 @@
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    background: linear-gradient(to bottom, rgba(1, 1, 1, 0.6), rgba(1, 1, 14, 0.01));
-    transition: 0.4s;
+    padding-left: 28px;
+    padding-right: 28px;
+    background: transparent;
+    height: 100px;
+    transition: background-color 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                height 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                padding 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: background-color, height, box-shadow;
+    box-shadow: none;
+}
+
+.top-banner.top-banner-black-background {
+    background-color: black;
+    height: 70px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
   
+ 
+
 .deGooseLogo {
     cursor: pointer;
-    z-index: 999;
+    z-index: 10;
     margin-top: 15px;
     margin-bottom: 15px;
     width: 200px;
     padding-left: 20px;
     opacity: 100%;
+    transition: width 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                margin 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform, width;
 }
 
-@media screen and (max-width: 1100px) {
-    .hamburger {
-        display: inline;
-        transition: all 0.5s ease;
-    }
+/* make the logo shrink smoothly when header becomes black */
+.top-banner-black-background .deGooseLogo {
+    width: 150px;
+    margin-top: 7px;
+    margin-bottom: 7px;
+}
 
-    .deGooseLogo {
-        width: 140px;
-    }
+.deGooseLogo:hover {
+    transform: scale(1.05);
+}
 
-    .menu__display ul {
-        background-color: black;
-        padding-top: 100px;
-        overflow: hidden;
-        padding-bottom: 30px;
-        width: 100%;
-        height: 100vh;
-        margin-right: 0px;
-        right: 0px;
-        top: -20px;
-        position: absolute;
-        text-align: center;
-        display: block;
-    }
+.deGooseLogo:active {
+    transform: scale(0.98);
+}
 
-    .menu__nodisplay ul {
-        overflow: hidden;
-        margin-right: 0px;
-        right: -180vw;
-        position: absolute;
-        transition: all 0.5s ease;
-        text-align: center;
-        display: block;
-    }
+/* deGooseLogo styles */
+html, body {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
 
-    .menu__display ul li {
-        font-size: 22px;
-        font-weight: 300;
-        text-align: left;
-        margin-top: 20px;
-        margin-left: 45px;
-        transition: all 0.5s ease;
-        right: 0px;
-    }
-
-    .menu__nodisplay ul li {
-        font-size: 22px;
-        font-weight: 300;
-        text-align: left;
-        margin-top: 20px;
-        margin-left: 35px;
-        transition: all 0.5s ease;
-        right: 0px;
-    }
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }

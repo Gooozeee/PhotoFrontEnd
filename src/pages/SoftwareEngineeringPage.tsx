@@ -1,4 +1,3 @@
-import NavBar from "../components/NavBar";
 import WelcomeImage from "../components/WelcomeImage";
 import Footer from "../components/Footer";
 import DownArrow from "../components/DownArrow";
@@ -6,19 +5,26 @@ import "../styles/SoftwareEngineeringPageStyles.css";
 import HomePage from "../assets/Projects/Website/HomePage.png";
 import LandscapePage from "../assets/Projects/Website/LandscapePage.png";
 import ImageSwitcher from "../components/ImageSwitcher";
+import { motion } from "framer-motion";
+import { useRef } from "react";
 
 const SoftwareEngineeringPage = () => {
   const images = [HomePage, LandscapePage];
+  const aboutRef = useRef<HTMLDivElement>(null);
 
   return (
-    <>
-      <NavBar />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
       <WelcomeImage
         heading="Hey! I'm Michal Guzy"
         subHeadingOne="A Full-Stack Software Engineer, Specialising in Backend"
       />
-      <DownArrow />
-      <div className="about-container black">
+      <DownArrow targetRef={aboutRef} />
+      <div id="about" className="about-container black" ref={aboutRef}>
         <h1 className="title-text">About Me</h1>
         <h2 className="subheading-two subheading-container">
           Here you will find out more about me, and my projects in terms of
@@ -30,14 +36,12 @@ const SoftwareEngineeringPage = () => {
               <b>Get to Know Me!</b>
             </h2>
             <p>
-              I'm a <b>Backend Focused Developer</b> currently working at PwC as
-              a Senior Associate software engineer. Check out some of my work in
-              the Projects section.
+              I'm a <b>Backend Focused Developer</b> currently working at
+              Simcorp as a Senior software engineer.
             </p>
             <p>
-              I specialise in <b>C# ASP .Net Core</b> but have university
-              experience in other languages and frameworks, and I'm building out
-              front ends in my spare time to develop these skills.
+              I specialise in <b>C# ASP .Net Core</b> backend development, and
+              enjoy front end development on the side.
             </p>
           </div>
           <div className="intro-item">
@@ -45,21 +49,21 @@ const SoftwareEngineeringPage = () => {
               <b>Skills</b>
             </h2>
             <div>
-              <div className="button skills">C#</div>
-              <div className="button skills">Asp.Net Core</div>
-              <div className="button skills">SQL</div>
-              <div className="button skills">Git</div>
-              <div className="button skills">Azure Service Bus</div>
-              <div className="button skills">RabbitMQ</div>
-              <div className="button skills">Serverless</div>
-              <div className="button skills">Kubernetes</div>
-              <div className="button skills">JavaScript</div>
-              <div className="button skills">React</div>
+              <div className="skills">C#</div>
+              <div className="skills">Asp.Net Core</div>
+              <div className="skills">SQL</div>
+              <div className="skills">Git</div>
+              <div className="skills">Azure Service Bus</div>
+              <div className="skills">RabbitMQ</div>
+              <div className="skills">Serverless</div>
+              <div className="skills">Kubernetes</div>
+              <div className="skills">JavaScript</div>
+              <div className="skills">React</div>
             </div>
           </div>
         </div>
       </div>
-      <div className="about-container gray">
+      <div id="projects" className="about-container gray">
         <div className="project">
           <h1 className="title-text">Projects</h1>
           <h2 className="subheading-two subheading-container">
@@ -81,12 +85,6 @@ const SoftwareEngineeringPage = () => {
               for storing the images in blob storage, and including liking,
               commenting and sorting functionality on the website.
             </p>
-            <a href="https://github.com/Gooozeee/PhotoFrontEnd" target="_blank">
-              <div className="button project-button">Github Repository</div>
-            </a>
-            <a href="https://www.michalguzy.com" target="_blank">
-              <div className="button project-button">Live URL</div>
-            </a>
           </div>
         </div>
         <h1 className="title-text final-message">
@@ -95,7 +93,7 @@ const SoftwareEngineeringPage = () => {
         </h1>
       </div>
       <Footer />
-    </>
+    </motion.div>
   );
 };
 

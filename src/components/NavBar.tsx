@@ -1,78 +1,74 @@
 import "../styles/NavBarStyles.css";
 import degooseLogoWhite from "../assets/degooseLogoWhite.webp";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Twirl as Hamburger } from "hamburger-react";
-import { Link, useNavigate } from "react-router-dom";
-import scrollToPosition from "../utils/scrollToPosition";
+import { NavLink, Link } from "react-router-dom";
 
 function NavBar() {
   const [scrolledDown, setScrolledDown] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
 
-  const toggleHamburger = () => {
-    setHamburgerOpen(!hamburgerOpen);
-    console.log(hamburgerOpen);
-  };
-
-  const listenScrollEvent = () => {
-    if (window.scrollY < 20) {
-      return setScrolledDown(false);
-    } else if (window.scrollY > 10) {
-      return setScrolledDown(true);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener("scroll", listenScrollEvent);
-
-    return () => window.removeEventListener("scroll", listenScrollEvent);
+  const listenScrollEvent = useCallback(() => {
+    const isScrolled = window.scrollY > 20;
+    setScrolledDown(isScrolled);
   }, []);
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    let ticking = false;
 
-  const handleClick = (path: string, yPosition: number) => {
-    navigate(path);
-    setTimeout(() => {
-      scrollToPosition(yPosition);
-    }, 100);
-  };
+    const onScroll = () => {
+      if (!ticking) {
+        globalThis.requestAnimationFrame(() => {
+          listenScrollEvent();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    // run once on mount in case the page is already scrolled
+    listenScrollEvent();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [listenScrollEvent]);
 
   return (
     <div
-      className={scrolledDown ? "top-banner-black-background" : "top-banner"}
+      className={`top-banner ${
+        scrolledDown ? "top-banner-black-background" : ""
+      }`}
     >
-      <div className="deGooseLogo" onClick={() => handleClick("/", 0)}>
+      <Link to="/" className="deGooseLogo">
         <img
           src={degooseLogoWhite}
           alt="De Goose Productions Logo"
           className="deGooseLogo"
         />
-      </div>
+      </Link>
       <div className={`menu${hamburgerOpen ? "__display" : "__nodisplay"}`}>
         <ul>
           <li>
-            <div className="link" onClick={() => handleClick("/", 0)}>
+            <NavLink to="/" className="link">
               Home
-            </div>
+            </NavLink>
           </li>
           <li>
-            <div className="link" onClick={() => handleClick("/software", 0)}>
+            <NavLink to="/software" className="link">
               Software Engineering
-            </div>
-          </li>
-          <li>
-            <div className="link" onClick={() => handleClick("/software", 600)}>
-              About
-            </div>
-          </li>
-          <li>
-            <div className="link" onClick={() => handleClick("/software", 1100)}>
-              Projects
-            </div>
+            </NavLink>
           </li>
         </ul>
       </div>
-      <div className="hamburger" onClick={() => toggleHamburger()}>
+      <button
+        type="button"
+        className="hamburger"
+        aria-label="Toggle menu"
+        aria-expanded={hamburgerOpen}
+      >
         <Hamburger
           toggled={hamburgerOpen}
           toggle={setHamburgerOpen}
@@ -81,7 +77,7 @@ function NavBar() {
           label="Show menu"
           rounded
         />
-      </div>
+      </button>
     </div>
   );
 }
