@@ -65,27 +65,41 @@ const SingleAlbumPage = () => {
       );
 
       const imageInfos: ImageInfo[] = await Promise.all(
-        imageUrls.map(async (url) => {
-          const img = new Image();
-          img.src = url;
-          await img.decode(); // Wait for image to load and decode
+        imageUrls.map((url) => {
+          return new Promise<ImageInfo>((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              const aspectRatio = img.width / img.height;
+              const orientation = aspectRatio < 1 ? "portrait" : "landscape";
 
-          const aspectRatio = img.width / img.height;
-          const orientation = aspectRatio < 1 ? "portrait" : "landscape";
+              // Define unit dimensions based on orientation
+              const unitWidth = orientation === "portrait" ? 1 : 2;
+              const unitHeight = orientation === "portrait" ? 2 : 1;
 
-          // Define unit dimensions based on orientation
-          const unitWidth = orientation === "portrait" ? 1 : 2;
-          const unitHeight = orientation === "portrait" ? 2 : 1;
-
-          return {
-            url,
-            id: generateImageCaptionFromFilePath(url),
-            width: img.width,
-            height: img.height,
-            orientation,
-            unitWidth,
-            unitHeight,
-          };
+              resolve({
+                url,
+                id: generateImageCaptionFromFilePath(url),
+                width: img.width,
+                height: img.height,
+                orientation,
+                unitWidth,
+                unitHeight,
+              });
+            };
+            img.onerror = () => {
+              // Fallback for failed images
+              resolve({
+                url,
+                id: generateImageCaptionFromFilePath(url),
+                width: 400,
+                height: 300,
+                orientation: "landscape",
+                unitWidth: 2,
+                unitHeight: 1,
+              });
+            };
+            img.src = url;
+          });
         })
       );
 
