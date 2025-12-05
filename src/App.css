@@ -5,7 +5,8 @@
     font-family: "Poppins", sans-serif;
     color: white;
     background-color: black;
-    height: 100vh;
+    /* removed height: 100vh to allow natural scrolling on window */
+    min-height: 100vh;
 }
 
 h1 {

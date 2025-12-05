@@ -207,23 +207,8 @@
     transition: all 0.2s ease-out;
 }
 
-.top-banner-black-background {
-    top: 0px;
-    height: 70px;
-    z-index: 3;
-    position: fixed; 
-    width: 100%;
-    border: none;
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    background-color: black;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    will-change: box-shadow;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
 .top-banner {
+    top: 0;
     z-index: 3;
     position: fixed; 
     width: 100%;
@@ -231,12 +216,22 @@
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
+    padding-left: 28px;
+    padding-right: 28px;
     background: transparent;
+    height: 100px;
     transition: background-color 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
                 height 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
-                padding 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
-    height: 100px;
-    will-change: background-color;
+                padding 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: background-color, height, box-shadow;
+    box-shadow: none;
+}
+
+.top-banner.top-banner-black-background {
+    background-color: black;
+    height: 70px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
   
  
@@ -270,14 +265,7 @@
     transform: scale(0.98);
 }
 
-/* Nudge the header content inward so the nav text isn't flush to the right edge */
-.top-banner,
-.top-banner-black-background {
-    padding-left: 28px;
-    padding-right: 28px;
-}
-
-/* Hide native scrollbars visually while preserving scroll behavior */
+/* deGooseLogo styles */
 html, body {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
