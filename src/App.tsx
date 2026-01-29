@@ -1,4 +1,3 @@
-import "./App.css";
 import { Routes, Route, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -12,7 +11,7 @@ function App() {
   const location = useLocation();
 
   return (
-    <div className="App">
+    <div className="app-container">
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route element={<Layout />}>

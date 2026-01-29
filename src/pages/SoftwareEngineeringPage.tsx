@@ -1,7 +1,6 @@
 import WelcomeImage from "../components/WelcomeImage";
 import Footer from "../components/Footer";
 import DownArrow from "../components/DownArrow";
-import "../styles/SoftwareEngineeringPageStyles.css";
 import HomePage from "../assets/Projects/Website/HomePage.png";
 import LandscapePage from "../assets/Projects/Website/LandscapePage.png";
 import ImageSwitcher from "../components/ImageSwitcher";
@@ -24,18 +23,22 @@ const SoftwareEngineeringPage = () => {
         subHeadingOne="A Full-Stack Software Engineer, Specialising in Backend"
       />
       <DownArrow targetRef={aboutRef} />
-      <div id="about" className="about-container black" ref={aboutRef}>
-        <h1 className="title-text">About Me</h1>
-        <h2 className="subheading-two subheading-container">
+      <div
+        id="about"
+        className="bg-[rgb(12,12,12)] pt-12 md:pt-[50px] flex flex-col items-center w-full"
+        ref={aboutRef}
+      >
+        <h1 className="text-white font-light text-2xl text-center">About Me</h1>
+        <h2 className="text-lg font-light text-center pt-5 pb-[30px] px-5">
           Here you will find out more about me, and my projects in terms of
           programming and technology
         </h2>
-        <div className="section-container">
-          <div className="intro-item">
-            <h2 className="subheading software-subheading">
+        <div className="w-[95%] pt-[50px] pb-[60px] flex flex-col md:flex-row gap-[100px] md:gap-0">
+          <div className="w-full md:w-1/2">
+            <h2 className="text-lg font-light text-left md:text-center mb-4">
               <b>Get to Know Me!</b>
             </h2>
-            <p>
+            <p className="mb-4">
               I'm a <b>Backend Focused Developer</b> currently working at
               Simcorp as a Senior software engineer.
             </p>
@@ -44,41 +47,52 @@ const SoftwareEngineeringPage = () => {
               enjoy front end development on the side.
             </p>
           </div>
-          <div className="intro-item">
-            <h2 className="subheading software-subheading">
+          <div className="w-full md:w-1/2">
+            <h2 className="text-lg font-light text-left md:text-center mb-4">
               <b>Skills</b>
             </h2>
-            <div>
-              <div className="skills">C#</div>
-              <div className="skills">Asp.Net Core</div>
-              <div className="skills">SQL</div>
-              <div className="skills">Git</div>
-              <div className="skills">Azure Service Bus</div>
-              <div className="skills">RabbitMQ</div>
-              <div className="skills">Serverless</div>
-              <div className="skills">Kubernetes</div>
-              <div className="skills">JavaScript</div>
-              <div className="skills">React</div>
+            <div className="flex flex-wrap gap-1 md:justify-center">
+              {[
+                "C#",
+                "Asp.Net Core",
+                "SQL",
+                "Git",
+                "Azure Service Bus",
+                "RabbitMQ",
+                "Serverless",
+                "Kubernetes",
+                "JavaScript",
+                "React",
+              ].map((skill) => (
+                <div
+                  key={skill}
+                  className="inline-block text-sm font-normal bg-[#333] text-white px-2.5 py-1.5 rounded transition-all duration-500 hover:-translate-y-1.5 hover:bg-[#555]"
+                >
+                  {skill}
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
-      <div id="projects" className="about-container gray">
-        <div className="project">
-          <h1 className="title-text">Projects</h1>
-          <h2 className="subheading-two subheading-container">
+      <div id="projects" className="bg-[rgb(25,25,25)] w-full flex flex-col items-center">
+        <div className="w-[95%]">
+          <h1 className="text-white font-light text-2xl text-center pt-[50px]">
+            Projects
+          </h1>
+          <h2 className="text-lg font-light text-center pt-5 pb-[30px]">
             Here you will find out more about my programming projects
           </h2>
         </div>
-        <div className="projects-container project">
-          <div className="image-container">
+        <div className="w-[95%] h-[600px] gap-[100px] flex flex-col md:flex-row pb-[60px]">
+          <div className="flex items-center justify-center w-full h-full md:-mt-5 relative">
             <ImageSwitcher images={images} />
           </div>
-          <div className="text-container">
-            <h1 className="title-text project-heading">
+          <div className="w-full pt-[60px]">
+            <h1 className="text-white font-light text-2xl text-left mb-5">
               Photography Portfolio
             </h1>
-            <p className="project-text">
+            <p className="mb-4">
               Custom website built in <b>React Typescript</b> with the use of
               Vite to practice and showcase my skills in front end development.
               I have plans to extend the system further and include a backend
@@ -87,7 +101,7 @@ const SoftwareEngineeringPage = () => {
             </p>
           </div>
         </div>
-        <h1 className="title-text final-message">
+        <h1 className="text-white font-light text-2xl text-center w-[70%] pb-[50px]">
           Head to my GitHub to see more projects! (I will be bringing more here
           soon)
         </h1>
