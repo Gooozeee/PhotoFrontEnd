@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import "../styles/GalleryImageStyles.css";
 import { Link } from "react-router-dom";
 import ImageModal from "./ImageModal";
 
@@ -39,7 +38,7 @@ const SingleAlbumImage = ({
         "tall"
       );
 
-      // Add classes based on unit dimensions for CSS styling
+      // Add classes based on unit dimensions for styling
       if (unitWidth === 1 && unitHeight === 2) {
         container.classList.add("portrait-unit");
       } else if (unitWidth === 2 && unitHeight === 1) {
@@ -49,7 +48,7 @@ const SingleAlbumImage = ({
         container.classList.add("normal-unit");
       }
     }
-  }, [unitWidth, unitHeight, useUnitSizing]); // Dependencies on unit dimensions
+  }, [unitWidth, unitHeight, useUnitSizing]);
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -69,20 +68,34 @@ const SingleAlbumImage = ({
     }
   };
 
+  const imageClasses = `w-full h-full object-cover object-center block rounded transition-opacity duration-500 ease-bounce ${
+    imageLoaded ? "opacity-100 blur-none" : "opacity-0 blur-[10px]"
+  }`;
+
+  const overlayClasses = `absolute inset-0 bg-[rgba(57,57,57,0.85)] rounded flex items-center justify-center text-center px-5 transition-transform duration-200 ease-bounce scale-0 hover:scale-100 focus-visible:scale-100`;
+
   if (albumName) {
     // For album gallery - use Link wrapper
     return (
-      <div ref={containerRef} className="image-item">
-        <Link to={`/singleAlbum?album=${albumName}`} className="image-wrapper">
+      <div
+        ref={containerRef}
+        className="relative cursor-pointer overflow-hidden rounded w-full h-full bg-[rgba(30,30,30,0.5)]"
+      >
+        <Link
+          to={`/singleAlbum?album=${albumName}`}
+          className="absolute inset-0 flex items-center justify-center overflow-hidden rounded cursor-pointer transition-transform duration-200 ease-out"
+        >
           <img
             src={imageSource}
             alt={imageDescription}
             onLoad={handleImageLoad}
-            className={imageLoaded ? "loaded" : ""}
+            className={imageClasses}
             loading="lazy"
           />
-          <div className="overlay">
-            <span>{albumName}</span>
+          <div className={overlayClasses}>
+            <span className="text-white text-base sm:text-lg md:text-xl font-light">
+              {albumName}
+            </span>
           </div>
         </Link>
       </div>
@@ -91,9 +104,12 @@ const SingleAlbumImage = ({
 
   // For single images in albums - use button
   return (
-    <div ref={containerRef} className="image-item">
+    <div
+      ref={containerRef}
+      className="relative cursor-pointer overflow-hidden rounded w-full h-full bg-[rgba(30,30,30,0.5)]"
+    >
       <button
-        className="image-wrapper"
+        className="absolute inset-0 flex items-center justify-center overflow-hidden rounded cursor-pointer transition-transform duration-200 ease-out w-full h-full p-0 border-none bg-transparent hover:scale-105 focus-visible:scale-105"
         onClick={handleInteraction}
         onKeyDown={handleKeyDown}
         aria-label={`View full size image of ${imageDescription}`}
@@ -103,10 +119,12 @@ const SingleAlbumImage = ({
           src={imageSource}
           alt={imageDescription}
           onLoad={handleImageLoad}
-          className={imageLoaded ? "loaded" : ""}
+          className={imageClasses}
         />
-        <div className="overlay">
-          <span>{imageDescription}</span>
+        <div className={overlayClasses}>
+          <span className="text-white text-base sm:text-lg md:text-xl font-light">
+            {imageDescription}
+          </span>
         </div>
       </button>
       {showModal && (

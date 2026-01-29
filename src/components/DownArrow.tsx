@@ -1,5 +1,4 @@
 import { useEffect, useState, RefObject, useCallback } from "react";
-import "../styles/DownArrowStyles.css";
 import { SlArrowDown } from "react-icons/sl";
 import scrollToPosition from "../utils/scrollToPosition";
 
@@ -55,7 +54,11 @@ const DownArrow = ({ targetRef }: Props) => {
 
   return (
     <button
-      className={isOnTop ? "down-arrow" : "down-arrow-disabled"}
+      className={`fixed left-1/2 -translate-x-1/2 text-[1.7rem] cursor-pointer z-[1000] text-white transition-all duration-300 ease-bounce bg-transparent border-none p-0 flex items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white/50 focus-visible:rounded ${
+        isOnTop
+          ? "bottom-5 animate-float"
+          : "bottom-5 pointer-events-none opacity-0"
+      } hover:text-gray-600 active:translate-y-0.5`}
       onClick={handleClick}
       aria-label="Scroll to gallery section"
     >
