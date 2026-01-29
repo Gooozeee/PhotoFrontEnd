@@ -13,16 +13,18 @@ const ImageSwitcher = ({ images }: ImageSwitcherProps) => {
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [images.length]);
 
   return (
-    <div className="image-container">
+    <div className="relative flex items-center justify-center w-full h-full">
       {images.map((image, index) => (
         <img
           key={index}
           src={image}
           alt={`Image ${index + 1}`}
-          className={`image ${index === currentImageIndex ? "visible" : ""}`}
+          className={`w-full sm:w-[500px] md:w-[600px] lg:w-[700px] max-w-full h-auto absolute left-1/2 -translate-x-1/2 transition-opacity duration-1000 ease-in-out ${
+            index === currentImageIndex ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          }`}
         />
       ))}
     </div>

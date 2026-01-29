@@ -1,5 +1,4 @@
 import NavBar from "../components/NavBar";
-import "../styles/SingleAlbumPageStyles.css";
 import SingleAlbumImage from "../components/SingleAlbumImage";
 import { generateImageCaptionFromFilePath } from "../utils/RetrieveNameFromFilePath";
 import Footer from "../components/Footer";
@@ -16,22 +15,35 @@ const SingleAlbumPage = () => {
   });
 
   return (
-    <div className="album-page-container">
+    <div className="bg-black min-h-screen overflow-x-hidden">
       <NavBar />
-      <div className="image-gallery-container">
-        <h1 className="title-text">{albumName}</h1>
-        <div className="puzzle-gallery-container">
-          {" "}
+      <div className="pt-[150px] pb-10 px-5 sm:px-6 md:px-8 max-w-full w-full">
+        <h1 className="text-white font-light text-2xl text-center mb-10">
+          {albumName}
+        </h1>
+        <div className="grid grid-cols-4 gap-4 w-full">
           {/* Grid container */}
           {images.map((img) => (
-            <SingleAlbumImage
+            <div
               key={img.id}
-              imageSource={img.url}
-              imageDescription={generateImageCaptionFromFilePath(img.url)}
-              unitWidth={img.unitWidth} // Pass unit dimensions
-              unitHeight={img.unitHeight} // Pass unit dimensions
-              useUnitSizing={true}
-            />
+              className={`
+                ${
+                  img.unitWidth === 2 && img.unitHeight === 1
+                    ? "col-span-2 row-span-1 aspect-[2/1]"
+                    : img.unitWidth === 1 && img.unitHeight === 2
+                    ? "col-span-1 row-span-2 aspect-[1/2]"
+                    : "col-span-1 row-span-1 aspect-[1/1]"
+                }
+              `}
+            >
+              <SingleAlbumImage
+                imageSource={img.url}
+                imageDescription={generateImageCaptionFromFilePath(img.url)}
+                unitWidth={img.unitWidth}
+                unitHeight={img.unitHeight}
+                useUnitSizing={true}
+              />
+            </div>
           ))}
         </div>
       </div>
