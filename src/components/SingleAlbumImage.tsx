@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import ImageModal from "./ImageModal";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface Props {
   imageSource: string;
@@ -9,6 +10,10 @@ interface Props {
   unitWidth: number;
   unitHeight: number;
   useUnitSizing?: boolean;
+  imageIndex?: number;
+  totalImages?: number;
+  onImageClick?: (index: number) => void;
+  blurPlaceholder?: string;
 }
 
 const SingleAlbumImage = ({
@@ -18,49 +23,40 @@ const SingleAlbumImage = ({
   unitWidth,
   unitHeight,
   useUnitSizing = false,
+  imageIndex,
+  totalImages,
+  onImageClick,
+  blurPlaceholder,
 }: Props) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
   const [showModal, setShowModal] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-
-  useEffect(() => {
-    if (useUnitSizing) {
-      const container = containerRef.current;
-      if (!container) return;
-
-      // Remove old size/orientation classes
-      container.classList.remove(
-        "portrait",
-        "landscape",
-        "normal",
-        "wide",
-        "full",
-        "tall"
-      );
-
-      // Add classes based on unit dimensions for styling
-      if (unitWidth === 1 && unitHeight === 2) {
-        container.classList.add("portrait-unit");
-      } else if (unitWidth === 2 && unitHeight === 1) {
-        container.classList.add("landscape-unit");
-      } else {
-        // Default or other sizes if needed
-        container.classList.add("normal-unit");
-      }
-    }
-  }, [unitWidth, unitHeight, useUnitSizing]);
 
   const handleImageLoad = () => {
     setImageLoaded(true);
   };
 
-  const handleInteraction = (e: React.MouseEvent | React.KeyboardEvent) => {
-    if (!albumName && !showModal) {
+  const containerStyle = !imageLoaded && blurPlaceholder ? {
+    background: blurPlaceholder,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  } : {};
+
+  const handleInteraction = useCallback(
+    (e: React.MouseEvent | React.KeyboardEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      setShowModal(true);
-    }
-  };
+      if (!albumName && !showModal) {
+        if (onImageClick && imageIndex !== undefined) {
+          onImageClick(imageIndex);
+          return;
+        }
+
+        setShowModal(true);
+      }
+    },
+    [albumName, showModal, onImageClick, imageIndex]
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -68,22 +64,24 @@ const SingleAlbumImage = ({
     }
   };
 
-  const imageClasses = `w-full h-full object-cover object-center block rounded transition-opacity duration-500 ease-bounce ${
-    imageLoaded ? "opacity-100 blur-none" : "opacity-0 blur-[10px]"
-  }`;
+  const imageClasses = albumName 
+    ? "album-cover-img"
+    : `w-full h-auto object-cover block transition-all duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`;
 
-  const overlayClasses = `absolute inset-0 bg-[rgba(57,57,57,0.85)] rounded flex items-center justify-center text-center px-5 transition-transform duration-200 ease-bounce scale-0 hover:scale-100 focus-visible:scale-100`;
+  const overlayClasses = albumName 
+    ? "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded flex flex-col items-center justify-end pb-6 px-4"
+    : `absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded flex flex-col items-center justify-end pb-6 px-4 transition-all duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`;
 
   if (albumName) {
-    // For album gallery - use Link wrapper
     return (
-      <div
-        ref={containerRef}
-        className="relative cursor-pointer overflow-hidden rounded w-full h-full bg-[rgba(30,30,30,0.5)]"
+      <motion.div
+        className="relative cursor-pointer overflow-hidden rounded-lg w-full h-full"
+        whileHover={{ scale: 1.02 }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
       >
         <Link
           to={`/singleAlbum?album=${albumName}`}
-          className="absolute inset-0 flex items-center justify-center overflow-hidden rounded cursor-pointer transition-transform duration-200 ease-out"
+          className="block w-full h-full"
         >
           <img
             src={imageSource}
@@ -93,36 +91,43 @@ const SingleAlbumImage = ({
             loading="lazy"
           />
           <div className={overlayClasses}>
-            <span className="text-white text-base sm:text-lg md:text-xl font-light">
+            <span
+              className="text-white text-lg font-medium tracking-wide"
+              style={{ fontFamily: "'Archivo', sans-serif" }}
+            >
               {albumName}
             </span>
           </div>
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
-  // For single images in albums - use button
   return (
-    <div
-      ref={containerRef}
-      className="relative cursor-pointer overflow-hidden rounded w-full h-full bg-[rgba(30,30,30,0.5)]"
+    <motion.div
+      className="relative cursor-pointer overflow-hidden rounded-lg w-full"
+      style={containerStyle}
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
     >
       <button
-        className="absolute inset-0 flex items-center justify-center overflow-hidden rounded cursor-pointer transition-transform duration-200 ease-out w-full h-full p-0 border-none bg-transparent hover:scale-105 focus-visible:scale-105"
+        className="relative w-full flex items-center justify-center overflow-hidden rounded-lg cursor-pointer p-0 border-none bg-transparent"
         onClick={handleInteraction}
         onKeyDown={handleKeyDown}
-        aria-label={`View full size image of ${imageDescription}`}
-        disabled={showModal}
+        aria-label={`View ${imageDescription}`}
       >
         <img
           src={imageSource}
           alt={imageDescription}
           onLoad={handleImageLoad}
           className={imageClasses}
+          loading="lazy"
         />
         <div className={overlayClasses}>
-          <span className="text-white text-base sm:text-lg md:text-xl font-light">
+          <span
+            className="text-white text-sm font-light tracking-wide"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
             {imageDescription}
           </span>
         </div>
@@ -130,10 +135,12 @@ const SingleAlbumImage = ({
       {showModal && (
         <ImageModal
           imageUrl={imageSource}
+          imageIndex={1}
+          totalImages={1}
           onClose={() => setShowModal(false)}
         />
       )}
-    </div>
+    </motion.div>
   );
 };
 

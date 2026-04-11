@@ -1,30 +1,27 @@
 import { useRef } from "react";
 import WelcomeImage from "../components/WelcomeImage";
 import GalleryBanner from "../components/GalleryBanner";
-import DownArrow from "../components/DownArrow";
 import Footer from "../components/Footer";
-import { motion } from "framer-motion";
 
 const HomePage = () => {
   const galleryBannerRef = useRef<HTMLDivElement>(null);
 
+  const scrollToGallery = () => {
+    galleryBannerRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-    >
+    <div>
       <WelcomeImage
         heading="Michal Guzy"
         subHeadingOne="Photographer, Software Engineer"
+        onScrollIndicatorClick={scrollToGallery}
       />
       <div ref={galleryBannerRef}>
         <GalleryBanner title="Image Gallery" />
       </div>
-      <DownArrow targetRef={galleryBannerRef} />
       <Footer />
-    </motion.div>
+    </div>
   );
 };
 

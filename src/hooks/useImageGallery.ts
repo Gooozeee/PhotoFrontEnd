@@ -4,6 +4,7 @@ import { apiCache } from '../utils/ApiCache';
 export interface ImageData {
   url: string;
   id: string;
+  caption: string;
   width: number;
   height: number;
   orientation: 'portrait' | 'landscape';
@@ -85,17 +86,13 @@ export const useImageGallery = ({
           return;
       }
 
-      const imageUrls = await Promise.all(
-        Object.keys(imagesGlob).map(async (key) => {
-          const module = await imagesGlob[key]();
-          return module.default;
-        })
-      );
-
       const imageInfos: ImageData[] = await Promise.all(
-        imageUrls.map(
-          (url) =>
-            new Promise<ImageData>((resolve) => {
+        Object.entries(imagesGlob).map(
+          async ([key, loadImage]) => {
+            const module = await loadImage();
+            const url = module.default;
+            const caption = key.split('/').pop()?.replace(/\.[^.]+$/, '') || url.split('/').pop() || url;
+            return new Promise<ImageData>((resolve) => {
               const img = new Image();
               img.onload = () => {
                 const aspectRatio = img.width / img.height;
@@ -105,7 +102,8 @@ export const useImageGallery = ({
 
                 resolve({
                   url,
-                  id: url.split('/').pop() || url,
+                  id: key,
+                  caption,
                   width: img.width,
                   height: img.height,
                   orientation,
@@ -116,7 +114,8 @@ export const useImageGallery = ({
               img.onerror = () => {
                 resolve({
                   url,
-                  id: url.split('/').pop() || url,
+                  id: key,
+                  caption,
                   width: 400,
                   height: 300,
                   orientation: 'landscape',
@@ -125,7 +124,8 @@ export const useImageGallery = ({
                 });
               };
               img.src = url;
-            })
+            });
+          }
         )
       );
 
