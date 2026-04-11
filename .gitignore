@@ -21,3 +21,6 @@ dist
 *.njsproj
 *.sln
 *.sw?
+
+# OpenCode skill files (auto-generated, not part of project)
+.opencode/skills/
