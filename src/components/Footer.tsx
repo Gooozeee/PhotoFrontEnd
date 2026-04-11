@@ -1,41 +1,82 @@
-import { FaLinkedin, FaGithub } from "react-icons/fa"
+import { FaLinkedin, FaGithub } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
+import { motion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 
 const Footer = () => {
+  const shouldReduceMotion = useReducedMotion();
+
+  const socialLinks = [
+    { icon: FaLinkedin, label: "LinkedIn", href: "https://www.linkedin.com/in/michal-guzy/" },
+    { icon: FaGithub, label: "GitHub", href: "https://github.com/Gooozeee" },
+  ];
+
   return (
-    <div>
-      <h3 className="bg-black text-center pt-[30px] mt-0 mb-0 font-normal text-white">
-        Find me on my socials
-      </h3>
-      <footer className="flex justify-center text-xs pt-5 bg-black">
-        <div className="flex flex-col gap-4 text-center">
-          <a
-            href="https://www.linkedin.com/in/michal-guzy/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group text-white text-lg font-light transition-colors duration-200 hover:text-gray-400 cursor-pointer flex items-center justify-center gap-2"
+    <div className="bg-[#09090B] border-t border-white/5">
+      <div className="max-w-4xl mx-auto px-6 py-16">
+        <motion.h3
+          className="text-center text-white/80 text-lg font-medium mb-8 tracking-wide"
+          style={{ fontFamily: "'Archivo', sans-serif" }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          Let's create together
+        </motion.h3>
+
+        <motion.footer
+          className="flex justify-center gap-8"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          {socialLinks.map((social, i) => (
+            <motion.a
+              key={social.label}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-3 text-white/60 hover:text-white transition-colors duration-300 cursor-pointer"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+            >
+              <social.icon size={20} />
+              <span
+                className="text-sm tracking-wide"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              >
+                {social.label}
+              </span>
+            </motion.a>
+          ))}
+          <motion.button
+            onClick={() => (window.location.href = "mailto:michalguzym@gmail.com")}
+            className="group flex items-center gap-3 text-white/60 hover:text-white transition-colors duration-300 cursor-pointer bg-transparent border-none p-0"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
           >
-            <FaLinkedin /> LinkedIn
-          </a>
-          <a
-            href="https://github.com/Gooozeee"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group text-white text-lg font-light transition-colors duration-200 hover:text-gray-400 cursor-pointer flex items-center justify-center gap-2"
-          >
-            <FaGithub /> Github
-          </a>
-          <button
-            onClick={() => window.location.href = 'mailto:michalguzym@gmail.com'}
-            className="group text-white text-lg font-light transition-colors duration-200 hover:text-gray-400 cursor-pointer flex items-center justify-center gap-2 bg-transparent border-none p-0"
-          >
-            <MdEmail /> Email me
-          </button>
-        </div>
-      </footer>
-      <p className="bg-black text-center text-xs pt-5 mt-0">
-        &copy; {new Date().getFullYear()}, Michal Guzy, DeGoose Productions.
-      </p>
+            <MdEmail size={20} />
+            <span
+              className="text-sm tracking-wide"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Email
+            </span>
+          </motion.button>
+        </motion.footer>
+
+        <motion.p
+          className="text-center text-white/30 text-xs mt-12"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          © {new Date().getFullYear()} Michal Guzy. All rights reserved.
+        </motion.p>
+      </div>
     </div>
   );
 };

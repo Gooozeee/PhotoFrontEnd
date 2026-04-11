@@ -1,57 +1,65 @@
 import WelcomeImage from "../components/WelcomeImage";
 import Footer from "../components/Footer";
-import DownArrow from "../components/DownArrow";
 import HomePage from "../assets/Projects/Website/HomePage.png";
 import LandscapePage from "../assets/Projects/Website/LandscapePage.png";
 import ImageSwitcher from "../components/ImageSwitcher";
-import { motion } from "framer-motion";
 import { useRef } from "react";
 
 const SoftwareEngineeringPage = () => {
   const images = [HomePage, LandscapePage];
   const aboutRef = useRef<HTMLDivElement>(null);
 
+  const scrollToAbout = () => {
+    aboutRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-    >
+    <div className="bg-[#09090B]">
       <WelcomeImage
         heading="Hey! I'm Michal Guzy"
         subHeadingOne="A Full-Stack Software Engineer, Specialising in Backend"
+        onScrollIndicatorClick={scrollToAbout}
       />
-      <DownArrow targetRef={aboutRef} />
       <div
         id="about"
-        className="bg-[rgb(12,12,12)] pt-12 md:pt-[50px] flex flex-col items-center w-full"
+        className="pt-10 md:pt-12 flex flex-col items-center w-full px-4"
         ref={aboutRef}
       >
-        <h1 className="text-white font-light text-2xl text-center">About Me</h1>
-        <h2 className="text-lg font-light text-center pt-5 pb-[30px] px-5">
-          Here you will find out more about me, and my projects in terms of
-          programming and technology
+        <h1 
+          className="text-white font-light text-[clamp(1.5rem,4vw,2rem)] text-center"
+          style={{ fontFamily: "'Archivo', sans-serif" }}
+        >
+          About Me
+        </h1>
+        <h2 
+          className="text-white/60 text-base font-light text-center pt-3 pb-8 px-5 max-w-xl"
+          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+        >
+          Here you will find out more about me, and my projects in terms of programming and technology
         </h2>
-        <div className="w-[95%] pt-[50px] pb-[60px] flex flex-col md:flex-row gap-[100px] md:gap-0">
+        <div className="w-full max-w-4xl py-8 flex flex-col md:flex-row gap-8 md:gap-12">
           <div className="w-full md:w-1/2">
-            <h2 className="text-lg font-light text-left md:text-center mb-4">
-              <b>Get to Know Me!</b>
+            <h2 
+              className="text-white text-lg font-light mb-4"
+              style={{ fontFamily: "'Archivo', sans-serif" }}
+            >
+              Get to Know Me!
             </h2>
-            <p className="mb-4">
-              I'm a <b>Backend Focused Developer</b> currently working at
-              Simcorp as a Senior software engineer.
+            <p className="text-white/70 mb-4 leading-relaxed text-sm md:text-base">
+              I'm a <span className="text-white font-medium">Backend Focused Developer</span> currently working at Simcorp as a Senior software engineer.
             </p>
-            <p>
-              I specialise in <b>C# ASP .Net Core</b> backend development, and
-              enjoy front end development on the side.
+            <p className="text-white/70 leading-relaxed text-sm md:text-base">
+              I specialise in <span className="text-white font-medium">C# ASP .Net Core</span> backend development, and enjoy front end development on the side.
             </p>
           </div>
           <div className="w-full md:w-1/2">
-            <h2 className="text-lg font-light text-left md:text-center mb-4">
-              <b>Skills</b>
+            <h2 
+              className="text-white text-lg font-light mb-4"
+              style={{ fontFamily: "'Archivo', sans-serif" }}
+            >
+              Skills
             </h2>
-            <div className="flex flex-wrap gap-1 md:justify-center">
+            <div className="flex flex-wrap gap-2">
               {[
                 "C#",
                 "Asp.Net Core",
@@ -66,7 +74,7 @@ const SoftwareEngineeringPage = () => {
               ].map((skill) => (
                 <div
                   key={skill}
-                  className="inline-block text-sm font-normal bg-[#333] text-white px-2.5 py-1.5 rounded transition-all duration-500 hover:-translate-y-1.5 hover:bg-[#555]"
+                  className="text-sm font-normal bg-[#27272A] text-white/80 px-3 py-1.5 rounded transition-all duration-300 hover:bg-[#3F3F46] hover:text-white"
                 >
                   {skill}
                 </div>
@@ -75,39 +83,46 @@ const SoftwareEngineeringPage = () => {
           </div>
         </div>
       </div>
-      <div id="projects" className="bg-[rgb(25,25,25)] w-full flex flex-col items-center">
-        <div className="w-[95%]">
-          <h1 className="text-white font-light text-2xl text-center pt-[50px]">
+      <div id="projects" className="w-full flex flex-col items-center border-t border-white/[0.08] px-4">
+        <div className="w-full max-w-4xl">
+          <h1 
+            className="text-white font-light text-[clamp(1.5rem,4vw,2rem)] text-center pt-10"
+            style={{ fontFamily: "'Archivo', sans-serif" }}
+          >
             Projects
           </h1>
-          <h2 className="text-lg font-light text-center pt-5 pb-[30px]">
+          <h2 
+            className="text-white/60 text-base font-light text-center pt-3 pb-8"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
             Here you will find out more about my programming projects
           </h2>
         </div>
-        <div className="w-[95%] h-[600px] gap-[100px] flex flex-col md:flex-row pb-[60px]">
-          <div className="flex items-center justify-center w-full h-full md:-mt-5 relative">
+        <div className="w-full max-w-4xl gap-8 flex flex-col md:flex-row py-8 items-center">
+          <div className="flex items-center justify-center w-full md:w-1/2">
             <ImageSwitcher images={images} />
           </div>
-          <div className="w-full pt-[60px]">
-            <h1 className="text-white font-light text-2xl text-left mb-5">
+          <div className="w-full md:w-1/2">
+            <h1 
+              className="text-white font-light text-lg md:text-xl mb-4"
+              style={{ fontFamily: "'Archivo', sans-serif" }}
+            >
               Photography Portfolio
             </h1>
-            <p className="mb-4">
-              Custom website built in <b>React Typescript</b> with the use of
-              Vite to practice and showcase my skills in front end development.
-              I have plans to extend the system further and include a backend
-              for storing the images in blob storage, and including liking,
-              commenting and sorting functionality on the website.
+            <p className="text-white/70 mb-4 leading-relaxed text-sm md:text-base">
+              Custom website built in <span className="text-white font-medium">React Typescript</span> with Vite to practice and showcase my skills in front end development.
+            </p>
+            <p className="text-white/70 leading-relaxed text-sm md:text-base">
+              I plan to extend the system further and include a backend for storing images in blob storage, with liking, commenting and sorting functionality.
             </p>
           </div>
         </div>
-        <h1 className="text-white font-light text-2xl text-center w-[70%] pb-[50px]">
-          Head to my GitHub to see more projects! (I will be bringing more here
-          soon)
+        <h1 className="text-white/60 font-light text-center w-full max-w-xl px-4 pb-12 text-sm md:text-base">
+          Head to my GitHub to see more projects! (More coming soon)
         </h1>
       </div>
       <Footer />
-    </motion.div>
+    </div>
   );
 };
 
