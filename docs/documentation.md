@@ -4,11 +4,14 @@
 
 This project is a React application built with Vite. It is a photography portfolio website.
 
+The public gallery reads published albums and photos from the backend API. The admin area uses Supabase GitHub OAuth and sends the session access token to the backend for protected asset-management requests.
+
 ## Components
 
 *   `NavBar`: Navigation bar component with links to different sections of the website.
 *   `WelcomeImage`: Component that displays a welcome message and a banner image.
 *   `GalleryBanner`: Component that displays a gallery of images with links to individual albums.
+    *   **Technical Details:** The filter chips are generated from the live published album list instead of hardcoded categories.
 *   `GalleryImage`: Component that displays a single image in the gallery.
 *   `ImageSwitcher`: Component that switches between multiple images in a slideshow.
 *   `DownArrow`: Component that displays a down arrow icon that scrolls the page down.
@@ -18,15 +21,11 @@ This project is a React application built with Vite. It is a photography portfol
 ## Pages
 
 *   `HomePage`: The main page of the website, displaying the welcome image and the gallery banner.
-    *   **Technical Details:** This page imports and renders the `NavBar`, `WelcomeImage`, `GalleryBanner`, `DownArrow`, and `Footer` components. It's a simple composition of these components to create the main landing page.
+    *   **Technical Details:** This page renders `WelcomeImage`, `GalleryBanner`, and `Footer`, uses a ref to scroll to the gallery section, and shows an admin status banner when the user is redirected home after an admin auth failure.
 *   `SingleAlbumPage`: Page that displays a single album of images.
-    *   **Technical Details:** This page dynamically loads images based on the `album` query parameter in the URL. It uses `import.meta.glob` to import images from the corresponding album directory (`src/assets/Birds`, `src/assets/Rally`, `src/assets/Cities`, or `src/assets/Landscapes`). The `determineImageOrientation` function determines the orientation of each image and the `optimizeImageLayout` function optimizes the layout of the images in the gallery.
-        *   **Image Display Details:**
-            *   The `SingleAlbumPage` component fetches images from a specific album based on the URL parameter.
-            *   It uses `import.meta.glob` to dynamically import all images from the corresponding directory.
-            *   The `determineImageOrientation` function is crucial for determining whether an image is in portrait or landscape mode. This information is then used to apply appropriate styling.
-            *   The `optimizeImageLayout` function attempts to optimize the image layout based on the number of images in the album. It adjusts the `size` property of the `ImageInfo` objects to control how wide each image is displayed in the `masonry-grid`. The possible sizes are "normal", "wide", and "full".
-            *   The `SingleAlbumImage` component is responsible for rendering each individual image. It receives the `imageSource`, `imageDescription`, `presetOrientation`, and `size` props. It uses these props to determine how to display the image and apply the correct styling.
+    *   **Technical Details:** This page loads images through `useImageGallery` using the `album` query parameter, progressively loads later pages from the backend, and only renders visible captions when a photo has an explicit description.
+*   `AdminPage`: Admin entry page.
+    *   **Technical Details:** This page initializes the Supabase session, redirects authenticated users into `/admin/upload`, and starts GitHub OAuth for signed-out users.
 *   `SoftwareEngineeringPage`: Page that displays information about the user's software engineering skills and projects.
     *   **Technical Details:** This page displays information about the user's software engineering skills and projects. It uses the `WelcomeImage` component to display a welcome message and the `ImageSwitcher` component to display a slideshow of images.
 *   `NotFoundPage`: Page that displays a 404 error message.
@@ -38,5 +37,9 @@ This project is a React application built with Vite. It is a photography portfol
 
 *   The website displays a gallery of images organized into albums.
 *   Users can navigate to individual album pages to view the images in each album.
+*   The admin area is protected by Supabase GitHub OAuth on the frontend and by backend allowlist checks on the API.
+*   Local frontend Supabase config lives in `.env.local`, but the backend needs its own `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `ADMIN_USER_ID` configuration to validate admin access.
+*   Production frontend builds require `VITE_API_BASE_URL`; there is no production fallback to localhost.
+*   Azure Static Web Apps serves the SPA with `staticwebapp.config.json` for navigation fallback and baseline security headers.
 *   The website also includes a software engineering page with information about the user's skills and projects.
 *   The navigation bar allows users to navigate to different sections of the website.
