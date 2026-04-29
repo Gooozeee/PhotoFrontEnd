@@ -2,34 +2,75 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import GalleryBanner from './GalleryBanner';
 
-vi.mock('../assets/Birds/Seagull Northern Ireland 2022.webp', () => ({ default: 'bird.webp' }));
-vi.mock('../assets/Rally/Yellow Escort Pan Kirkistown 2023.webp', () => ({ default: 'rally.webp' }));
-vi.mock('../assets/Cities/Aachen Germany 2022.webp', () => ({ default: 'city.webp' }));
-vi.mock('../assets/Landscapes/Koh Tao 2023.webp', () => ({ default: 'landscape.webp' }));
+const galleryState = vi.hoisted(() => ({
+  albums: [
+    { id: '1', name: 'Landscapes', coverThumbnailUrl: 'landscape.webp', coverUrl: 'landscape-full.webp' },
+    { id: '2', name: 'Cities', coverThumbnailUrl: 'city.webp', coverUrl: 'city-full.webp' },
+    { id: '3', name: 'Rally', coverThumbnailUrl: 'rally.webp', coverUrl: 'rally-full.webp' },
+    { id: '4', name: 'Birds', coverThumbnailUrl: 'bird.webp', coverUrl: 'bird-full.webp' },
+  ],
+  loading: false,
+  error: null as string | null,
+}));
+
+vi.mock('../hooks/useImageGallery', () => ({
+  useImageGallery: () => ({
+    albums: galleryState.albums,
+    images: [],
+    loading: galleryState.loading,
+    error: galleryState.error,
+    hasMore: false,
+    loadMore: vi.fn(),
+    clearCache: vi.fn(),
+  }),
+}));
 
 vi.mock('./SingleAlbumImage', () => ({
   default: ({ albumName }: { albumName?: string }) => <div>{albumName ?? 'image'}</div>,
 }));
 
 describe('GalleryBanner', () => {
+  it('shows a wake-up message while albums are loading', () => {
+    galleryState.albums = [];
+    galleryState.loading = true;
+
+    render(<GalleryBanner title="Image Gallery" />);
+
+    expect(screen.getByText('Waiting for the images to wake up...')).toBeInTheDocument();
+
+    galleryState.albums = [
+      { id: '1', name: 'Landscapes', coverThumbnailUrl: 'landscape.webp', coverUrl: 'landscape-full.webp' },
+      { id: '2', name: 'Cities', coverThumbnailUrl: 'city.webp', coverUrl: 'city-full.webp' },
+      { id: '3', name: 'Rally', coverThumbnailUrl: 'rally.webp', coverUrl: 'rally-full.webp' },
+      { id: '4', name: 'Birds', coverThumbnailUrl: 'bird.webp', coverUrl: 'bird-full.webp' },
+    ];
+    galleryState.loading = false;
+  });
+
   it('renders the album list', () => {
     render(<GalleryBanner title="Image Gallery" />);
 
     expect(screen.getByText('Image Gallery')).toBeInTheDocument();
-    expect(screen.getByText('Landscapes')).toBeInTheDocument();
-    expect(screen.getByText('Cities')).toBeInTheDocument();
-    expect(screen.getByText('Rally')).toBeInTheDocument();
-    expect(screen.getByText('Birds')).toBeInTheDocument();
+    expect(screen.getAllByText('Landscapes').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Cities').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Rally').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Birds').length).toBeGreaterThan(0);
   });
 
   it('filters albums by category', () => {
     render(<GalleryBanner title="Image Gallery" />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Urban' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cities' }));
 
-    expect(screen.queryByText('Landscapes')).not.toBeInTheDocument();
-    expect(screen.getByText('Cities')).toBeInTheDocument();
-    expect(screen.queryByText('Rally')).not.toBeInTheDocument();
-    expect(screen.queryByText('Birds')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Cities').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: 'Landscapes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Rally' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Birds' })).not.toBeInTheDocument();
+  });
+
+  it('renders an all albums filter', () => {
+    render(<GalleryBanner title="Image Gallery" />);
+
+    expect(screen.getByRole('button', { name: 'All albums' })).toBeInTheDocument();
   });
 });

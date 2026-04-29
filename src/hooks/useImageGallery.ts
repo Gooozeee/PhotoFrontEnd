@@ -1,169 +1,264 @@
-import { useEffect, useState, useCallback } from 'react';
-import { apiCache } from '../utils/ApiCache';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { resolveApiBaseUrl } from "../lib/apiBaseUrl";
 
-export interface ImageData {
-  url: string;
+const albumCache = new Map<string, { timestamp: number; data: GalleryAlbum[] }>();
+const photoPageCache = new Map<string, { timestamp: number; data: GalleryPhotoPage }>();
+const inflightRequests = new Map<string, Promise<unknown>>();
+const DEFAULT_PAGE_SIZE = 24;
+
+export interface GalleryPhoto {
   id: string;
-  caption: string;
+  fileName: string;
+  albumId: string | null;
+  albumName: string | null;
+  url: string;
+  thumbnailUrl: string | null;
+  contentType: string;
   width: number;
   height: number;
-  orientation: 'portrait' | 'landscape';
-  unitWidth: number;
-  unitHeight: number;
+  fileSizeBytes: number;
+  description: string | null;
+  takenAt: string;
+  importedAt: string;
+  location: string | null;
+  cameraModel: string | null;
+  tags: string[];
 }
 
-interface UseImageGalleryOptions {
-  albumName: string;
-  pageSize?: number; // Images per page/batch
+export interface GalleryAlbum {
+  id: string;
+  name: string;
+  description: string | null;
+  coverPhotoId: string | null;
+  coverUrl: string | null;
+  coverThumbnailUrl: string | null;
+  isPublished: boolean;
+  photosCount: number;
+}
+
+interface GalleryPhotoPage {
+  items: GalleryPhoto[];
+  offset: number;
+  limit: number;
+  totalCount: number;
+  hasMore: boolean;
+}
+
+export interface UseImageGalleryOptions {
+  albumName?: string;
   cacheKey?: string;
-  cacheTTL?: number; // Cache time-to-live in milliseconds
+  cacheTTL?: number;
+  includePhotos?: boolean;
+  pageSize?: number;
 }
 
-/**
- * Hook to fetch and manage image gallery data with caching and pagination
- * Designed for both local imports and future API integration
- */
+const API_BASE = resolveApiBaseUrl();
+
+function createScopedKey(cacheKey: string, suffix: string) {
+  return `${cacheKey}:${suffix}`;
+}
+
+function getAlbumPageCacheKey(cacheKey: string, albumId: string, offset: number, limit: number) {
+  return createScopedKey(cacheKey, `album:${albumId}:page:${offset}:limit:${limit}`);
+}
+
+async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed with ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+
+async function getOrCreateCachedRequest<T>(key: string, factory: () => Promise<T>): Promise<T> {
+  const existing = inflightRequests.get(key) as Promise<T> | undefined;
+  if (existing) return existing;
+
+  const created = factory().finally(() => inflightRequests.delete(key));
+  inflightRequests.set(key, created);
+  return created;
+}
+
 export const useImageGallery = ({
   albumName,
-  pageSize = 12, // Load 12 images at a time
-  cacheKey = `album-${albumName}`,
-  cacheTTL = 60 * 60 * 1000, // 1 hour cache
+  cacheKey = "gallery",
+  cacheTTL = 5 * 60 * 1000,
+  includePhotos = true,
+  pageSize = DEFAULT_PAGE_SIZE,
 }: UseImageGalleryOptions) => {
-  const [images, setImages] = useState<ImageData[]>([]);
+  const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
+  const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [albumId, setAlbumId] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const requestIdRef = useRef(0);
 
-  const loadImages = useCallback(async () => {
+  const appendPhotoPage = useCallback((page: GalleryPhotoPage, append: boolean) => {
+    setPhotos((current) => {
+      if (!append) {
+        return page.items;
+      }
+
+      const seen = new Set(current.map((photo) => photo.id));
+      const nextItems = page.items.filter((photo) => !seen.has(photo.id));
+      return [...current, ...nextItems];
+    });
+
+    setTotalCount(page.totalCount);
+    setHasMore(page.hasMore);
+  }, []);
+
+  const getPublishedAlbums = useCallback(async () => {
+    const albumsCacheKey = createScopedKey(cacheKey, "published");
+    const albumsRequestKey = createScopedKey(cacheKey, "published-albums");
+    const cachedAlbums = albumCache.get(albumsCacheKey);
+
+    if (cachedAlbums && Date.now() - cachedAlbums.timestamp < cacheTTL) {
+      return cachedAlbums.data;
+    }
+
+    return getOrCreateCachedRequest(albumsRequestKey, async () => {
+      const items = await fetchJson<GalleryAlbum[]>(`${API_BASE}/api/albums/published`);
+      albumCache.set(albumsCacheKey, { timestamp: Date.now(), data: items });
+      return items;
+    });
+  }, [cacheKey, cacheTTL]);
+
+  const getAlbumPhotoPage = useCallback(async (selectedAlbumId: string, offset: number) => {
+    const pageCacheKey = getAlbumPageCacheKey(cacheKey, selectedAlbumId, offset, pageSize);
+    const cachedPage = photoPageCache.get(pageCacheKey);
+
+    if (cachedPage && Date.now() - cachedPage.timestamp < cacheTTL) {
+      return cachedPage.data;
+    }
+
+    return getOrCreateCachedRequest(pageCacheKey, async () => {
+      const page = await fetchJson<GalleryPhotoPage>(`${API_BASE}/api/albums/${selectedAlbumId}/photos?offset=${offset}&limit=${pageSize}`);
+      photoPageCache.set(pageCacheKey, { timestamp: Date.now(), data: page });
+      return page;
+    });
+  }, [cacheKey, cacheTTL, pageSize]);
+
+  const load = useCallback(async () => {
+    requestIdRef.current += 1;
+    const requestId = requestIdRef.current;
+    const normalizedAlbumName = albumName?.trim();
+
+    setLoading(true);
+    setLoadingMore(false);
+    setError(null);
+    setAlbumId(null);
+    setPhotos([]);
+    setHasMore(false);
+    setTotalCount(0);
+
     try {
-      setLoading(true);
+      const albumsData = await getPublishedAlbums();
 
-      // Try to get from cache first
-      const cacheData = apiCache.get<ImageData[]>(cacheKey);
-      if (cacheData) {
-        setImages(cacheData);
-        setLoading(false);
+      if (requestIdRef.current !== requestId) return;
+      setAlbums(albumsData);
+
+      if (!includePhotos) {
         return;
       }
 
-      // TODO: Replace with API call in the future
-      // Example API call structure:
-      // const response = await fetch(`/api/gallery/${albumName}?page=${page}&pageSize=${pageSize}`);
-      // const data = await response.json();
-
-      // For now, use the local import system
-      let imagesGlob: Record<string, () => Promise<{ default: string }>>;
-
-      switch (albumName) {
-        case 'Birds':
-          imagesGlob = import.meta.glob('../assets/Birds/*') as Record<
-            string,
-            () => Promise<{ default: string }>
-          >;
-          break;
-        case 'Rally':
-          imagesGlob = import.meta.glob('../assets/Rally/*') as Record<
-            string,
-            () => Promise<{ default: string }>
-          >;
-          break;
-        case 'Cities':
-          imagesGlob = import.meta.glob('../assets/Cities/*') as Record<
-            string,
-            () => Promise<{ default: string }>
-          >;
-          break;
-        case 'Landscapes':
-          imagesGlob = import.meta.glob('../assets/Landscapes/*') as Record<
-            string,
-            () => Promise<{ default: string }>
-          >;
-          break;
-        default:
-          setError('Album not found');
-          setLoading(false);
-          return;
+      const album = albumsData.find((item) => item.name.toLowerCase() === normalizedAlbumName.toLowerCase());
+      if (!album) {
+        setError(`Album "${normalizedAlbumName}" was not found.`);
+        return;
       }
 
-      const imageInfos: ImageData[] = await Promise.all(
-        Object.entries(imagesGlob).map(
-          async ([key, loadImage]) => {
-            const module = await loadImage();
-            const url = module.default;
-            const caption = key.split('/').pop()?.replace(/\.[^.]+$/, '') || url.split('/').pop() || url;
-            return new Promise<ImageData>((resolve) => {
-              const img = new Image();
-              img.onload = () => {
-                const aspectRatio = img.width / img.height;
-                const orientation = aspectRatio < 1 ? 'portrait' : 'landscape';
-                const unitWidth = orientation === 'portrait' ? 1 : 2;
-                const unitHeight = orientation === 'portrait' ? 2 : 1;
+      setAlbumId(album.id);
 
-                resolve({
-                  url,
-                  id: key,
-                  caption,
-                  width: img.width,
-                  height: img.height,
-                  orientation,
-                  unitWidth,
-                  unitHeight,
-                });
-              };
-              img.onerror = () => {
-                resolve({
-                  url,
-                  id: key,
-                  caption,
-                  width: 400,
-                  height: 300,
-                  orientation: 'landscape',
-                  unitWidth: 2,
-                  unitHeight: 1,
-                });
-              };
-              img.src = url;
-            });
-          }
-        )
-      );
+      const firstPage = await getAlbumPhotoPage(album.id, 0);
+      if (requestIdRef.current !== requestId) return;
 
-      // Sort images
-      imageInfos.sort((a, b) => b.unitWidth - a.unitWidth);
-
-      // Cache the results
-      apiCache.set(cacheKey, imageInfos, cacheTTL);
-
-      setImages(imageInfos);
-      setHasMore(imageInfos.length >= pageSize);
+      appendPhotoPage(firstPage, false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load images');
+      if (requestIdRef.current !== requestId) return;
+      setError(err instanceof Error ? err.message : "Failed to load gallery");
     } finally {
-      setLoading(false);
+      if (requestIdRef.current === requestId) {
+        setLoading(false);
+      }
     }
-  }, [albumName, pageSize, cacheKey, cacheTTL]);
+  }, [albumName, appendPhotoPage, getAlbumPhotoPage, getPublishedAlbums, includePhotos]);
 
   useEffect(() => {
-    loadImages();
-  }, [loadImages]);
-
-  const loadMore = useCallback(() => {
-    // TODO: Implement pagination
-    // setPage((p) => p + 1);
-    // Fetch next page of images
-  }, []);
+    void load();
+  }, [load]);
 
   const clearCache = useCallback(() => {
-    apiCache.clear(cacheKey);
+    const scopedPrefix = `${cacheKey}:album:`;
+    albumCache.delete(createScopedKey(cacheKey, "published"));
+
+    for (const key of photoPageCache.keys()) {
+      if (key.startsWith(scopedPrefix)) {
+        photoPageCache.delete(key);
+      }
+    }
   }, [cacheKey]);
+
+  const loadMore = useCallback(async () => {
+    if (!albumId || loading || loadingMore || !hasMore) {
+      return;
+    }
+
+    const requestId = requestIdRef.current;
+    const nextOffset = photos.length;
+
+    setLoadingMore(true);
+    setError(null);
+
+    try {
+      const page = await getAlbumPhotoPage(albumId, nextOffset);
+      if (requestIdRef.current !== requestId) return;
+
+      appendPhotoPage(page, true);
+    } catch (err) {
+      if (requestIdRef.current !== requestId) return;
+      setError(err instanceof Error ? err.message : "Failed to load gallery");
+    } finally {
+      if (requestIdRef.current === requestId) {
+        setLoadingMore(false);
+      }
+    }
+  }, [albumId, appendPhotoPage, getAlbumPhotoPage, hasMore, loading, loadingMore, photos.length]);
+
+  const images = useMemo(
+    () =>
+      photos.map((photo) => ({
+        id: photo.id,
+        url: photo.url,
+        caption: photo.description?.trim() || null,
+        width: photo.width,
+        height: photo.height,
+        orientation: photo.width < photo.height ? ("portrait" as const) : ("landscape" as const),
+        unitWidth: photo.width < photo.height ? 1 : 2,
+        unitHeight: photo.width < photo.height ? 2 : 1,
+        blurPlaceholder: photo.thumbnailUrl ?? undefined,
+      })),
+    [photos]
+  );
 
   return {
     images,
+    albums,
     loading,
+    loadingMore,
     error,
-    page,
     hasMore,
+    totalCount,
     loadMore,
     clearCache,
   };

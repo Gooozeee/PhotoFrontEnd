@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 
 interface Props {
   imageSource: string;
-  imageDescription: string;
+  imageDescription?: string | null;
   albumName?: string;
   unitWidth: number;
   unitHeight: number;
@@ -31,6 +31,9 @@ const SingleAlbumImage = ({
   const shouldReduceMotion = useReducedMotion();
   const [showModal, setShowModal] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const visibleDescription = imageDescription?.trim() ?? "";
+  const fallbackDescription = imageIndex !== undefined ? `image ${imageIndex + 1}` : "image";
+  const accessibleDescription = visibleDescription || fallbackDescription;
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -85,7 +88,7 @@ const SingleAlbumImage = ({
         >
           <img
             src={imageSource}
-            alt={imageDescription}
+            alt={visibleDescription}
             onLoad={handleImageLoad}
             className={imageClasses}
             loading="lazy"
@@ -114,22 +117,24 @@ const SingleAlbumImage = ({
         className="relative w-full flex items-center justify-center overflow-hidden rounded-lg cursor-pointer p-0 border-none bg-transparent"
         onClick={handleInteraction}
         onKeyDown={handleKeyDown}
-        aria-label={`View ${imageDescription}`}
+        aria-label={`View ${accessibleDescription}`}
       >
         <img
           src={imageSource}
-          alt={imageDescription}
+          alt={visibleDescription}
           onLoad={handleImageLoad}
           className={imageClasses}
           loading="lazy"
         />
         <div className={overlayClasses}>
-          <span
-            className="text-white text-sm font-light tracking-wide"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-          >
-            {imageDescription}
-          </span>
+          {visibleDescription ? (
+            <span
+              className="text-white text-sm font-light tracking-wide"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              {visibleDescription}
+            </span>
+          ) : null}
         </div>
       </button>
       {showModal && (

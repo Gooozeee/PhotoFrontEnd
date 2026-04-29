@@ -4,6 +4,11 @@ import NotFoundPage from "./pages/NotFoundPage";
 import UnderConstructionPage from "./pages/UnderConstructionPage";
 import SingleAlbumPage from "./pages/SingleAlbumPage";
 import SoftwareEngineeringPage from "./pages/SoftwareEngineeringPage";
+import AdminPage from "./pages/AdminPage";
+import RequireAdminSession from "./pages/admin/RequireAdminSession";
+import UploadPage from "./pages/admin/UploadPage";
+import AlbumsPage from "./pages/admin/AlbumsPage";
+import PhotosPage from "./pages/admin/PhotosPage";
 import Layout from "./components/Layout";
 
 function App() {
@@ -12,6 +17,12 @@ function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route element={<RequireAdminSession />}>
+            <Route path="/admin/upload" element={<UploadPage />} />
+            <Route path="/admin/albums" element={<AlbumsPage />} />
+            <Route path="/admin/photos" element={<PhotosPage />} />
+          </Route>
           <Route path="/construction" element={<UnderConstructionPage />} />
           <Route path="/singleAlbum" element={<SingleAlbumPage />} />
           <Route path="/software" element={<SoftwareEngineeringPage />} />
