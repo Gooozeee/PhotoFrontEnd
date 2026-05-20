@@ -69,6 +69,17 @@ const SingleAlbumPage = () => {
     });
   }, [images.length]);
 
+  const renderLoadingGrid = () => (
+    <div className={`${gridClassName} gap-2 w-full ${maxWidthClassName} mx-auto`} aria-hidden="true">
+      {Array.from({ length: 12 }, (_, index) => (
+        <div
+          key={index}
+          className="aspect-[4/3] rounded-xl border border-white/10 bg-white/5 animate-pulse"
+        />
+      ))}
+    </div>
+  );
+
   const renderGallery = () => (
     <div className={`${gridClassName} gap-2 w-full ${maxWidthClassName} mx-auto`}>
       {images.map((img, index) => (
@@ -76,7 +87,7 @@ const SingleAlbumPage = () => {
           key={img.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: index * 0.03 }}
+          transition={{ duration: 0.28, delay: Math.min(index * 0.015, 0.18) }}
           className="break-inside-avoid mb-2 inline-block w-full"
         >
           <SingleAlbumImage
@@ -123,10 +134,13 @@ const SingleAlbumPage = () => {
             <p className="mt-3 text-sm text-white/70">{albumSelectionError}</p>
           </div>
         ) : loading && images.length === 0 ? (
-          <div role="status" className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 px-6 py-10 text-center text-white shadow-2xl shadow-black/20">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/40">Waking up</p>
-            <p className="mt-4 text-[clamp(1.25rem,3vw,1.75rem)] font-medium">Waiting for the images to wake up...</p>
-            <p className="mt-3 text-sm text-white/60">The image service can take a moment to come back after sitting idle.</p>
+          <div className="space-y-6">
+            <div role="status" className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 px-6 py-10 text-center text-white shadow-2xl shadow-black/20">
+              <p className="text-xs uppercase tracking-[0.3em] text-white/40">Waking up</p>
+              <p className="mt-4 text-[clamp(1.25rem,3vw,1.75rem)] font-medium">Waiting for the images to wake up...</p>
+              <p className="mt-3 text-sm text-white/60">The image service can take a moment to come back after sitting idle.</p>
+            </div>
+            {renderLoadingGrid()}
           </div>
         ) : error && images.length === 0 ? (
           <div className="mx-auto max-w-3xl rounded-3xl border border-red-500/30 bg-red-500/10 px-6 py-10 text-center text-red-100">
@@ -136,6 +150,7 @@ const SingleAlbumPage = () => {
         ) : (
           <>
             {renderGallery()}
+            {loadingMore ? renderLoadingGrid() : null}
             {hasMore ? <p className="mt-6 text-center text-sm text-white/45">Showing {images.length} of {totalCount} photos. More load as you scroll.</p> : null}
             {loadingMore ? <p className="mt-4 text-center text-sm text-white/45">Loading more photos...</p> : null}
           </>
