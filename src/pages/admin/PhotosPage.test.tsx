@@ -204,6 +204,28 @@ describe('PhotosPage', () => {
     expect(JSON.parse(String(init.body))).toMatchObject({ albumId: null });
   });
 
+  it('updates album counts immediately after a bulk move', async () => {
+    const user = userEvent.setup();
+    adminFetchMock.mockResolvedValueOnce({ ...createPhotos()[0], albumId: 'album-2', albumName: 'Cities' });
+    adminFetchMock.mockResolvedValueOnce({ ...createPhotos()[1], albumId: 'album-2', albumName: 'Cities' });
+
+    render(<PhotosPage />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Open landscape.jpg' }), { ctrlKey: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Open waterfall.jpg' }), { ctrlKey: true });
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Bulk move destination' }), { target: { value: 'album-2' } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Bulk move' }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open album Landscapes' })).toHaveTextContent('0 photos');
+      expect(screen.getByRole('button', { name: 'Open album Cities' })).toHaveTextContent('3 photos');
+    });
+  });
+
   it('filters photos that are not in any album', async () => {
     loadPhotosMock.mockResolvedValue([
       ...createPhotos(),

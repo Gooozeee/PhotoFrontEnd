@@ -210,6 +210,7 @@ export default function PhotosPage() {
   }
 
   async function movePhoto(photo: AdminPhoto, albumId: string | null) {
+    const previousAlbumId = photo.albumId;
     setSaving(true);
     setError(null);
     try {
@@ -218,6 +219,7 @@ export default function PhotosPage() {
         body: JSON.stringify(buildPhotoPayload(photo, albumId)),
       });
       setPhotos((current) => current.map((item) => item.id === updated.id ? updated : item));
+      setAlbums((current) => applyAlbumPhotoMove(current, previousAlbumId, updated.albumId, updated.id));
       setSelectedPhotoId(updated.id);
       setMessage("Photo moved");
     } catch (err) {
@@ -230,6 +232,7 @@ export default function PhotosPage() {
   async function bulkMove(albumId: string | null) {
     if (selectedPhotos.length === 0) return;
     const photosToMove = [...selectedPhotos];
+    const previousAlbums = new Map(photosToMove.map((photo) => [photo.id, photo.albumId]));
     setSaving(true);
     setError(null);
     try {
@@ -243,6 +246,13 @@ export default function PhotosPage() {
       }
 
       setPhotos((current) => current.map((photo) => updatedPhotos.find((item) => item.id === photo.id) ?? photo));
+      setAlbums((current) => {
+        const movedPhotosById = new Map(updatedPhotos.map((photo) => [photo.id, photo]));
+        return photosToMove.reduce((nextAlbums, originalPhoto) => {
+          const updated = movedPhotosById.get(originalPhoto.id);
+          return updated ? applyAlbumPhotoMove(nextAlbums, previousAlbums.get(originalPhoto.id) ?? null, updated.albumId, updated.id) : nextAlbums;
+        }, current);
+      });
       setMessage(`Moved ${photosToMove.length} photos`);
       clearSelection();
       setBulkMoveAlbumId(bulkMoveUnsetValue);
@@ -302,6 +312,7 @@ export default function PhotosPage() {
       clearSelection();
 
       if (selectedPhotos.length > 0) {
+        const previousAlbums = new Map(selectedPhotos.map((photo) => [photo.id, photo.albumId]));
         const updatedPhotos: AdminPhoto[] = [];
         for (const photo of [...selectedPhotos]) {
           const updated = await adminFetch<AdminPhoto>(`/api/photos/${photo.id}`, {
@@ -312,6 +323,14 @@ export default function PhotosPage() {
         }
 
         setPhotos((current) => current.map((photo) => updatedPhotos.find((item) => item.id === photo.id) ?? photo));
+        setAlbums((current) => {
+          const movedPhotosById = new Map(updatedPhotos.map((photo) => [photo.id, photo]));
+          const withCreatedAlbum = [created, ...current.filter((album) => album.id !== created.id)];
+          return selectedPhotos.reduce((nextAlbums, originalPhoto) => {
+            const updated = movedPhotosById.get(originalPhoto.id);
+            return updated ? applyAlbumPhotoMove(nextAlbums, previousAlbums.get(originalPhoto.id) ?? null, updated.albumId, updated.id) : nextAlbums;
+          }, withCreatedAlbum);
+        });
         setBulkMoveAlbumId(bulkMoveUnsetValue);
         setMessage(`Album created and ${updatedPhotos.length} photo${updatedPhotos.length === 1 ? "" : "s"} moved`);
       } else if (selectedPhoto) {
@@ -320,6 +339,7 @@ export default function PhotosPage() {
           body: JSON.stringify(buildPhotoPayload(selectedPhoto, created.id)),
         });
         setPhotos((current) => current.map((photo) => photo.id === updated.id ? updated : photo));
+        setAlbums((current) => applyAlbumPhotoMove([created, ...current.filter((album) => album.id !== created.id)], selectedPhoto.albumId, updated.albumId, updated.id));
         setSelectedPhotoId(updated.id);
         setMessage(`Album created and ${updated.fileName} moved`);
       } else {
@@ -330,6 +350,32 @@ export default function PhotosPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function applyAlbumPhotoMove(albumsState: AdminAlbum[], previousAlbumId: string | null, nextAlbumId: string | null, movedPhotoId: string) {
+    if (previousAlbumId === nextAlbumId) {
+      return albumsState.map((album) => album.id === nextAlbumId && album.coverPhotoId === null ? { ...album, coverPhotoId: movedPhotoId, photosCount: album.photosCount } : album);
+    }
+
+    return albumsState.map((album) => {
+      if (album.id === previousAlbumId) {
+        return {
+          ...album,
+          photosCount: Math.max(0, album.photosCount - 1),
+          coverPhotoId: album.coverPhotoId === movedPhotoId ? null : album.coverPhotoId,
+        };
+      }
+
+      if (album.id === nextAlbumId) {
+        return {
+          ...album,
+          photosCount: album.photosCount + 1,
+          coverPhotoId: album.coverPhotoId ?? movedPhotoId,
+        };
+      }
+
+      return album;
+    });
   }
 
   return (
