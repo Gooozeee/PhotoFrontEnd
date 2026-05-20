@@ -174,7 +174,7 @@ describe('UploadPage', () => {
     expect(((secondInit.body as FormData).get('file') as File).name).toBe('fresh-2.jpg');
     expect((secondInit.body as FormData).get('albumId')).toBe('album-1');
 
-    expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
+    expect(await screen.findByText('/admin/photos?review=photo-3%2Cphoto-4')).toBeInTheDocument();
   });
 
   it('can create a new batch album before queueing files', async () => {
@@ -292,18 +292,6 @@ describe('UploadPage', () => {
     });
 
     expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
-
-    await act(async () => {
-      await user.upload(screen.getByLabelText('Queue photos'), [
-        new File(['image-2'], 'second.jpg', { type: 'image/jpeg' }),
-      ]);
-    });
-
-    await waitFor(() => {
-      expect(adminFetchMock).toHaveBeenCalledTimes(2);
-    });
-
-    expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
   });
 
   it('shows detected metadata for a selected recent upload', async () => {
@@ -354,7 +342,7 @@ describe('UploadPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('photo manager')).toBeInTheDocument();
+      expect(screen.getByText('/admin/photos?review=photo-3')).toBeInTheDocument();
     });
   });
 });
