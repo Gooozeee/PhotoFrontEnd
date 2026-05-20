@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import UploadPage from './UploadPage';
 import type { AdminAlbum, AdminPhoto } from './types';
 
@@ -10,6 +11,12 @@ const loadPhotosMock = vi.fn();
 const adminFetchMock = vi.fn();
 const createObjectUrlMock = vi.fn();
 const revokeObjectUrlMock = vi.fn();
+
+function LocationProbe() {
+  const location = useLocation();
+
+  return <div>{`${location.pathname}${location.search}`}</div>;
+}
 
 vi.mock('./api', () => ({
   loadAlbums: (...args: unknown[]) => loadAlbumsMock(...args),
@@ -109,7 +116,7 @@ describe('UploadPage', () => {
         <MemoryRouter initialEntries={['/admin/upload']}>
           <Routes>
             <Route path="/admin/upload" element={<UploadPage />} />
-            <Route path="/admin/photos" element={<div>photo manager</div>} />
+            <Route path="/admin/photos" element={<LocationProbe />} />
           </Routes>
         </MemoryRouter>
       );
@@ -167,7 +174,7 @@ describe('UploadPage', () => {
     expect(((secondInit.body as FormData).get('file') as File).name).toBe('fresh-2.jpg');
     expect((secondInit.body as FormData).get('albumId')).toBe('album-1');
 
-    expect(screen.getByText('Edit photo')).toBeInTheDocument();
+    expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
   });
 
   it('can create a new batch album before queueing files', async () => {
@@ -243,7 +250,7 @@ describe('UploadPage', () => {
       expect(adminFetchMock).toHaveBeenCalledTimes(2);
     });
 
-    expect(screen.getByText('Edit photo')).toBeInTheDocument();
+    expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
   });
 
   it('marks malformed upload responses as failed instead of crashing', async () => {
@@ -284,7 +291,7 @@ describe('UploadPage', () => {
       ]);
     });
 
-    expect(screen.getByRole('heading', { name: 'Upload' })).toBeInTheDocument();
+    expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
 
     await act(async () => {
       await user.upload(screen.getByLabelText('Queue photos'), [
@@ -296,7 +303,7 @@ describe('UploadPage', () => {
       expect(adminFetchMock).toHaveBeenCalledTimes(2);
     });
 
-    expect(screen.getByText('Edit photo')).toBeInTheDocument();
+    expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
   });
 
   it('shows detected metadata for a selected recent upload', async () => {
