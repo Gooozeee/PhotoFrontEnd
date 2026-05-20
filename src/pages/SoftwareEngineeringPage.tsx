@@ -39,7 +39,7 @@ const SoftwareEngineeringPage = () => {
     <div className="bg-[#09090B]">
       <WelcomeImage
         heading="Hey! I'm Michal Guzy"
-        subHeadingOne="A Full-Stack Software Engineer Shipping Backend-Connected Frontends"
+        subHeadingOne="A Full-Stack Software Engineer"
         onScrollIndicatorClick={scrollToAbout}
       />
       <div
