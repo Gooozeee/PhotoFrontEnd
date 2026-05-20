@@ -1,6 +1,8 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import UploadPage from './UploadPage';
 import type { AdminAlbum, AdminPhoto } from './types';
 
@@ -9,6 +11,12 @@ const loadPhotosMock = vi.fn();
 const adminFetchMock = vi.fn();
 const createObjectUrlMock = vi.fn();
 const revokeObjectUrlMock = vi.fn();
+
+function LocationProbe() {
+  const location = useLocation();
+
+  return <div>{`${location.pathname}${location.search}`}</div>;
+}
 
 vi.mock('./api', () => ({
   loadAlbums: (...args: unknown[]) => loadAlbumsMock(...args),
@@ -104,7 +112,14 @@ describe('UploadPage', () => {
 
   async function renderUploadPage() {
     await act(async () => {
-      render(<UploadPage />);
+      render(
+        <MemoryRouter initialEntries={['/admin/upload']}>
+          <Routes>
+            <Route path="/admin/upload" element={<UploadPage />} />
+            <Route path="/admin/photos" element={<LocationProbe />} />
+          </Routes>
+        </MemoryRouter>
+      );
     });
 
     expect(await screen.findByText('Batch upload')).toBeInTheDocument();
@@ -159,8 +174,7 @@ describe('UploadPage', () => {
     expect(((secondInit.body as FormData).get('file') as File).name).toBe('fresh-2.jpg');
     expect((secondInit.body as FormData).get('albumId')).toBe('album-1');
 
-    expect(await screen.findByText('Upload complete. 2 photos uploaded.')).toBeInTheDocument();
-    expect(screen.getByText('Taken at: Detected')).toBeInTheDocument();
+    expect(await screen.findByText('/admin/photos?review=photo-3%2Cphoto-4')).toBeInTheDocument();
   });
 
   it('can create a new batch album before queueing files', async () => {
@@ -236,7 +250,7 @@ describe('UploadPage', () => {
       expect(adminFetchMock).toHaveBeenCalledTimes(2);
     });
 
-    expect(await screen.findByText('Upload complete. 1 photo uploaded.')).toBeInTheDocument();
+    expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
   });
 
   it('marks malformed upload responses as failed instead of crashing', async () => {
@@ -277,20 +291,7 @@ describe('UploadPage', () => {
       ]);
     });
 
-    expect(await screen.findByText('Upload complete. 1 photo uploaded.')).toBeInTheDocument();
-
-    await act(async () => {
-      await user.upload(screen.getByLabelText('Queue photos'), [
-        new File(['image-2'], 'second.jpg', { type: 'image/jpeg' }),
-      ]);
-    });
-
-    await waitFor(() => {
-      expect(adminFetchMock).toHaveBeenCalledTimes(2);
-    });
-
-    expect(screen.getByText('Upload complete. 1 photo uploaded.')).toBeInTheDocument();
-    expect(screen.queryByText('Upload complete. 2 photos uploaded.')).not.toBeInTheDocument();
+    expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
   });
 
   it('shows detected metadata for a selected recent upload', async () => {
@@ -309,9 +310,39 @@ describe('UploadPage', () => {
     loadAlbumsMock.mockRejectedValue(new Error('Failed to load upload data'));
 
     await act(async () => {
-      render(<UploadPage />);
+      render(
+        <MemoryRouter initialEntries={['/admin/upload']}>
+          <Routes>
+            <Route path="/admin/upload" element={<UploadPage />} />
+            <Route path="/admin/photos" element={<div>photo manager</div>} />
+          </Routes>
+        </MemoryRouter>
+      );
     });
 
     expect(await screen.findByText('Failed to load upload data')).toBeInTheDocument();
+  });
+
+  it('opens the photo manager after a batch upload completes', async () => {
+    const user = userEvent.setup();
+    adminFetchMock.mockResolvedValue({
+      ...createPhotos()[0],
+      id: 'photo-3',
+      fileName: 'review.jpg',
+      albumId: 'album-1',
+      albumName: 'Landscapes',
+    });
+
+    await renderUploadPage();
+
+    await act(async () => {
+      await user.upload(screen.getByLabelText('Queue photos'), [
+        new File(['image-1'], 'review.jpg', { type: 'image/jpeg' }),
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('/admin/photos?review=photo-3')).toBeInTheDocument();
+    });
   });
 });

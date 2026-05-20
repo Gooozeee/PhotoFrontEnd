@@ -1,4 +1,5 @@
 import { FormEvent, KeyboardEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { AdminShell } from "./AdminShell";
 import { adminFetch, loadAlbums, loadPhotos } from "./api";
 import type { AdminAlbum, AdminPhoto } from "./types";
@@ -26,6 +27,7 @@ function buildPhotoPayload(photo: AdminPhoto, albumId: string | null = photo.alb
 }
 
 export default function PhotosPage() {
+  const location = useLocation();
   const [albums, setAlbums] = useState<AdminAlbum[]>([]);
   const [photos, setPhotos] = useState<AdminPhoto[]>([]);
   const [activeAlbumId, setActiveAlbumId] = useState<string>(allPhotosAlbumId);
@@ -44,6 +46,10 @@ export default function PhotosPage() {
   const selectedPhotoIdsRef = useRef<string[]>([]);
   const selectedPhotoIdRef = useRef("");
   const lastSelectedPhotoIdRef = useRef<string | null>(null);
+  const reviewTargetIds = useMemo(() => {
+    const reviewParam = new URLSearchParams(location.search).get("review");
+    return reviewParam ? reviewParam.split(",").map((item) => item.trim()).filter(Boolean) : [];
+  }, [location.search]);
 
   const selectedPhoto = useMemo(() => photos.find((photo) => photo.id === selectedPhotoId) ?? null, [photos, selectedPhotoId]);
   const activeAlbum = useMemo(() => albums.find((album) => album.id === activeAlbumId) ?? null, [activeAlbumId, albums]);
@@ -105,6 +111,19 @@ export default function PhotosPage() {
 
     commitSelection([], "", null);
   }, [searchTerm]);
+
+  useEffect(() => {
+    if (reviewTargetIds.length === 0 || photos.length === 0) {
+      return;
+    }
+
+    const firstReviewPhoto = photos.find((photo) => reviewTargetIds.includes(photo.id)) ?? null;
+    if (!firstReviewPhoto) {
+      return;
+    }
+
+    setSelectedPhotoId(firstReviewPhoto.id);
+  }, [photos, reviewTargetIds]);
 
   async function refresh() {
     setLoading(true);
