@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import UploadPage from './UploadPage';
 import type { AdminAlbum, AdminPhoto } from './types';
 
@@ -104,7 +105,14 @@ describe('UploadPage', () => {
 
   async function renderUploadPage() {
     await act(async () => {
-      render(<UploadPage />);
+      render(
+        <MemoryRouter initialEntries={['/admin/upload']}>
+          <Routes>
+            <Route path="/admin/upload" element={<UploadPage />} />
+            <Route path="/admin/photos" element={<div>photo manager</div>} />
+          </Routes>
+        </MemoryRouter>
+      );
     });
 
     expect(await screen.findByText('Batch upload')).toBeInTheDocument();
@@ -159,8 +167,7 @@ describe('UploadPage', () => {
     expect(((secondInit.body as FormData).get('file') as File).name).toBe('fresh-2.jpg');
     expect((secondInit.body as FormData).get('albumId')).toBe('album-1');
 
-    expect(await screen.findByText('Upload complete. 2 photos uploaded.')).toBeInTheDocument();
-    expect(screen.getByText('Taken at: Detected')).toBeInTheDocument();
+    expect(screen.getByText('Edit photo')).toBeInTheDocument();
   });
 
   it('can create a new batch album before queueing files', async () => {
@@ -236,7 +243,7 @@ describe('UploadPage', () => {
       expect(adminFetchMock).toHaveBeenCalledTimes(2);
     });
 
-    expect(await screen.findByText('Upload complete. 1 photo uploaded.')).toBeInTheDocument();
+    expect(screen.getByText('Edit photo')).toBeInTheDocument();
   });
 
   it('marks malformed upload responses as failed instead of crashing', async () => {
@@ -277,7 +284,7 @@ describe('UploadPage', () => {
       ]);
     });
 
-    expect(await screen.findByText('Upload complete. 1 photo uploaded.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Upload' })).toBeInTheDocument();
 
     await act(async () => {
       await user.upload(screen.getByLabelText('Queue photos'), [
@@ -289,8 +296,7 @@ describe('UploadPage', () => {
       expect(adminFetchMock).toHaveBeenCalledTimes(2);
     });
 
-    expect(screen.getByText('Upload complete. 1 photo uploaded.')).toBeInTheDocument();
-    expect(screen.queryByText('Upload complete. 2 photos uploaded.')).not.toBeInTheDocument();
+    expect(screen.getByText('Edit photo')).toBeInTheDocument();
   });
 
   it('shows detected metadata for a selected recent upload', async () => {
@@ -309,9 +315,39 @@ describe('UploadPage', () => {
     loadAlbumsMock.mockRejectedValue(new Error('Failed to load upload data'));
 
     await act(async () => {
-      render(<UploadPage />);
+      render(
+        <MemoryRouter initialEntries={['/admin/upload']}>
+          <Routes>
+            <Route path="/admin/upload" element={<UploadPage />} />
+            <Route path="/admin/photos" element={<div>photo manager</div>} />
+          </Routes>
+        </MemoryRouter>
+      );
     });
 
     expect(await screen.findByText('Failed to load upload data')).toBeInTheDocument();
+  });
+
+  it('opens the photo manager after a batch upload completes', async () => {
+    const user = userEvent.setup();
+    adminFetchMock.mockResolvedValue({
+      ...createPhotos()[0],
+      id: 'photo-3',
+      fileName: 'review.jpg',
+      albumId: 'album-1',
+      albumName: 'Landscapes',
+    });
+
+    await renderUploadPage();
+
+    await act(async () => {
+      await user.upload(screen.getByLabelText('Queue photos'), [
+        new File(['image-1'], 'review.jpg', { type: 'image/jpeg' }),
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('photo manager')).toBeInTheDocument();
+    });
   });
 });

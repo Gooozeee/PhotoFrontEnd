@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PhotosPage from './PhotosPage';
 import type { AdminAlbum, AdminPhoto } from './types';
@@ -118,8 +119,18 @@ describe('PhotosPage', () => {
     loadPhotosMock.mockResolvedValue(createPhotos());
   });
 
+  function renderPhotosPage(initialEntries = ['/admin/photos']) {
+    return render(
+      <MemoryRouter initialEntries={initialEntries}>
+        <Routes>
+          <Route path="/admin/photos" element={<PhotosPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+  }
+
   it('starts in browse mode and opens the editor only after clicking a photo', async () => {
-    render(<PhotosPage />);
+    renderPhotosPage();
 
     expect(await screen.findByRole('button', { name: 'Browse all photos' })).toBeInTheDocument();
     expect(screen.queryByText('Edit photo')).not.toBeInTheDocument();
@@ -130,7 +141,7 @@ describe('PhotosPage', () => {
   });
 
   it('shows album-first navigation and filters the grid by album', async () => {
-    render(<PhotosPage />);
+    renderPhotosPage();
 
     expect(await screen.findByRole('button', { name: 'Open album Landscapes' })).toBeInTheDocument();
 
@@ -141,7 +152,7 @@ describe('PhotosPage', () => {
   });
 
   it('saves the selected photo metadata', async () => {
-    render(<PhotosPage />);
+    renderPhotosPage();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Open landscape.jpg' }));
 
@@ -181,7 +192,7 @@ describe('PhotosPage', () => {
       return Promise.resolve(undefined);
     });
 
-    render(<PhotosPage />);
+    renderPhotosPage();
 
     const firstPhoto = await screen.findByRole('button', { name: 'Open landscape.jpg' });
     const secondPhoto = screen.getByRole('button', { name: 'Open waterfall.jpg' });
@@ -209,7 +220,7 @@ describe('PhotosPage', () => {
     adminFetchMock.mockResolvedValueOnce({ ...createPhotos()[0], albumId: 'album-2', albumName: 'Cities' });
     adminFetchMock.mockResolvedValueOnce({ ...createPhotos()[1], albumId: 'album-2', albumName: 'Cities' });
 
-    render(<PhotosPage />);
+    renderPhotosPage();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Open landscape.jpg' }), { ctrlKey: true });
     fireEvent.click(screen.getByRole('button', { name: 'Open waterfall.jpg' }), { ctrlKey: true });
@@ -249,7 +260,7 @@ describe('PhotosPage', () => {
       },
     ]);
 
-    render(<PhotosPage />);
+    renderPhotosPage();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Browse photos with no album' }));
 
@@ -274,7 +285,7 @@ describe('PhotosPage', () => {
       .mockResolvedValueOnce({ ...createPhotos()[0], albumId: 'album-3', albumName: 'Birds' })
       .mockResolvedValueOnce({ ...createPhotos()[1], albumId: 'album-3', albumName: 'Birds' });
 
-    render(<PhotosPage />);
+    renderPhotosPage();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Open landscape.jpg' }), { ctrlKey: true });
     fireEvent.click(screen.getByRole('button', { name: 'Open waterfall.jpg' }), { ctrlKey: true });
@@ -296,7 +307,7 @@ describe('PhotosPage', () => {
   });
 
   it('supports shift-click range selection', async () => {
-    render(<PhotosPage />);
+    renderPhotosPage();
 
     const firstPhoto = await screen.findByRole('button', { name: 'Open landscape.jpg' });
     const secondPhoto = screen.getByRole('button', { name: 'Open waterfall.jpg' });
@@ -311,7 +322,7 @@ describe('PhotosPage', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     adminFetchMock.mockResolvedValue(undefined);
 
-    render(<PhotosPage />);
+    renderPhotosPage();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Open landscape.jpg' }), { ctrlKey: true });
     fireEvent.click(screen.getByRole('button', { name: 'Open waterfall.jpg' }), { ctrlKey: true });
@@ -328,7 +339,7 @@ describe('PhotosPage', () => {
   });
 
   it('clears hidden selection when the search scope changes', async () => {
-    render(<PhotosPage />);
+    renderPhotosPage();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Open landscape.jpg' }), { ctrlKey: true });
     fireEvent.click(screen.getByRole('button', { name: 'Open waterfall.jpg' }), { ctrlKey: true });
@@ -338,5 +349,12 @@ describe('PhotosPage', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Search photos' }), { target: { value: 'city' } });
 
     expect(screen.getByText('0 selected')).toBeInTheDocument();
+  });
+
+  it('opens the first reviewed photo from the query string', async () => {
+    renderPhotosPage(['/admin/photos?review=photo-2,photo-1']);
+
+    expect(await screen.findByText('Edit photo')).toBeInTheDocument();
+    expect(screen.getByText('waterfall.jpg')).toBeInTheDocument();
   });
 });

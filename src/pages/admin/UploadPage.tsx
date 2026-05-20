@@ -1,4 +1,5 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AdminShell } from "./AdminShell";
 import { adminFetch, loadAlbums, loadPhotos } from "./api";
 import type { AdminAlbum, AdminPhoto } from "./types";
@@ -59,6 +60,7 @@ function getStatusClassName(item: QueuedUpload) {
 }
 
 export default function UploadPage() {
+  const navigate = useNavigate();
   const [albums, setAlbums] = useState<AdminAlbum[]>([]);
   const [photos, setPhotos] = useState<AdminPhoto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +77,8 @@ export default function UploadPage() {
   const queueRef = useRef<QueuedUpload[]>([]);
   const uploadingRef = useRef(false);
   const uploadRunSummaryRef = useRef({ uploaded: 0, failed: 0 });
+  const uploadedBatchPhotoIdsRef = useRef<string[]>([]);
+  const reviewNavigationTriggeredRef = useRef(false);
 
   const selectedPhoto = photos.find((photo) => photo.id === selectedPhotoId) ?? null;
   const queueSummary = useMemo(() => ({
@@ -95,6 +99,12 @@ export default function UploadPage() {
 
   useEffect(() => {
     uploadingRef.current = uploading;
+  }, [uploading]);
+
+  useEffect(() => {
+    if (!uploading) {
+      reviewNavigationTriggeredRef.current = false;
+    }
   }, [uploading]);
 
   useEffect(() => {
@@ -119,6 +129,12 @@ export default function UploadPage() {
     if (nextQueued) {
       void uploadQueuedItem(nextQueued.id);
       return;
+    }
+
+    const uploadedBatchPhotoIds = uploadedBatchPhotoIdsRef.current;
+    if (!reviewNavigationTriggeredRef.current && uploadedBatchPhotoIds.length > 0) {
+      reviewNavigationTriggeredRef.current = true;
+      navigate(`/admin/photos?review=${encodeURIComponent(uploadedBatchPhotoIds.join(","))}`);
     }
 
     uploadingRef.current = false;
@@ -165,6 +181,7 @@ export default function UploadPage() {
 
     if (!uploadingRef.current) {
       uploadRunSummaryRef.current = { uploaded: 0, failed: 0 };
+      uploadedBatchPhotoIdsRef.current = [];
     }
 
     setQueue((current) => [...current, ...queued]);
@@ -282,6 +299,7 @@ export default function UploadPage() {
       }
 
       uploadRunSummaryRef.current.uploaded += 1;
+      uploadedBatchPhotoIdsRef.current.push(result.id);
       setError(null);
 
       setQueue((current) => current.map((entry) => entry.id === id
