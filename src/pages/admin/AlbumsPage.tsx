@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "./AdminShell";
-import { adminFetch, loadAlbums, loadPhotos } from "./api";
+import { adminFetch, loadAlbums, loadPhotos, loadMetadataQueue } from "./api";
 import type { AdminAlbum, AdminPhoto } from "./types";
 
 function renderAlbumCover(album: AdminAlbum, className: string) {
@@ -18,6 +18,7 @@ function renderAlbumCover(album: AdminAlbum, className: string) {
 export default function AlbumsPage() {
   const [albums, setAlbums] = useState<AdminAlbum[]>([]);
   const [photos, setPhotos] = useState<AdminPhoto[]>([]);
+  const [queue, setQueue] = useState<Array<{ state: string; attempts: number }>>([]);
   const [selectedAlbumId, setSelectedAlbumId] = useState<string>("");
   const [coverPhotoId, setCoverPhotoId] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -44,8 +45,10 @@ export default function AlbumsPage() {
     setError(null);
     try {
       const [albumsData, photosData] = await Promise.all([loadAlbums(), loadPhotos()]);
+      const queueData = await loadMetadataQueue();
       setAlbums(albumsData);
       setPhotos(photosData);
+      setQueue(queueData);
       if (!selectedAlbumId && albumsData.length > 0) {
         setSelectedAlbumId(albumsData[0].id);
         setCoverPhotoId(albumsData[0].coverPhotoId ?? "");
@@ -155,6 +158,29 @@ export default function AlbumsPage() {
           {error ?? message}
         </div>
       )}
+
+      <section className="rounded-3xl border border-white/10 bg-white/5 p-5 space-y-3">
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-white/40">AI metadata queue</p>
+            <h2 className="text-lg mt-2">Processing status</h2>
+          </div>
+          <p className="text-sm text-white/60">Visible queue state helps you know when an album is ready to publish.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-4">
+          {[
+            { label: "Pending", value: queue.filter((item) => item.state === "Pending").length },
+            { label: "Processing", value: queue.filter((item) => item.state === "Processing").length },
+            { label: "Completed", value: queue.filter((item) => item.state === "Completed").length },
+            { label: "Failed", value: queue.filter((item) => item.state === "Failed").length },
+          ].map((item) => (
+            <div key={item.label} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="text-[10px] uppercase tracking-[0.25em] text-white/35">{item.label}</div>
+              <div className="mt-2 text-2xl font-semibold text-white">{item.value}</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
         <div className="rounded-3xl border border-white/10 bg-white/5 p-5 space-y-4">

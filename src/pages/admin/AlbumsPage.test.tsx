@@ -5,11 +5,13 @@ import type { AdminAlbum, AdminPhoto } from './types';
 
 const loadAlbumsMock = vi.fn();
 const loadPhotosMock = vi.fn();
+const loadMetadataQueueMock = vi.fn();
 const adminFetchMock = vi.fn();
 
 vi.mock('./api', () => ({
   loadAlbums: (...args: unknown[]) => loadAlbumsMock(...args),
   loadPhotos: (...args: unknown[]) => loadPhotosMock(...args),
+  loadMetadataQueue: (...args: unknown[]) => loadMetadataQueueMock(...args),
   adminFetch: (...args: unknown[]) => adminFetchMock(...args),
 }));
 
@@ -110,15 +112,24 @@ describe('AlbumsPage', () => {
   beforeEach(() => {
     loadAlbumsMock.mockReset();
     loadPhotosMock.mockReset();
+    loadMetadataQueueMock.mockReset();
     adminFetchMock.mockReset();
     loadAlbumsMock.mockResolvedValue(createAlbums());
     loadPhotosMock.mockResolvedValue(createPhotos());
+    loadMetadataQueueMock.mockResolvedValue([
+      { state: 'Pending', attempts: 0 },
+      { state: 'Processing', attempts: 1 },
+      { state: 'Completed', attempts: 1 },
+      { state: 'Failed', attempts: 2 },
+    ]);
   });
 
   it('loads albums and saves the selected album', async () => {
     render(<AlbumsPage />);
 
     expect(await screen.findByText('Edit album')).toBeInTheDocument();
+    expect(screen.getByText('AI metadata queue')).toBeInTheDocument();
+    expect(screen.getByText('Processing status')).toBeInTheDocument();
 
     adminFetchMock.mockResolvedValue({ ...createAlbums()[0], name: 'Updated Landscapes' });
 

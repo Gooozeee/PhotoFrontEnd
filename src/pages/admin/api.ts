@@ -68,6 +68,10 @@ export async function loadPhotos(): Promise<AdminPhoto[]> {
   return adminFetch<AdminPhoto[]>("/api/admin/photos");
 }
 
+export async function loadMetadataQueue(): Promise<Array<{ state: string; attempts: number }>> {
+  return adminFetch<Array<{ state: string; attempts: number }>>("/api/admin/metadata/queue");
+}
+
 export async function verifyAdminSession(): Promise<void> {
   await adminFetch<void>("/api/admin/session", undefined, { redirectOnAuthFailure: false });
 }
