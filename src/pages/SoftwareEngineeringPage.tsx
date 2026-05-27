@@ -29,6 +29,28 @@ const SoftwareEngineeringPage = () => {
       detail: "Syncs UI with server state",
     },
   ];
+  const aiFlow = [
+    {
+      title: "Queue untagged photos",
+      description: "Background jobs detect photos missing tags, captions, or descriptions and queue them for processing.",
+      detail: "Admin-only queue",
+    },
+    {
+      title: "Generate metadata once",
+      description: "A small Gemini model creates tags, captions, and descriptions from compressed previews and stores them immediately.",
+      detail: "Persisted results",
+    },
+    {
+      title: "Suggest albums and titles",
+      description: "The same pipeline can suggest album descriptions from sampled photos, then let the admin approve the result.",
+      detail: "Manual publish step",
+    },
+    {
+      title: "Re-use stored metadata",
+      description: "Search and discovery read persisted metadata first so the model is not called again for the same photo.",
+      detail: "No duplicate calls",
+    },
+  ];
   const aboutRef = useRef<HTMLDivElement>(null);
 
   const scrollToAbout = () => {
@@ -143,6 +165,42 @@ const SoftwareEngineeringPage = () => {
                     0{index + 1}
                   </div>
                   {index < systemFlow.length - 1 && (
+                    <div className="hidden md:block flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
+                  )}
+                </div>
+                <h3 className="text-white text-base font-medium mb-2">{item.title}</h3>
+                <p className="text-white/65 text-sm leading-relaxed mb-4">{item.description}</p>
+                <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/55">
+                  {item.detail}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="w-full max-w-5xl px-4 pb-4">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6 backdrop-blur-sm">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-5">
+            <div>
+              <h2 className="text-white text-lg md:text-xl font-light" style={{ fontFamily: "'Archivo', sans-serif" }}>
+                AI workflow
+              </h2>
+              <p className="text-white/55 text-sm md:text-base">
+                Tagging, album suggestion, and discovery all run through persisted metadata, not repeated model calls.
+              </p>
+            </div>
+            <div className="text-white/40 text-xs uppercase tracking-[0.24em]">
+              Cost controlled
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-4">
+            {aiFlow.map((item, index) => (
+              <div key={item.title} className="relative rounded-xl border border-white/10 bg-[#111114] p-4 min-h-[160px]">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-black text-sm font-semibold">
+                    A{index + 1}
+                  </div>
+                  {index < aiFlow.length - 1 && (
                     <div className="hidden md:block flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
                   )}
                 </div>
