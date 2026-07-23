@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import WelcomeImage from "../components/WelcomeImage";
-import DiscoverySearch from "../components/DiscoverySearch";
 import GalleryBanner from "../components/GalleryBanner";
 import Footer from "../components/Footer";
 import { clearAdminRedirectMessage, peekAdminRedirectMessage } from "../lib/adminRedirectMessage";
@@ -36,7 +35,6 @@ const HomePage = () => {
         subHeadingOne="Photographer, Software Engineer"
         onScrollIndicatorClick={scrollToGallery}
       />
-      <DiscoverySearch />
       <div ref={galleryBannerRef}>
         <GalleryBanner title="Image Gallery" />
       </div>

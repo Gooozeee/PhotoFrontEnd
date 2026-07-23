@@ -55,6 +55,18 @@ export interface UseImageGalleryOptions {
 
 const API_BASE = resolveApiBaseUrl();
 
+let serverUnreachable = false;
+
+async function fetchWithTimeout<T>(url: string, timeoutMs = 4000): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetchJson<T>(url, controller.signal);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function createScopedKey(cacheKey: string, suffix: string) {
   return `${cacheKey}:${suffix}`;
 }
@@ -129,7 +141,7 @@ export const useImageGallery = ({
     }
 
     return getOrCreateCachedRequest(albumsRequestKey, async () => {
-      const items = await fetchJson<GalleryAlbum[]>(`${API_BASE}/api/albums/published`);
+      const items = await fetchWithTimeout<GalleryAlbum[]>(`${API_BASE}/api/albums/published`);
       albumCache.set(albumsCacheKey, { timestamp: Date.now(), data: items });
       return items;
     });
@@ -167,15 +179,22 @@ export const useImageGallery = ({
       let albumsData: GalleryAlbum[];
       let staticFallback = false;
 
-      try {
-        albumsData = await getPublishedAlbums();
-      } catch (err) {
-        if (err instanceof TypeError) {
-          const staticData = getStaticGalleryData();
-          albumsData = staticData.albums;
-          staticFallback = true;
-        } else {
-          throw err;
+      if (serverUnreachable) {
+        const staticData = getStaticGalleryData();
+        albumsData = staticData.albums;
+        staticFallback = true;
+      } else {
+        try {
+          albumsData = await getPublishedAlbums();
+        } catch (err) {
+          if (err instanceof TypeError || err instanceof DOMException) {
+            serverUnreachable = true;
+            const staticData = getStaticGalleryData();
+            albumsData = staticData.albums;
+            staticFallback = true;
+          } else {
+            throw err;
+          }
         }
       }
 
