@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolveApiBaseUrl } from "../lib/apiBaseUrl";
+import { getStaticGalleryData } from "./staticGalleryData";
 
 const albumCache = new Map<string, { timestamp: number; data: GalleryAlbum[] }>();
 const photoPageCache = new Map<string, { timestamp: number; data: GalleryPhotoPage }>();
@@ -53,6 +54,18 @@ export interface UseImageGalleryOptions {
 }
 
 const API_BASE = resolveApiBaseUrl();
+
+let serverUnreachable = false;
+
+async function fetchWithTimeout<T>(url: string, timeoutMs = 4000): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetchJson<T>(url, controller.signal);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function createScopedKey(cacheKey: string, suffix: string) {
   return `${cacheKey}:${suffix}`;
@@ -128,7 +141,7 @@ export const useImageGallery = ({
     }
 
     return getOrCreateCachedRequest(albumsRequestKey, async () => {
-      const items = await fetchJson<GalleryAlbum[]>(`${API_BASE}/api/albums/published`);
+      const items = await fetchWithTimeout<GalleryAlbum[]>(`${API_BASE}/api/albums/published`);
       albumCache.set(albumsCacheKey, { timestamp: Date.now(), data: items });
       return items;
     });
@@ -163,7 +176,27 @@ export const useImageGallery = ({
     setTotalCount(0);
 
     try {
-      const albumsData = await getPublishedAlbums();
+      let albumsData: GalleryAlbum[];
+      let staticFallback = false;
+
+      if (serverUnreachable) {
+        const staticData = getStaticGalleryData();
+        albumsData = staticData.albums;
+        staticFallback = true;
+      } else {
+        try {
+          albumsData = await getPublishedAlbums();
+        } catch (err) {
+          if (err instanceof TypeError || err instanceof DOMException) {
+            serverUnreachable = true;
+            const staticData = getStaticGalleryData();
+            albumsData = staticData.albums;
+            staticFallback = true;
+          } else {
+            throw err;
+          }
+        }
+      }
 
       if (requestIdRef.current !== requestId) return;
       setAlbums(albumsData);
@@ -179,6 +212,22 @@ export const useImageGallery = ({
       }
 
       setAlbumId(album.id);
+
+      if (staticFallback) {
+        const staticData = getStaticGalleryData();
+        const staticPhotos = staticData.photosByAlbum[album.id];
+        if (staticPhotos) {
+          const page: GalleryPhotoPage = {
+            items: staticPhotos,
+            offset: 0,
+            limit: staticPhotos.length,
+            totalCount: staticPhotos.length,
+            hasMore: false,
+          };
+          appendPhotoPage(page, false);
+        }
+        return;
+      }
 
       const firstPage = await getAlbumPhotoPage(album.id, 0);
       if (requestIdRef.current !== requestId) return;

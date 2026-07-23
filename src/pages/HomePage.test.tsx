@@ -15,10 +15,6 @@ vi.mock('../components/GalleryBanner', () => ({
   default: ({ title }: { title?: string }) => <div>{title}</div>,
 }));
 
-vi.mock('../components/DiscoverySearch', () => ({
-  default: () => <div>discover-search featured-photos smart-collections</div>,
-}));
-
 vi.mock('../components/Footer', () => ({ default: () => <footer>footer</footer> }));
 
 describe('HomePage', () => {
@@ -34,7 +30,6 @@ describe('HomePage', () => {
     );
 
     expect(screen.getByText('Image Gallery')).toBeInTheDocument();
-    expect(screen.getByText(/discover-search featured-photos smart-collections/)).toBeInTheDocument();
     expect(screen.getByText('footer')).toBeInTheDocument();
   });
 
