@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolveApiBaseUrl } from "../lib/apiBaseUrl";
+import { getStaticGalleryData } from "./staticGalleryData";
 
 const albumCache = new Map<string, { timestamp: number; data: GalleryAlbum[] }>();
 const photoPageCache = new Map<string, { timestamp: number; data: GalleryPhotoPage }>();
@@ -163,7 +164,20 @@ export const useImageGallery = ({
     setTotalCount(0);
 
     try {
-      const albumsData = await getPublishedAlbums();
+      let albumsData: GalleryAlbum[];
+      let staticFallback = false;
+
+      try {
+        albumsData = await getPublishedAlbums();
+      } catch (err) {
+        if (err instanceof TypeError) {
+          const staticData = getStaticGalleryData();
+          albumsData = staticData.albums;
+          staticFallback = true;
+        } else {
+          throw err;
+        }
+      }
 
       if (requestIdRef.current !== requestId) return;
       setAlbums(albumsData);
@@ -179,6 +193,22 @@ export const useImageGallery = ({
       }
 
       setAlbumId(album.id);
+
+      if (staticFallback) {
+        const staticData = getStaticGalleryData();
+        const staticPhotos = staticData.photosByAlbum[album.id];
+        if (staticPhotos) {
+          const page: GalleryPhotoPage = {
+            items: staticPhotos,
+            offset: 0,
+            limit: staticPhotos.length,
+            totalCount: staticPhotos.length,
+            hasMore: false,
+          };
+          appendPhotoPage(page, false);
+        }
+        return;
+      }
 
       const firstPage = await getAlbumPhotoPage(album.id, 0);
       if (requestIdRef.current !== requestId) return;
