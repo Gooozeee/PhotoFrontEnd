@@ -72,7 +72,7 @@ const SingleAlbumImage = ({
     : `w-full h-auto object-cover block transition-all duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`;
 
   const overlayClasses = albumName 
-    ? "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded flex flex-col items-center justify-end pb-6 px-4"
+    ? "absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent rounded flex flex-col items-center justify-end pb-6 px-4"
     : `absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded flex flex-col items-center justify-end pb-6 px-4 transition-all duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`;
 
   if (albumName) {

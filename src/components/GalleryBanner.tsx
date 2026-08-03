@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import SingleAlbumImage from "./SingleAlbumImage";
 import { useImageGallery } from "../hooks/useImageGallery";
+import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
 
 interface Props {
   title?: string;
@@ -101,7 +102,7 @@ const GalleryBanner = ({ title }: Props) => {
                 className="aspect-[3/2] w-full"
               >
                 <SingleAlbumImage
-                  imageSource={album.coverThumbnailUrl ?? album.coverUrl ?? ""}
+                  imageSource={getPreviewImageUrl(album.coverThumbnailUrl) ?? album.coverUrl ?? ""}
                   imageDescription={album.name}
                   albumName={album.name}
                   unitWidth={1}
