@@ -10,6 +10,7 @@ import UploadPage from "./pages/admin/UploadPage";
 import AlbumsPage from "./pages/admin/AlbumsPage";
 import PhotosPage from "./pages/admin/PhotosPage";
 import MetadataQueuePage from "./pages/admin/MetadataQueuePage";
+import LibraryPage from "./pages/admin/LibraryPage";
 import Layout from "./components/Layout";
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route element={<RequireAdminSession />}>
+            <Route path="/admin/library" element={<LibraryPage />} />
             <Route path="/admin/upload" element={<UploadPage />} />
             <Route path="/admin/albums" element={<AlbumsPage />} />
             <Route path="/admin/photos" element={<PhotosPage />} />

@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { AdminShell } from "./AdminShell";
 import { enqueueMetadata, loadAlbums, loadMetadataQueue, loadPhotos, resetMetadataQueue } from "./api";
 import type { AdminAlbum, AdminPhoto, MetadataQueueItem } from "./types";
+
+const POLL_MS = 10_000;
 
 const STATE_STYLES: Record<MetadataQueueItem["state"], string> = {
   Pending: "border-white/10 bg-white/5 text-white/70",
@@ -18,23 +21,29 @@ export default function MetadataQueuePage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const refreshId = useRef(0);
 
   useEffect(() => {
     void refresh();
+    const timer = window.setInterval(() => void refresh({ silent: true }), POLL_MS);
+    return () => window.clearInterval(timer);
   }, []);
 
-  async function refresh() {
-    setLoading(true);
+  async function refresh(options?: { silent?: boolean }) {
+    const requestId = ++refreshId.current;
+    if (!options?.silent) setLoading(true);
     setError(null);
     try {
       const [albumsData, photosData, queueData] = await Promise.all([loadAlbums(), loadPhotos(), loadMetadataQueue()]);
+      if (requestId !== refreshId.current) return;
       setAlbums(albumsData);
       setPhotos(photosData);
       setQueue(queueData);
     } catch (err) {
+      if (requestId !== refreshId.current) return;
       setError(err instanceof Error ? err.message : "Failed to load metadata queue");
     } finally {
-      setLoading(false);
+      if (requestId === refreshId.current) setLoading(false);
     }
   }
 
@@ -122,6 +131,21 @@ export default function MetadataQueuePage() {
             </div>
           ))}
         </div>
+        <div>
+          <div className="mb-2 flex items-center justify-between text-xs text-white/50">
+            <span className="inline-flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              Live — refreshes automatically every 10s
+            </span>
+            <span>Queue done: {queue.length === 0 ? 0 : Math.round((counts.completed / queue.length) * 100)}%</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-emerald-400 transition-all duration-700"
+              style={{ width: `${queue.length === 0 ? 0 : (counts.completed / queue.length) * 100}%` }}
+            />
+          </div>
+        </div>
         <p className="text-sm text-white/50">
           The hourly worker processes up to 25 photos per run at 12/min to stay within the Gemini free tier. Reset failed jobs to retry them; the run happens automatically on the hour.
         </p>
@@ -133,25 +157,35 @@ export default function MetadataQueuePage() {
           <span className="text-sm text-white/50">{queue.length} total</span>
         </div>
         <div className="space-y-2">
-          {queue.map((item) => (
-            <div key={item.photoId} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="min-w-0">
-                  <div className="truncate font-medium">{item.fileName}</div>
-                  <div className="text-sm text-white/50 truncate">{item.albumName ?? "No album"}</div>
+          <AnimatePresence initial={false}>
+            {queue.map((item) => (
+              <motion.div
+                key={item.photoId}
+                layout
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-4"
+              >
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">{item.fileName}</div>
+                    <div className="text-sm text-white/50 truncate">{item.albumName ?? "No album"}</div>
+                  </div>
+                  <span className={`rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.2em] ${STATE_STYLES[item.state]}`}>{item.state}</span>
                 </div>
-                <span className={`rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.2em] ${STATE_STYLES[item.state]}`}>{item.state}</span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/40">
-                <span>Attempts: {item.attempts}</span>
-                {item.completedAt ? <span>Done: {new Date(item.completedAt).toLocaleString()}</span> : null}
-                {item.lastAttemptAt ? <span>Last attempt: {new Date(item.lastAttemptAt).toLocaleString()}</span> : null}
-              </div>
-              {item.lastError ? (
-                <div className="mt-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-100 break-all">{item.lastError}</div>
-              ) : null}
-            </div>
-          ))}
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/40">
+                  <span>Attempts: {item.attempts}</span>
+                  {item.completedAt ? <span>Done: {new Date(item.completedAt).toLocaleString()}</span> : null}
+                  {item.lastAttemptAt ? <span>Last attempt: {new Date(item.lastAttemptAt).toLocaleString()}</span> : null}
+                </div>
+                {item.lastError ? (
+                  <div className="mt-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-100 break-all">{item.lastError}</div>
+                ) : null}
+              </motion.div>
+            ))}
+          </AnimatePresence>
           {queue.length === 0 && !loading && <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-8 text-sm text-white/60">No metadata jobs yet. Queue missing metadata to begin.</div>}
         </div>
       </section>

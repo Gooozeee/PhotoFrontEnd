@@ -27,6 +27,8 @@ export type AdminPhoto = {
   url: string;
   thumbnailUrl: string | null;
   description: string | null;
+  caption: string | null;
+  rating: number | null;
   contentType: string;
   width: number;
   height: number;
@@ -41,4 +43,31 @@ export type AdminPhoto = {
     hasLocation: boolean;
     hasCameraModel: boolean;
   } | null;
+};
+
+export type CreateAlbumPayload = {
+  name: string;
+  description: string | null;
+  isPublished?: boolean;
+};
+
+export type UpdateAlbumPayload = {
+  name: string;
+  description: string | null;
+  isPublished: boolean;
+  coverPhotoId?: string | null;
+};
+
+export type UpdatePhotoPayload = {
+  fileName: string;
+  description: string | null;
+  fileSizeBytes: number;
+  contentType: string;
+  width: number;
+  height: number;
+  takenAt: string;
+  albumId: string | null;
+  location: string | null;
+  cameraModel: string | null;
+  tags: string[];
 };

@@ -1,7 +1,21 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReactElement } from 'react';
 import MetadataQueuePage from './MetadataQueuePage';
 import type { AdminAlbum, AdminPhoto, MetadataQueueItem } from './types';
+
+vi.mock('framer-motion', () => {
+  const stripMotion = (props: Record<string, unknown> & { children?: ReactElement }) => {
+    const { layout, initial, animate, exit, transition, ...rest } = props;
+    return <div {...rest}>{props.children}</div>;
+  };
+  return {
+    motion: {
+      div: (props: Record<string, unknown> & { children?: ReactElement }) => stripMotion(props),
+    },
+    AnimatePresence: ({ children }: { children?: ReactElement }) => <>{children}</>,
+  };
+});
 
 const loadAlbumsMock = vi.fn();
 const loadPhotosMock = vi.fn();
@@ -39,7 +53,7 @@ function createAlbums(): AdminAlbum[] {
 }
 
 function createPhotos(): AdminPhoto[] {
-  return [{ id: 'p1', fileName: 'sunset.jpg', albumId: 'a1', albumName: 'Landscapes', url: '/photos/sunset.jpg', thumbnailUrl: null, description: null, contentType: 'image/webp', width: 1000, height: 800, fileSizeBytes: 100, takenAt: '2024-01-01T00:00:00Z', importedAt: '2024-01-01T00:00:00Z', location: null, cameraModel: null, tags: [] }];
+  return [{ id: 'p1', fileName: 'sunset.jpg', albumId: 'a1', albumName: 'Landscapes', url: '/photos/sunset.jpg', thumbnailUrl: null, description: null, caption: null, rating: null, contentType: 'image/webp', width: 1000, height: 800, fileSizeBytes: 100, takenAt: '2024-01-01T00:00:00Z', importedAt: '2024-01-01T00:00:00Z', location: null, cameraModel: null, tags: [] }];
 }
 
 describe('MetadataQueuePage', () => {

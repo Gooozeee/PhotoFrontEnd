@@ -1,7 +1,7 @@
 import { getAccessToken, signOutAdmin } from "../../lib/supabase";
 import { storeAdminRedirectMessage } from "../../lib/adminRedirectMessage";
 import { resolveApiBaseUrl } from "../../lib/apiBaseUrl";
-import type { AdminAlbum, AdminPhoto, MetadataQueueItem } from "./types";
+import type { AdminAlbum, AdminPhoto, CreateAlbumPayload, MetadataQueueItem, UpdateAlbumPayload, UpdatePhotoPayload } from "./types";
 
 const API_BASE = resolveApiBaseUrl();
 
@@ -75,6 +75,30 @@ export async function loadPhotos(): Promise<AdminPhoto[]> {
 
 export async function loadMetadataQueue(): Promise<MetadataQueueItem[]> {
   return adminFetch<MetadataQueueItem[]>("/api/admin/metadata/queue");
+}
+
+export async function createAlbum(payload: CreateAlbumPayload): Promise<AdminAlbum> {
+  return adminFetch<AdminAlbum>("/api/albums", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export async function updateAlbum(id: string, payload: UpdateAlbumPayload): Promise<AdminAlbum> {
+  return adminFetch<AdminAlbum>(`/api/albums/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+}
+
+export async function deleteAlbum(id: string): Promise<void> {
+  await adminFetch<void>(`/api/albums/${id}`, { method: "DELETE" });
+}
+
+export async function updatePhoto(id: string, payload: UpdatePhotoPayload): Promise<AdminPhoto> {
+  return adminFetch<AdminPhoto>(`/api/photos/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+}
+
+export async function deletePhoto(id: string): Promise<void> {
+  await adminFetch<void>(`/api/photos/${id}`, { method: "DELETE" });
+}
+
+export async function uploadPhoto(formData: FormData): Promise<AdminPhoto> {
+  return adminFetch<AdminPhoto>("/api/photos/upload", { method: "POST", body: formData });
 }
 
 export async function enqueueMetadata(): Promise<void> {

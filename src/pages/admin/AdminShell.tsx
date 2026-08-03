@@ -4,7 +4,7 @@ import { signOutAdmin } from "../../lib/supabase";
 type Props = {
   title: string;
   subtitle?: string;
-  active: "upload" | "albums" | "photos" | "metadata";
+  active: "upload" | "albums" | "photos" | "metadata" | "library";
   stats: { albums: number; photos: number; published: number };
   children: React.ReactNode;
 };
@@ -30,9 +30,8 @@ export function AdminShell({ title, subtitle, active, stats, children }: Props) 
         </header>
 
         <nav className="flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-white/5 p-2 w-fit">
+          <Link to="/admin/library" className={`px-4 py-2 rounded-xl text-sm transition ${active === "library" ? "bg-white text-black" : "text-white/70 hover:text-white"}`}>Library</Link>
           <Link to="/admin/upload" className={`px-4 py-2 rounded-xl text-sm transition ${active === "upload" ? "bg-white text-black" : "text-white/70 hover:text-white"}`}>Upload</Link>
-          <Link to="/admin/albums" className={`px-4 py-2 rounded-xl text-sm transition ${active === "albums" ? "bg-white text-black" : "text-white/70 hover:text-white"}`}>Albums</Link>
-          <Link to="/admin/photos" className={`px-4 py-2 rounded-xl text-sm transition ${active === "photos" ? "bg-white text-black" : "text-white/70 hover:text-white"}`}>Photos</Link>
           <Link to="/admin/metadata" className={`px-4 py-2 rounded-xl text-sm transition ${active === "metadata" ? "bg-white text-black" : "text-white/70 hover:text-white"}`}>AI Metadata</Link>
         </nav>
 
