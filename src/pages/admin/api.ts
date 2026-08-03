@@ -1,7 +1,7 @@
 import { getAccessToken, signOutAdmin } from "../../lib/supabase";
 import { storeAdminRedirectMessage } from "../../lib/adminRedirectMessage";
 import { resolveApiBaseUrl } from "../../lib/apiBaseUrl";
-import type { AdminAlbum, AdminPhoto } from "./types";
+import type { AdminAlbum, AdminPhoto, MetadataQueueItem } from "./types";
 
 const API_BASE = resolveApiBaseUrl();
 
@@ -53,7 +53,12 @@ export async function adminFetch<T>(path: string, init?: RequestInit, options: A
     return undefined as T;
   }
 
-  return response.json() as Promise<T>;
+  const text = await response.text();
+  if (!text) {
+    return undefined as T;
+  }
+
+  return JSON.parse(text) as Promise<T>;
 }
 
 export async function loadAlbums(): Promise<AdminAlbum[]> {
@@ -68,8 +73,16 @@ export async function loadPhotos(): Promise<AdminPhoto[]> {
   return adminFetch<AdminPhoto[]>("/api/admin/photos");
 }
 
-export async function loadMetadataQueue(): Promise<Array<{ state: string; attempts: number }>> {
-  return adminFetch<Array<{ state: string; attempts: number }>>("/api/admin/metadata/queue");
+export async function loadMetadataQueue(): Promise<MetadataQueueItem[]> {
+  return adminFetch<MetadataQueueItem[]>("/api/admin/metadata/queue");
+}
+
+export async function enqueueMetadata(): Promise<void> {
+  await adminFetch<void>("/api/admin/metadata/enqueue", { method: "POST" });
+}
+
+export async function resetMetadataQueue(): Promise<{ reset: number }> {
+  return adminFetch<{ reset: number }>("/api/admin/metadata/reset", { method: "POST" });
 }
 
 export async function verifyAdminSession(): Promise<void> {

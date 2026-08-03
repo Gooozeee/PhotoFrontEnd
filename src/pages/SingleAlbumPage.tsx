@@ -163,6 +163,8 @@ const SingleAlbumPage = () => {
           imageUrl={selectedImage.url}
           imageIndex={selectedImageIndex + 1}
           totalImages={images.length}
+          caption={selectedImage.caption}
+          tags={selectedImage.tags}
           onClose={handleCloseModal}
           onNext={handleNext}
           onPrev={handlePrev}

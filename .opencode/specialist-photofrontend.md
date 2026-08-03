@@ -1,142 +1,117 @@
 # PhotoFrontEnd Specialist - React 18 TypeScript
 
-**Your Project:** React 18 SPA with TypeScript  
+**Your Project:** React 18 SPA with TypeScript (Vite, Vitest, Testing Library)
 **Core Rule:** Container → Presentational → Services (data flows down, events up)
 
 ---
 
-## 🏗️ Project Structure (THIS IS CRITICAL)
+## 🏗️ Project Structure (THIS IS CRITICAL - match the REAL layout)
 
 ```
 src/
-├── components/
-│   ├── common/                  # Reusable UI components
-│   │   ├── Button.tsx
-│   │   ├── Modal.tsx
-│   │   └── ...
-│   │
-│   ├── features/                # Feature-specific components
-│   │   ├── PhotoUpload/
-│   │   ├── PhotoGallery/
-│   │   └── ...
-│   │
-│   └── layout/                  # Layout wrappers
-│       ├── Header.tsx
-│       ├── Sidebar.tsx
-│       └── MainLayout.tsx
+├── components/                  # Presentational UI components (flat, NOT nested subfolders)
+│   ├── GalleryBanner.tsx        # Home gallery section (albums filter + grid)
+│   ├── GalleryImage.tsx         # Single image card in a grid
+│   ├── SingleAlbumImage.tsx     # Album cover tile
+│   ├── ImageModal.tsx           # Full-size image modal w/ caption + tags
+│   ├── ImageSwitcher.tsx        # Prev/next navigation
+│   ├── WelcomeImage.tsx         # Hero banner
+│   ├── Layout.tsx, NavBar.tsx, Footer.tsx, DownArrow.tsx
+│   └── *.test.tsx               # Colocated component tests
 │
-├── hooks/                       # Custom React hooks (state logic)
-│   ├── useAuth.ts
-│   ├── usePhotos.ts
-│   └── ...
+├── hooks/                       # Custom React hooks (data fetching + state)
+│   ├── useImageGallery.ts       # Albums + paginated photos + cache + static fallback
+│   └── staticGalleryData.ts     # Offline/static fallback dataset
 │
-├── services/                    # API calls, business logic
-│   ├── photoService.ts
-│   ├── authService.ts
-│   └── ...
+├── lib/                         # Config & browser lib glue
+│   ├── apiBaseUrl.ts            # resolveApiBaseUrl() - env + path resolution
+│   ├── supabase.ts              # Supabase client
+│   └── adminRedirectMessage.ts  # Cross-route admin messages
 │
-├── types/                       # TypeScript types & interfaces
-│   └── index.ts
+├── pages/                       # Route-level containers
+│   ├── HomePage.tsx, SingleAlbumPage.tsx, SoftwareEngineeringPage.tsx
+│   ├── NotFoundPage.tsx, UnderConstructionPage.tsx
+│   └── admin/                   # Admin area (AdminShell, UploadPage, AlbumsPage,
+│       │                        #   PhotosPage, MetadataQueuePage, RequireAdminSession,
+│       │                        #   api.ts - admin API client, types.ts)
 │
-├── utils/                       # Helpers, utilities
-│   └── formatters.ts
+├── utils/                       # Pure functions, fully unit-tested
+│   ├── getPreviewImageUrl.ts, getAlbumGridLayout.ts
+│   ├── SplitArrayIntoParts.ts, scrollToPosition.ts, RetrieveNameFromFilePath.ts
+│   └── ApiCache.ts              # Generic TTL cache used by hooks
 │
-└── App.tsx
-
-Tests/
-├── components/
-├── hooks/
-├── services/
-└── integration/
+├── test/setup.ts                # Vitest setup (jsdom, jest-dom)
+└── App.tsx                      # Routes
 ```
+
+**NOTE:** Components are FLAT under `components/` — do NOT invent `common/`, `features/`, or `layout/` subfolders. Follow the existing files.
 
 ---
 
-## ⚡ Component Rules (ENFORCE STRICTLY)
-
-### ✅ Presentational Components (Dumb)
-- Pure UI rendering
-- Accept props only
-- No business logic
-- No API calls
-- Example: `<Button>`, `<Card>`, `<Modal>`
-
-### ✅ Container Components (Smart)
-- Manage state with hooks
-- Call services
-- Pass data to presentational components
-- Example: `<PhotoGalleryContainer>` loads photos, passes to `<PhotoGallery>`
-
-### ❌ NEVER Do
-- API calls in presentational components
-- Business logic in UI components
-- Mixing container & presentational in one file
-- Props drilling (use hooks instead for complex state)
-
----
-
-## 🎯 Data Flow
+## 🧱 Data Flow (the real pattern)
 
 ```
-Service (photoService.ts)
-    ↑
-    ↓ (data)
-Custom Hook (usePhotos.ts)
-    ↑
-    ↓ (state)
-Container Component (PhotoGalleryContainer.tsx)
+Service / API module (lib/apiBaseUrl + fetch inside hook, or pages/admin/api.ts)
     ↓
-Presentational Component (PhotoGallery.tsx)
+Custom Hook (useImageGallery.ts)  → caching (ApiCache / module Maps), inflight dedup,
+    ↓                                static fallback when server unreachable
+Container Page (HomePage.tsx / SingleAlbumPage.tsx) → owns state via hooks
     ↓
-Common Components (Card.tsx, Button.tsx)
+Presentational Component (GalleryBanner.tsx, ImageModal.tsx) → props only, NO fetch
 ```
 
----
-
-## 📁 What Goes Where
-
-| Folder | Purpose | Example |
-|--------|---------|---------|
-| **components/common** | Reusable UI only | Button, Modal, Card, Input |
-| **components/features** | Feature containers + presentational | PhotoUpload/, PhotoGallery/ |
-| **components/layout** | Page structure | Header, Sidebar, MainLayout |
-| **hooks** | State logic & side effects | usePhotos, useAuth, useForm |
-| **services** | API calls, business logic | photoService.fetchPhotos() |
-| **types** | TypeScript interfaces | Photo, User, ApiResponse |
-| **utils** | Pure functions | formatDate(), truncateText() |
+**Rules:**
+- **Pages (`pages/`)** = containers: own state via hooks, orchestrate data.
+- **Components (`components/`)** = presentational: props in, events up. **NEVER call `fetch` inside a presentational component.** (`GalleryBanner` uses the `useImageGallery` hook — that is the sanctioned exception: it is a data-driven section, and it delegates fetching to the hook.)
+- **Hooks (`hooks/`)** = all data fetching + state logic. Deduplicate in-flight requests, cache with TTL, and keep a **static fallback** for the public gallery so the site works when the free-tier backend is asleep.
+- **Services/API calls**: public gallery fetch lives in the hook; admin API lives in `pages/admin/api.ts`. New API modules should go in `lib/` or `services/` following the `apiBaseUrl.ts` pattern.
+- **Utils (`utils/`)** = pure functions only; every util gets a `.test.ts`.
 
 ---
 
-## ✅ Quick Checklist Before Coding
+## 💅 UI/UX Conventions
 
-- [ ] Is this a UI component? → Put in `components/common` or `components/features`
-- [ ] Does it manage state? → Use a custom hook in `hooks/`
-- [ ] Is it an API call? → Put in `services/`
-- [ ] Is it logic-only? → Use `utils/` or a custom hook
-- [ ] Can I test this without React? → If it's in `services/` or `utils/`, YES
-- [ ] Can I reuse this component? → If it's presentational, YES
-
----
-
-## 🚀 Folder Naming
-
-- **Presentational component file:** `Photo.tsx`
-- **Container component file:** `PhotoContainer.tsx`
-- **Custom hook file:** `usePhotos.ts`
-- **Service file:** `photoService.ts`
-- **Type file:** `photo.types.ts`
+- **Theme**: dark (near-black `#09090B`), white text, `font-family: 'Archivo'` for headings and `'Space Grotesk'` for UI/labels.
+- **Motion**: `framer-motion` — respect `useReducedMotion()`; keep entrance animations subtle (opacity + translate, ~0.4s, staggered `index * 0.08`).
+- **Grid**: `grid-cols-2 lg:grid-cols-4` with 2px gaps; photos use `aspect-*` ratios and orientation-aware unit sizing (portrait 1×2, landscape 2×1) via `getAlbumGridLayout`.
+- **Captions**: clamp to `MAX_CAPTION_CHARS = 80` via `clampCaption()` in `ImageModal.tsx`; render with `line-clamp-2`.
+- **Loading/empty states**: show friendly "Waking up…" messaging for the free-tier cold start; use `role="status"` for accessibility.
+- **Typography**: use `clamp()` for responsive type sizes.
+- **Colors**: zinc palette (`zinc-500/600`), white/10 borders, `rounded-full` pill buttons for filters.
 
 ---
 
-## 🔄 When Adding a New Feature
+## ✅ Checklist Before Coding
 
-1. **Create types in `types/`**
-2. **Create service in `services/`** (API calls)
-3. **Create custom hook in `hooks/`** (state logic)
-4. **Create container in `components/features/`** (uses hook)
-5. **Create presentational in `components/features/`** (receives props)
-6. **Create common components as needed** (reusable UI)
+- [ ] Route/page logic? → `pages/`
+- [ ] Presentational UI? → `components/` (flat, colocated `.test.tsx`)
+- [ ] Data fetching / state? → custom hook in `hooks/`
+- [ ] API client? → `lib/` or `pages/admin/api.ts` (mirror `apiBaseUrl.ts`)
+- [ ] Pure logic? → `utils/` with a `.test.ts`
+- [ ] Did you add tests? → components, hooks, utils all need tests (Vitest + Testing Library)
+- [ ] Did you run `npm run test` and `npm run build`?
 
 ---
 
-**That's it. Keep components simple and data flow clear.**
+## 🔄 When Adding a New Feature (real ordering)
+
+1. Add/define types alongside the data (e.g., `GalleryPhoto` in `useImageGallery.ts`, or `pages/admin/types.ts`).
+2. Add the API/query function (in the hook or `api.ts`).
+3. Build the presentational component(s) under `components/`.
+4. Wire the container (page) to the hook.
+5. Add tests (component + hook + util).
+6. Run `npm run test` (full suite) and `npm run build`.
+
+---
+
+## 🔒 Security / Secrets
+
+- **NEVER** hardcode API keys, tokens, or admin credentials in source. Admin API keys live in the Vault / environment only.
+- The admin area is guarded by `RequireAdminSession` (session-gated routes under `/admin/*`).
+- Keep `Accept: application/json` on API fetches; never log tokens.
+
+---
+
+## 📦 Dependencies (already present — don't add without checking)
+
+React 18, react-router-dom v6, framer-motion, TypeScript, Vite, Vitest, @testing-library/react + user-event + jest-dom, Tailwind CSS. Supabase client for auth. **Check `package.json` before adding anything new.**

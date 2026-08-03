@@ -15,6 +15,14 @@ vi.mock('../components/GalleryBanner', () => ({
   default: ({ title }: { title?: string }) => <div>{title}</div>,
 }));
 
+vi.mock('../components/HighlightsStrip', () => ({
+  default: () => <div>highlights</div>,
+}));
+
+vi.mock('../components/PhotoSearch', () => ({
+  default: () => <div>search</div>,
+}));
+
 vi.mock('../components/Footer', () => ({ default: () => <footer>footer</footer> }));
 
 describe('HomePage', () => {

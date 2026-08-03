@@ -28,6 +28,7 @@ describe('AdminShell', () => {
     expect(screen.getByRole('heading', { name: 'Albums' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Photos' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Upload' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'AI Metadata' })).toBeInTheDocument();
     expect(screen.getByText('content')).toBeInTheDocument();
   });
 

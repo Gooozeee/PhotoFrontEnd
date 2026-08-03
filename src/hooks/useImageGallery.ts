@@ -19,6 +19,7 @@ export interface GalleryPhoto {
   height: number;
   fileSizeBytes: number;
   description: string | null;
+  caption: string | null;
   takenAt: string;
   importedAt: string;
   location: string | null;
@@ -289,7 +290,8 @@ export const useImageGallery = ({
       photos.map((photo) => ({
         id: photo.id,
         url: photo.url,
-        caption: photo.description?.trim() || null,
+        caption: photo.caption?.trim() || photo.description?.trim() || null,
+        tags: photo.tags,
         width: photo.width,
         height: photo.height,
         orientation: photo.width < photo.height ? ("portrait" as const) : ("landscape" as const),

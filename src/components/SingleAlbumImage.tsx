@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 interface Props {
   imageSource: string;
   imageDescription?: string | null;
+  imageTags?: string[];
   albumName?: string;
   unitWidth: number;
   unitHeight: number;
@@ -19,6 +20,7 @@ interface Props {
 const SingleAlbumImage = ({
   imageSource,
   imageDescription,
+  imageTags,
   albumName,
   unitWidth,
   unitHeight,
@@ -142,6 +144,8 @@ const SingleAlbumImage = ({
           imageUrl={imageSource}
           imageIndex={1}
           totalImages={1}
+          caption={visibleDescription}
+          tags={imageTags}
           onClose={() => setShowModal(false)}
         />
       )}

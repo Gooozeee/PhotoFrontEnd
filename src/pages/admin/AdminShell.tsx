@@ -4,7 +4,7 @@ import { signOutAdmin } from "../../lib/supabase";
 type Props = {
   title: string;
   subtitle?: string;
-  active: "upload" | "albums" | "photos";
+  active: "upload" | "albums" | "photos" | "metadata";
   stats: { albums: number; photos: number; published: number };
   children: React.ReactNode;
 };
@@ -33,6 +33,7 @@ export function AdminShell({ title, subtitle, active, stats, children }: Props) 
           <Link to="/admin/upload" className={`px-4 py-2 rounded-xl text-sm transition ${active === "upload" ? "bg-white text-black" : "text-white/70 hover:text-white"}`}>Upload</Link>
           <Link to="/admin/albums" className={`px-4 py-2 rounded-xl text-sm transition ${active === "albums" ? "bg-white text-black" : "text-white/70 hover:text-white"}`}>Albums</Link>
           <Link to="/admin/photos" className={`px-4 py-2 rounded-xl text-sm transition ${active === "photos" ? "bg-white text-black" : "text-white/70 hover:text-white"}`}>Photos</Link>
+          <Link to="/admin/metadata" className={`px-4 py-2 rounded-xl text-sm transition ${active === "metadata" ? "bg-white text-black" : "text-white/70 hover:text-white"}`}>AI Metadata</Link>
         </nav>
 
         <section className="grid gap-4 md:grid-cols-3">

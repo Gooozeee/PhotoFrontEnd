@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import WelcomeImage from "../components/WelcomeImage";
 import GalleryBanner from "../components/GalleryBanner";
+import HighlightsStrip from "../components/HighlightsStrip";
+import PhotoSearch from "../components/PhotoSearch";
 import Footer from "../components/Footer";
 import { clearAdminRedirectMessage, peekAdminRedirectMessage } from "../lib/adminRedirectMessage";
 
@@ -38,6 +40,8 @@ const HomePage = () => {
       <div ref={galleryBannerRef}>
         <GalleryBanner title="Image Gallery" />
       </div>
+      <HighlightsStrip />
+      <PhotoSearch />
       <Footer />
     </div>
   );

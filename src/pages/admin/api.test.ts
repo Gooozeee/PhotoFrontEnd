@@ -164,6 +164,46 @@ describe('admin api', () => {
     expect(headers.get('Authorization')).toBeNull();
   });
 
+  it('loads the metadata queue', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify([{ photoId: 'p1', state: 'Pending', attempts: 0 }]), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    const mod = await import('./api');
+
+    const queue = await mod.loadMetadataQueue();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toContain('/api/admin/metadata/queue');
+    expect(queue[0]?.state).toBe('Pending');
+  });
+
+  it('posts to enqueue missing metadata', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 202 }));
+    const mod = await import('./api');
+
+    await mod.enqueueMetadata();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toContain('/api/admin/metadata/enqueue');
+    expect(fetchMock.mock.calls[0]?.[1]?.method).toBe('POST');
+  });
+
+  it('posts to reset failed metadata jobs and returns the reset count', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ reset: 4 }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    const mod = await import('./api');
+
+    const result = await mod.resetMetadataQueue();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toContain('/api/admin/metadata/reset');
+    expect(fetchMock.mock.calls[0]?.[1]?.method).toBe('POST');
+    expect(result.reset).toBe(4);
+  });
+
   it('maps unknown request failures to a generic error', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 500 }));
     const mod = await import('./api');

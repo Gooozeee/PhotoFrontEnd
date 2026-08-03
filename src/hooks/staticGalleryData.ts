@@ -42,6 +42,7 @@ function buildAlbum(
       height: 800,
       fileSizeBytes: 0,
       description: cleanName,
+      caption: null,
       takenAt: taken,
       importedAt: taken,
       location: cleanName,

@@ -1,11 +1,25 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { IoClose, IoChevronBack, IoChevronForward, IoExpand, IoContract } from "react-icons/io5";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
+import SimilarPhotosRow from "./SimilarPhotosRow";
+
+const MAX_CAPTION_CHARS = 80;
+
+export function clampCaption(caption: string | null | undefined, maxChars = MAX_CAPTION_CHARS): string | null {
+  if (!caption) return null;
+  const trimmed = caption.trim();
+  if (!trimmed) return null;
+  if (trimmed.length <= maxChars) return trimmed;
+  return `${trimmed.slice(0, maxChars).trimEnd()}…`;
+}
 
 interface Props {
   imageUrl: string;
   imageIndex?: number;
   totalImages?: number;
+  caption?: string | null;
+  tags?: string[];
+  photoId?: string | null;
   onClose: () => void;
   onNext?: () => void;
   onPrev?: () => void;
@@ -15,6 +29,9 @@ const ImageModal = ({
   imageUrl,
   imageIndex = 1,
   totalImages = 1,
+  caption,
+  tags = [],
+  photoId,
   onClose,
   onNext,
   onPrev,
@@ -213,6 +230,30 @@ const ImageModal = ({
           {isZoomed ? <IoContract size={24} /> : <IoExpand size={24} />}
         </motion.button>
 
+        {/* Caption + tags */}
+        {caption || tags.length > 0 ? (
+          <motion.div
+            className={`absolute left-1/2 -translate-x-1/2 max-w-[90%] sm:max-w-[70%] px-5 py-3 bg-black/60 backdrop-blur-sm rounded-2xl text-center ${photoId ? "bottom-[190px]" : "bottom-16"}`}
+            animate={{ opacity: showControls ? 1 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {caption ? (
+              <p className="text-white text-sm md:text-base font-light tracking-wide line-clamp-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                {clampCaption(caption)}
+              </p>
+            ) : null}
+            {tags.length > 0 ? (
+              <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                {tags.map((tag) => (
+                  <span key={tag} className="rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.15em] text-white/60">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </motion.div>
+        ) : null}
+
         {/* Keyboard hints - hidden on mobile */}
         <motion.div
           className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/40 text-xs tracking-wide flex gap-4 hidden md:flex"
@@ -223,6 +264,8 @@ const ImageModal = ({
           <span>← → navigate</span>
           <span>space next</span>
         </motion.div>
+
+        {photoId ? <SimilarPhotosRow photoId={photoId} onSelect={onClose} /> : null}
       </motion.div>
     </dialog>
   );

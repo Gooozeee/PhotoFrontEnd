@@ -9,6 +9,16 @@ export type AdminAlbum = {
   photosCount: number;
 };
 
+export type MetadataQueueItem = {
+  photoId: string;
+  fileName: string;
+  albumName: string | null;
+  state: "Pending" | "Processing" | "Completed" | "Failed";
+  attempts: number;
+  lastAttemptAt: string | null;
+  completedAt: string | null;
+  lastError: string | null;
+};
 export type AdminPhoto = {
   id: string;
   fileName: string;

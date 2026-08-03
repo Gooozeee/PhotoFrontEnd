@@ -141,6 +141,61 @@ describe('useImageGallery', () => {
     expect(String(fetchMock.mock.calls[1]?.[0])).toContain('/api/albums/album-2/photos');
   });
 
+  it('prefers the AI caption over the manual description for gallery images', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([
+        {
+          id: 'album-2',
+          name: 'Cities',
+          description: 'Urban work',
+          coverPhotoId: 'photo-2',
+          coverUrl: '/covers/cities.jpg',
+          coverThumbnailUrl: '/covers/cities-thumb.jpg',
+          isPublished: true,
+          photosCount: 1,
+        },
+      ]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(createPhotoPage([
+        {
+          id: 'photo-2',
+          fileName: 'city.jpg',
+          albumId: 'album-2',
+          albumName: 'Cities',
+          url: '/photos/city.jpg',
+          thumbnailUrl: '/photos/city-thumb.jpg',
+          contentType: 'image/webp',
+          width: 900,
+          height: 600,
+          fileSizeBytes: 123,
+          description: 'Street scene',
+          caption: 'Night-time street with neon lights',
+          takenAt: '2024-01-01T00:00:00Z',
+          importedAt: '2024-01-02T00:00:00Z',
+          location: 'Belfast',
+          cameraModel: 'Sony',
+          tags: ['urban', 'night'],
+        },
+      ])), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { useImageGallery } = await import('./useImageGallery');
+
+    const { result } = renderHook(() => useImageGallery({ albumName: 'Cities', cacheTTL: 0 }));
+
+    await waitFor(() => {
+      expect(result.current.images).toHaveLength(1);
+    });
+
+    expect(result.current.images[0]?.caption).toBe('Night-time street with neon lights');
+    expect(result.current.images[0]?.tags).toEqual(['urban', 'night']);
+  });
+
   it('loads the next album photo page when loadMore is called', async () => {
     const fetchMock = vi
       .fn()
