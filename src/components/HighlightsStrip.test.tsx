@@ -40,13 +40,12 @@ describe('HighlightsStrip', () => {
     highlightsState.error = null;
   });
 
-  it('renders the featured gallery and slide controls', () => {
+  it('renders the two-row responsive gallery', () => {
     render(<HighlightsStrip />);
 
     expect(screen.getByText('Best images')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /View larger featured image:/ }).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Show highlight 1' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Show highlight 2' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /View larger highlight/ }).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Images roll through the grid/)).toBeInTheDocument();
   });
 
   it('renders nothing when there are no highlights', () => {
@@ -59,18 +58,15 @@ describe('HighlightsStrip', () => {
   it('opens the modal when a photo is selected', () => {
     render(<HighlightsStrip />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Show highlight 1' }));
-    fireEvent.click(screen.getAllByRole('button', { name: /View larger featured image:/ })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /View larger highlight/ })[0]);
 
     expect(screen.getByText('modal')).toBeInTheDocument();
-    expect(screen.getAllByText('Sunset over the bay')).toHaveLength(2);
   });
 
   it('closes the modal when close is pressed', () => {
     render(<HighlightsStrip />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Show highlight 2' }));
-    fireEvent.click(screen.getAllByRole('button', { name: /View larger featured image:/ })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /View larger highlight/ })[0]);
     fireEvent.click(screen.getByRole('button', { name: 'close' }));
 
     expect(screen.queryByText('modal')).not.toBeInTheDocument();

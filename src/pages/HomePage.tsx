@@ -37,11 +37,11 @@ const HomePage = () => {
         subHeadingOne="Photographer, Software Engineer"
         onScrollIndicatorClick={scrollToGallery}
       />
+      <HighlightsStrip />
       <PhotoSearch />
       <div ref={galleryBannerRef}>
         <GalleryBanner title="Image Gallery" />
       </div>
-      <HighlightsStrip />
       <Footer />
     </div>
   );

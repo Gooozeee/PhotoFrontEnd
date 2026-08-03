@@ -19,7 +19,9 @@ interface Props {
   imageIndex?: number;
   totalImages?: number;
   caption?: string | null;
+  rating?: number | null;
   tags?: string[];
+  showTags?: boolean;
   photoId?: string | null;
   onClose: () => void;
   onNext?: () => void;
@@ -31,7 +33,9 @@ const ImageModal = ({
   imageIndex = 1,
   totalImages = 1,
   caption,
+  rating = null,
   tags = [],
+  showTags = true,
   photoId,
   onClose,
   onNext,
@@ -49,8 +53,10 @@ const ImageModal = ({
   const prevImageUrl = useRef(imageUrl);
   const currentImageUrl = similarPhoto?.url ?? imageUrl;
   const currentCaption = similarPhoto ? similarPhoto.caption : caption;
-  const currentTags = similarPhoto ? similarPhoto.tags : tags;
+  const currentRating = similarPhoto ? similarPhoto.rating : rating;
+  const currentTags = showTags ? (similarPhoto ? similarPhoto.tags : tags) : [];
   const currentPhotoId = similarPhoto ? similarPhoto.id : photoId;
+  const currentAlt = similarPhoto ? (similarPhoto.caption ?? similarPhoto.fileName) : (caption ?? "Full size view");
 
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
@@ -155,7 +161,7 @@ const ImageModal = ({
         >
           <motion.img
              src={currentImageUrl}
-            alt="Full size view"
+            alt={currentAlt}
             className={`max-w-full max-h-[80vh] object-contain select-none transition-transform duration-300 ${
               isZoomed ? "cursor-zoom-out" : "cursor-zoom-in"
             }`}
@@ -241,17 +247,18 @@ const ImageModal = ({
         </motion.button>
 
         {/* Caption + tags */}
-        {currentCaption || currentTags.length > 0 ? (
+        {currentCaption || currentRating != null || currentTags.length > 0 ? (
           <motion.div
-            className={`absolute left-1/2 -translate-x-1/2 max-w-[90%] sm:max-w-[70%] px-5 py-3 bg-black/60 backdrop-blur-sm rounded-2xl text-center ${photoId ? "bottom-[190px]" : "bottom-16"}`}
+            className={`absolute left-1/2 w-[min(90vw,42rem)] -translate-x-1/2 rounded-3xl border border-white/15 bg-black/65 px-5 py-4 text-center shadow-2xl backdrop-blur-xl sm:px-7 ${currentPhotoId ? "bottom-44" : "bottom-20"}`}
             animate={{ opacity: showControls ? 1 : 0 }}
             transition={{ duration: 0.2 }}
           >
             {currentCaption ? (
-              <p className="text-white text-sm md:text-base font-light tracking-wide line-clamp-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                {clampCaption(currentCaption)}
-              </p>
-            ) : null}
+                <p className="text-white text-base font-medium tracking-wide line-clamp-2 sm:text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  {clampCaption(currentCaption)}
+                </p>
+              ) : null}
+            {currentRating != null ? <p className="mt-2 text-xs uppercase tracking-[0.25em] text-white/55">Curated rating · {currentRating}/10</p> : null}
             {currentTags.length > 0 ? (
               <div className="mt-2 flex flex-wrap justify-center gap-1.5">
                 {currentTags.map((tag) => (

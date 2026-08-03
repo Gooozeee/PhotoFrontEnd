@@ -91,6 +91,7 @@ const PhotoSearch = () => {
         <ImageModal
           imageUrl={selected.url}
           caption={clampCaption(selected.caption)}
+          rating={selected.rating}
           tags={selected.tags}
           photoId={selected.id}
           onClose={() => setSelectedId(null)}
