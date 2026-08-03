@@ -37,7 +37,7 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-Production builds must set `VITE_API_BASE_URL`. The frontend no longer falls back to `http://localhost:5000` outside local development.
+Production builds must set `VITE_API_BASE_URL`. Discovery, search, highlights, and similar-photo routes use that same API base.
 
 ### Build
 

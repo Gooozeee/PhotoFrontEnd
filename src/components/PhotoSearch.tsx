@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { usePhotoSearch } from "../hooks/useDiscovery";
 import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
@@ -9,24 +9,43 @@ const PhotoSearch = () => {
   const shouldReduceMotion = useReducedMotion();
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { results, loading, error, searched } = usePhotoSearch(query);
 
   const selected = results.find((photo) => photo.id === selectedId) ?? null;
 
   return (
-    <section className="bg-[#09090B] mx-auto px-4 sm:px-6 md:px-8 pb-10">
+    <section id="collection-search" className="bg-[#09090B] mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-10">
       <div className="mx-auto max-w-3xl">
-        <div className="relative">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Find a frame</p>
+            <h2 className="mt-2 text-xl font-semibold text-white">Search the collection</h2>
+          </div>
+          <span className="hidden text-xs text-white/35 sm:block">Captions, tags, places</span>
+        </div>
+        <form
+          className="flex gap-2"
+          role="search"
+          onSubmit={(event: FormEvent) => {
+            event.preventDefault();
+            inputRef.current?.focus();
+          }}
+        >
           <input
+            ref={inputRef}
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search the collection… try “snow”, “portrait”, “rally”"
             aria-label="Search photos"
-            className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3 text-white placeholder:text-white/40 outline-none focus:border-white/30 focus:bg-white/10 transition-colors duration-300 text-sm"
+            className="min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-6 py-3 text-white placeholder:text-white/40 outline-none focus:border-white/30 focus:bg-white/10 transition-colors duration-300 text-sm"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           />
-        </div>
+          <button type="submit" className="rounded-full bg-white px-5 py-3 text-sm font-medium text-black transition-transform duration-200 hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/60 cursor-pointer">
+            Search
+          </button>
+        </form>
 
         {loading ? (
           <div role="status" className="mt-4 flex gap-2 flex-wrap">

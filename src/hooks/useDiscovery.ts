@@ -3,6 +3,7 @@ import { getHighlights, getSimilarPhotos, searchPhotos, type DiscoveryPhoto } fr
 import { getStaticGalleryData } from "./staticGalleryData";
 
 const TTL = 5 * 60 * 1000;
+const MAX_QUERY_LENGTH = 120;
 const cache = new Map<string, { timestamp: number; data: DiscoveryPhoto[] }>();
 const inflight = new Map<string, Promise<DiscoveryPhoto[]>>();
 
@@ -138,7 +139,7 @@ export function usePhotoSearch(query: string, { debounceMs = 350, minQueryLength
   const [error, setError] = useState<string | null>(null);
   const requestIdRef = useRef(0);
 
-  const normalized = query.trim();
+  const normalized = query.trim().slice(0, MAX_QUERY_LENGTH);
 
   useEffect(() => {
     if (normalized.length < minQueryLength) {
@@ -172,7 +173,7 @@ export function usePhotoSearch(query: string, { debounceMs = 350, minQueryLength
         .catch((err: unknown) => {
           if (stale || requestId !== requestIdRef.current) return;
 
-          if (isNetworkError(err)) {
+           if (isNetworkError(err)) {
             const staticData = getStaticGalleryData();
             const needle = normalized.toLowerCase();
             const fallback = Object.values(staticData.photosByAlbum)
@@ -225,4 +226,3 @@ function staticToDiscovery(photo: {
     tags: photo.tags,
   };
 }
-

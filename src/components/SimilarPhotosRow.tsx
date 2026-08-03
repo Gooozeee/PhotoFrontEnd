@@ -1,13 +1,15 @@
 import { motion } from "framer-motion";
 import { useSimilarPhotos } from "../hooks/useDiscovery";
+import type { DiscoveryPhoto } from "../lib/discoveryApi";
 import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
 
 interface Props {
   photoId: string;
   onSelect: (photoId: string) => void;
+  onSelectPhoto?: (photo: DiscoveryPhoto) => void;
 }
 
-const SimilarPhotosRow = ({ photoId, onSelect }: Props) => {
+const SimilarPhotosRow = ({ photoId, onSelect, onSelectPhoto }: Props) => {
   const { photos, loading } = useSimilarPhotos(photoId);
 
   if (loading || photos.length === 0) {
@@ -24,7 +26,10 @@ const SimilarPhotosRow = ({ photoId, onSelect }: Props) => {
           <motion.button
             key={photo.id}
             type="button"
-            onClick={() => onSelect(photo.id)}
+            onClick={() => {
+              onSelect(photo.id);
+              onSelectPhoto?.(photo);
+            }}
             className="shrink-0 w-24 sm:w-28 aspect-[3/2] overflow-hidden rounded-lg border border-white/10 bg-white/5 cursor-pointer p-0"
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}

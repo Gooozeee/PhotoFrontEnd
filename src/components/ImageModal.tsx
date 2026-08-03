@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { IoClose, IoChevronBack, IoChevronForward, IoExpand, IoContract } from "react-icons/io5";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import SimilarPhotosRow from "./SimilarPhotosRow";
+import type { DiscoveryPhoto } from "../lib/discoveryApi";
 
 const MAX_CAPTION_CHARS = 80;
 
@@ -41,10 +42,15 @@ const ImageModal = ({
   const [isClosing, setIsClosing] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [similarPhoto, setSimilarPhoto] = useState<DiscoveryPhoto | null>(null);
   const [direction, setDirection] = useState(0);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const hideControlsTimer = useRef<NodeJS.Timeout | null>(null);
   const prevImageUrl = useRef(imageUrl);
+  const currentImageUrl = similarPhoto?.url ?? imageUrl;
+  const currentCaption = similarPhoto ? similarPhoto.caption : caption;
+  const currentTags = similarPhoto ? similarPhoto.tags : tags;
+  const currentPhotoId = similarPhoto ? similarPhoto.id : photoId;
 
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
@@ -95,12 +101,16 @@ const ImageModal = ({
   }, [onClose, onNext, onPrev]);
 
   useEffect(() => {
-    if (prevImageUrl.current !== imageUrl) {
-      setDirection(prevImageUrl.current < imageUrl ? 1 : -1);
-      prevImageUrl.current = imageUrl;
+    setSimilarPhoto(null);
+  }, [imageUrl, photoId]);
+
+  useEffect(() => {
+    if (prevImageUrl.current !== currentImageUrl) {
+      setDirection(prevImageUrl.current < currentImageUrl ? 1 : -1);
+      prevImageUrl.current = currentImageUrl;
     }
     setImageLoaded(false);
-  }, [imageUrl]);
+  }, [currentImageUrl]);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -136,7 +146,7 @@ const ImageModal = ({
         transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
       >
         <motion.div
-          key={imageUrl}
+           key={currentImageUrl}
           initial={{ opacity: 0, x: direction * 100 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: direction * -100 }}
@@ -144,7 +154,7 @@ const ImageModal = ({
           className="relative max-w-full max-h-full"
         >
           <motion.img
-            src={imageUrl}
+             src={currentImageUrl}
             alt="Full size view"
             className={`max-w-full max-h-[80vh] object-contain select-none transition-transform duration-300 ${
               isZoomed ? "cursor-zoom-out" : "cursor-zoom-in"
@@ -231,20 +241,20 @@ const ImageModal = ({
         </motion.button>
 
         {/* Caption + tags */}
-        {caption || tags.length > 0 ? (
+        {currentCaption || currentTags.length > 0 ? (
           <motion.div
             className={`absolute left-1/2 -translate-x-1/2 max-w-[90%] sm:max-w-[70%] px-5 py-3 bg-black/60 backdrop-blur-sm rounded-2xl text-center ${photoId ? "bottom-[190px]" : "bottom-16"}`}
             animate={{ opacity: showControls ? 1 : 0 }}
             transition={{ duration: 0.2 }}
           >
-            {caption ? (
+            {currentCaption ? (
               <p className="text-white text-sm md:text-base font-light tracking-wide line-clamp-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                {clampCaption(caption)}
+                {clampCaption(currentCaption)}
               </p>
             ) : null}
-            {tags.length > 0 ? (
+            {currentTags.length > 0 ? (
               <div className="mt-2 flex flex-wrap justify-center gap-1.5">
-                {tags.map((tag) => (
+                {currentTags.map((tag) => (
                   <span key={tag} className="rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.15em] text-white/60">
                     {tag}
                   </span>
@@ -265,7 +275,7 @@ const ImageModal = ({
           <span>space next</span>
         </motion.div>
 
-        {photoId ? <SimilarPhotosRow photoId={photoId} onSelect={onClose} /> : null}
+        {currentPhotoId ? <SimilarPhotosRow photoId={currentPhotoId} onSelect={() => undefined} onSelectPhoto={setSimilarPhoto} /> : null}
       </motion.div>
     </dialog>
   );
