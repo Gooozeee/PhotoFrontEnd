@@ -1,12 +1,40 @@
 import degooseLogoWhite from "../assets/degooseLogoWhite.webp";
-import { useEffect, useState, useCallback } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { IoSearch } from "react-icons/io5";
 
 function NavBar() {
   const shouldReduceMotion = useReducedMotion();
   const [scrolledDown, setScrolledDown] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchRef = useRef<HTMLDivElement>(null);
+  const searchTriggerRef = useRef<HTMLButtonElement>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeSearch();
+    };
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!searchRef.current?.contains(event.target as Node)) closeSearch();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [searchOpen]);
+
+  function closeSearch() {
+    setSearchOpen(false);
+    window.requestAnimationFrame(() => searchTriggerRef.current?.focus());
+  }
 
   const listenScrollEvent = useCallback(() => {
     const isScrolled = window.scrollY > 20;
@@ -33,6 +61,14 @@ function NavBar() {
       window.removeEventListener("scroll", onScroll);
     };
   }, [listenScrollEvent]);
+
+  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) return;
+    closeSearch();
+    navigate(`/?q=${encodeURIComponent(query)}`);
+  }
 
   const navVariants = {
     initial: { y: -100 },
@@ -96,19 +132,32 @@ function NavBar() {
           </ul>
         </div>
 
-        <button
-          type="button"
-          className="block lg:hidden z-[60] bg-transparent border-none cursor-pointer p-2 ml-auto"
-          aria-label="Toggle menu"
-          aria-expanded={hamburgerOpen}
-          onClick={() => setHamburgerOpen(!hamburgerOpen)}
-        >
-          <div className="flex flex-col gap-1.5 w-6">
-            <span className={`block h-0.5 bg-white transition-all duration-300 ${hamburgerOpen ? 'rotate-45 translate-y-2' : ''}`} />
-            <span className={`block h-0.5 bg-white transition-all duration-300 ${hamburgerOpen ? 'opacity-0' : ''}`} />
-            <span className={`block h-0.5 bg-white transition-all duration-300 ${hamburgerOpen ? '-rotate-45 -translate-y-2' : ''}`} />
-          </div>
-        </button>
+        <div className="relative z-[60] ml-auto flex items-center gap-1" ref={searchRef}>
+          <button ref={searchTriggerRef} type="button" aria-label="Open search" aria-expanded={searchOpen} onClick={() => setSearchOpen((value) => !value)} className="cursor-pointer rounded-full p-2 text-white/75 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/60">
+            <IoSearch size={22} />
+          </button>
+          <button
+            type="button"
+            className="block lg:hidden cursor-pointer bg-transparent p-2"
+            aria-label="Toggle menu"
+            aria-expanded={hamburgerOpen}
+            onClick={() => setHamburgerOpen(!hamburgerOpen)}
+          >
+            <div className="flex w-6 flex-col gap-1.5">
+              <span className={`block h-0.5 bg-white transition-all duration-300 ${hamburgerOpen ? 'rotate-45 translate-y-2' : ''}`} />
+              <span className={`block h-0.5 bg-white transition-all duration-300 ${hamburgerOpen ? 'opacity-0' : ''}`} />
+              <span className={`block h-0.5 bg-white transition-all duration-300 ${hamburgerOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+            </div>
+          </button>
+          <AnimatePresence>
+            {searchOpen ? (
+              <motion.form role="search" onSubmit={submitSearch} initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.96 }} className="absolute right-0 top-[calc(100%+0.75rem)] flex w-[min(86vw,22rem)] gap-2 rounded-2xl border border-white/15 bg-[#111113]/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl">
+                <input autoFocus type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search the collection" aria-label="Global search" className="min-w-0 flex-1 rounded-xl bg-white/5 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35 focus:bg-white/10" />
+                <button type="submit" aria-label="Submit search" className="cursor-pointer rounded-xl bg-white px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-white/85">Go</button>
+              </motion.form>
+            ) : null}
+          </AnimatePresence>
+        </div>
       </div>
 
       <AnimatePresence>

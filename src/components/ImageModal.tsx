@@ -19,7 +19,6 @@ interface Props {
   imageIndex?: number;
   totalImages?: number;
   caption?: string | null;
-  rating?: number | null;
   tags?: string[];
   showTags?: boolean;
   photoId?: string | null;
@@ -33,9 +32,8 @@ const ImageModal = ({
   imageIndex = 1,
   totalImages = 1,
   caption,
-  rating = null,
   tags = [],
-  showTags = true,
+  showTags = false,
   photoId,
   onClose,
   onNext,
@@ -53,7 +51,6 @@ const ImageModal = ({
   const prevImageUrl = useRef(imageUrl);
   const currentImageUrl = similarPhoto?.url ?? imageUrl;
   const currentCaption = similarPhoto ? similarPhoto.caption : caption;
-  const currentRating = similarPhoto ? similarPhoto.rating : rating;
   const currentTags = showTags ? (similarPhoto ? similarPhoto.tags : tags) : [];
   const currentPhotoId = similarPhoto ? similarPhoto.id : photoId;
   const currentAlt = similarPhoto ? (similarPhoto.caption ?? similarPhoto.fileName) : (caption ?? "Full size view");
@@ -137,6 +134,7 @@ const ImageModal = ({
   return (
     <dialog
       ref={dialogRef}
+      aria-label="Image viewer"
       className="fixed inset-0 bg-[#09090B]/95 z-50 p-0 m-0 border-none max-w-none max-h-none overflow-hidden"
       style={{
         width: "100vw",
@@ -198,6 +196,7 @@ const ImageModal = ({
           className="absolute top-6 right-6 z-[9999] bg-black/40 backdrop-blur-sm border-none cursor-pointer text-white hover:text-white/70 transition-colors duration-200 p-3 rounded-full hover:bg-white/10"
           onClick={handleClose}
           aria-label="Close image"
+          tabIndex={showControls ? 0 : -1}
           animate={{ opacity: showControls ? 1 : 0 }}
           transition={{ duration: 0.2 }}
         >
@@ -214,6 +213,7 @@ const ImageModal = ({
                 onPrev();
               }}
               aria-label="Previous image"
+              tabIndex={showControls ? 0 : -1}
               animate={{ opacity: showControls ? 1 : 0 }}
               transition={{ duration: 0.2 }}
             >
@@ -227,6 +227,7 @@ const ImageModal = ({
                 onNext();
               }}
               aria-label="Next image"
+              tabIndex={showControls ? 0 : -1}
               animate={{ opacity: showControls ? 1 : 0 }}
               transition={{ duration: 0.2 }}
             >
@@ -240,6 +241,7 @@ const ImageModal = ({
           className="absolute bottom-6 right-6 z-[9999] bg-black/40 backdrop-blur-sm border-none cursor-pointer text-white hover:text-white/70 transition-colors duration-200 p-3 rounded-full hover:bg-white/10"
           onClick={toggleZoom}
           aria-label={isZoomed ? "Zoom out" : "Zoom in"}
+          tabIndex={showControls ? 0 : -1}
           animate={{ opacity: showControls ? 1 : 0 }}
           transition={{ duration: 0.2 }}
         >
@@ -247,7 +249,7 @@ const ImageModal = ({
         </motion.button>
 
         {/* Caption + tags */}
-        {currentCaption || currentRating != null || currentTags.length > 0 ? (
+        {currentCaption || currentTags.length > 0 ? (
           <motion.div
             className={`absolute left-1/2 w-[min(90vw,42rem)] -translate-x-1/2 rounded-3xl border border-white/15 bg-black/65 px-5 py-4 text-center shadow-2xl backdrop-blur-xl sm:px-7 ${currentPhotoId ? "bottom-44" : "bottom-20"}`}
             animate={{ opacity: showControls ? 1 : 0 }}
@@ -258,7 +260,6 @@ const ImageModal = ({
                   {clampCaption(currentCaption)}
                 </p>
               ) : null}
-            {currentRating != null ? <p className="mt-2 text-xs uppercase tracking-[0.25em] text-white/55">Curated rating · {currentRating}/10</p> : null}
             {currentTags.length > 0 ? (
               <div className="mt-2 flex flex-wrap justify-center gap-1.5">
                 {currentTags.map((tag) => (

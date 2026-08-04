@@ -54,7 +54,7 @@ describe('ImageModal', () => {
     expect(onPrev).toHaveBeenCalled();
   });
 
-  it('renders a short caption and its tags', () => {
+  it('renders a short caption without internal tags', () => {
     const onClose = vi.fn();
 
     render(
@@ -62,8 +62,8 @@ describe('ImageModal', () => {
     );
 
     expect(screen.getByText('Storm over the Mournes')).toBeInTheDocument();
-    expect(screen.getByText('nature')).toBeInTheDocument();
-    expect(screen.getByText('landscape')).toBeInTheDocument();
+    expect(screen.queryByText('nature')).not.toBeInTheDocument();
+    expect(screen.queryByText('landscape')).not.toBeInTheDocument();
   });
 
   describe('clampCaption', () => {

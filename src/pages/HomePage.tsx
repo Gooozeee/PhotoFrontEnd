@@ -19,6 +19,12 @@ const HomePage = () => {
     }
   }, [location.state, persistedAdminMessage]);
 
+  useEffect(() => {
+    if (!new URLSearchParams(location.search).get("q")) return;
+    const frame = window.requestAnimationFrame(() => document.getElementById("collection-search")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.search]);
+
   const scrollToGallery = () => {
     galleryBannerRef.current?.scrollIntoView({ behavior: "smooth" });
   };

@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import PhotoSearch from './PhotoSearch';
 
 const searchState = vi.hoisted(() => ({
@@ -32,8 +33,12 @@ vi.mock('./ImageModal', () => ({
 }));
 
 describe('PhotoSearch', () => {
+  function renderSearch() {
+    return render(<MemoryRouter><PhotoSearch /></MemoryRouter>);
+  }
+
   it('renders a search input', () => {
-    render(<PhotoSearch />);
+    renderSearch();
     expect(screen.getByRole('searchbox', { name: 'Search photos' })).toBeInTheDocument();
   });
 
@@ -42,7 +47,7 @@ describe('PhotoSearch', () => {
     searchState.results = [
       { id: 'r1', fileName: 'snow.jpg', url: 'snow.webp', thumbnailUrl: null, caption: 'Fresh snow', description: null, rating: null, width: 800, height: 600, tags: [], albumId: null },
     ];
-    render(<PhotoSearch />);
+    renderSearch();
 
     expect(screen.getByRole('button', { name: 'View Fresh snow' })).toBeInTheDocument();
   });
@@ -50,7 +55,7 @@ describe('PhotoSearch', () => {
   it('shows a no-results message when searched with no matches', () => {
     searchState.searched = true;
     searchState.results = [];
-    render(<PhotoSearch />);
+    renderSearch();
 
     expect(screen.getByText(/No matches for/)).toBeInTheDocument();
   });
@@ -59,7 +64,7 @@ describe('PhotoSearch', () => {
     searchState.results = [
       { id: 'r1', fileName: 'snow.jpg', url: 'snow.webp', thumbnailUrl: null, caption: 'Fresh snow', description: null, rating: null, width: 800, height: 600, tags: [], albumId: null },
     ];
-    render(<PhotoSearch />);
+    renderSearch();
 
     fireEvent.click(screen.getByRole('button', { name: 'View Fresh snow' }));
 

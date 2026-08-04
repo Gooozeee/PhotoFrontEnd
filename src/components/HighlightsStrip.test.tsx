@@ -40,12 +40,11 @@ describe('HighlightsStrip', () => {
     highlightsState.error = null;
   });
 
-  it('renders the two-row responsive gallery', () => {
+  it('renders one large featured image', () => {
     render(<HighlightsStrip />);
 
-    expect(screen.getByText('Best images')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /View larger highlight/ }).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Images roll through the grid/)).toBeInTheDocument();
+    expect(screen.queryByText(/highlights|auto-rotating|Images roll/)).not.toBeInTheDocument();
   });
 
   it('renders nothing when there are no highlights', () => {

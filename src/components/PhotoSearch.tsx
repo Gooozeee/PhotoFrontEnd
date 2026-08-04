@@ -1,4 +1,6 @@
 import { FormEvent, useRef, useState } from "react";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { usePhotoSearch } from "../hooks/useDiscovery";
 import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
@@ -10,7 +12,13 @@ const PhotoSearch = () => {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const location = useLocation();
   const { results, loading, error, searched } = usePhotoSearch(query);
+
+  useEffect(() => {
+    const urlQuery = new URLSearchParams(location.search).get("q") ?? "";
+    if (urlQuery !== query) setQuery(urlQuery);
+  }, [location.search]);
 
   const selected = results.find((photo) => photo.id === selectedId) ?? null;
 
@@ -91,7 +99,6 @@ const PhotoSearch = () => {
         <ImageModal
           imageUrl={selected.url}
           caption={clampCaption(selected.caption)}
-          rating={selected.rating}
           tags={selected.tags}
           photoId={selected.id}
           onClose={() => setSelectedId(null)}
