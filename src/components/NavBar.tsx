@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { IoSearch } from "react-icons/io5";
+import { createPortal } from "react-dom";
 import { usePhotoSearch } from "../hooks/useDiscovery";
 import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
 import ImageModal from "./ImageModal";
@@ -15,6 +16,7 @@ function NavBar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchRef = useRef<HTMLDivElement>(null);
+  const searchOverlayRef = useRef<HTMLDivElement>(null);
   const searchTriggerRef = useRef<HTMLButtonElement>(null);
   const [searchSubmitted, setSearchSubmitted] = useState(false);
   const [selectedSearchId, setSelectedSearchId] = useState<string | null>(null);
@@ -27,7 +29,7 @@ function NavBar() {
       if (event.key === "Escape") closeSearch();
     };
     const handlePointerDown = (event: PointerEvent) => {
-      if (!searchRef.current?.contains(event.target as Node)) closeSearch();
+      if (!searchRef.current?.contains(event.target as Node) && !searchOverlayRef.current?.contains(event.target as Node)) closeSearch();
     };
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("pointerdown", handlePointerDown);
@@ -113,7 +115,7 @@ function NavBar() {
         </Link>
 
         <div
-          className={`hidden lg:flex items-center gap-8 transition-opacity duration-300 ${
+          className={`hidden lg:ml-auto lg:flex items-center gap-8 transition-opacity duration-300 ${
             hamburgerOpen ? "opacity-0" : "opacity-100"
           }`}
         >
@@ -163,9 +165,8 @@ function NavBar() {
               </motion.form>
             ) : null}
           </AnimatePresence>
-          <AnimatePresence>
-            {searchOpen && searchSubmitted ? (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[55] bg-black/75 p-4 pt-24 backdrop-blur-md sm:p-8 sm:pt-32">
+          {searchOpen && searchSubmitted ? createPortal(
+              <motion.div ref={searchOverlayRef} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] bg-black/75 p-4 pt-24 backdrop-blur-md sm:p-8 sm:pt-32">
                 <div className="mx-auto flex h-full max-w-6xl flex-col overflow-hidden rounded-[2rem] border border-white/15 bg-[#0d0d0f]/95 shadow-2xl shadow-black/50">
                   <form role="search" onSubmit={submitSearch} className="flex gap-2 border-b border-white/10 p-4 sm:p-6">
                     <input autoFocus type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search the collection" aria-label="Global search results" className="min-w-0 flex-1 rounded-2xl bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:bg-white/10" />
@@ -176,9 +177,9 @@ function NavBar() {
                     {loading ? <div role="status" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{Array.from({ length: 8 }, (_, index) => <div key={index} className="aspect-[4/3] animate-pulse rounded-2xl bg-white/5" />)}</div> : error ? <p role="alert" className="py-16 text-center text-sm text-red-300">Search is unavailable right now.</p> : !searched ? <p className="py-16 text-center text-sm text-white/45">Start typing to search the collection.</p> : results.length === 0 ? <p className="py-16 text-center text-sm text-white/55">No images matched “{searchQuery}”.</p> : <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">{results.map((photo) => <article key={photo.id} className="min-w-0"><button type="button" onClick={() => setSelectedSearchId(photo.id)} aria-label={`View ${clampCaption(photo.caption) ?? photo.fileName}`} className="group relative block aspect-[4/3] w-full cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-white/5 text-left focus:outline-none focus:ring-2 focus:ring-white/70"><img src={getPreviewImageUrl(photo.thumbnailUrl) ?? photo.thumbnailUrl ?? photo.url} alt={clampCaption(photo.caption) ?? photo.fileName} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" /></button><p className="mt-2 line-clamp-1 text-sm text-white/85">{clampCaption(photo.caption) ?? photo.fileName}</p><p className="mt-1 line-clamp-1 text-xs uppercase tracking-[0.15em] text-white/35">{photo.albumName ?? "Collection"}</p></article>)}</div>}
                   </div>
                 </div>
-              </motion.div>
+              </motion.div>,
+              document.body
             ) : null}
-          </AnimatePresence>
           {selectedSearchPhoto ? <ImageModal imageUrl={selectedSearchPhoto.url} caption={clampCaption(selectedSearchPhoto.caption)} tags={selectedSearchPhoto.tags} showTags={false} photoId={selectedSearchPhoto.id} onClose={() => setSelectedSearchId(null)} /> : null}
         </div>
       </div>

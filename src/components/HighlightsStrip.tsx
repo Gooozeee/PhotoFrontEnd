@@ -6,8 +6,8 @@ import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
 import { clampCaption } from "./ImageModal";
 
 const SLOT_COUNT = 6;
-const MIN_ROTATION_MS = 7000;
-const MAX_ROTATION_MS = 10000;
+const MIN_ROTATION_MS = 4000;
+const MAX_ROTATION_MS = 6000;
 
 function randomDelay() {
   return MIN_ROTATION_MS + Math.random() * (MAX_ROTATION_MS - MIN_ROTATION_MS);
@@ -68,7 +68,7 @@ const HighlightsStrip = () => {
             if (!photo) return null;
             return (
               <div key={slot} className="min-w-0">
-                <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white/5">
+                <div className="relative aspect-[3/2] overflow-hidden rounded-2xl bg-white/5">
                   <AnimatePresence initial={false} mode="wait">
                     <motion.button
                       key={`${slot}-${photo.id}`}
