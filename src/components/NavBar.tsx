@@ -1,8 +1,12 @@
 import degooseLogoWhite from "../assets/degooseLogoWhite.webp";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { IoSearch } from "react-icons/io5";
+import { usePhotoSearch } from "../hooks/useDiscovery";
+import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
+import ImageModal from "./ImageModal";
+import { clampCaption } from "./ImageModal";
 
 function NavBar() {
   const shouldReduceMotion = useReducedMotion();
@@ -12,8 +16,10 @@ function NavBar() {
   const [searchQuery, setSearchQuery] = useState("");
   const searchRef = useRef<HTMLDivElement>(null);
   const searchTriggerRef = useRef<HTMLButtonElement>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [searchSubmitted, setSearchSubmitted] = useState(false);
+  const [selectedSearchId, setSelectedSearchId] = useState<string | null>(null);
+  const { results, loading, error, searched } = usePhotoSearch(searchQuery);
+  const selectedSearchPhoto = results.find((photo) => photo.id === selectedSearchId) ?? null;
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -33,6 +39,7 @@ function NavBar() {
 
   function closeSearch() {
     setSearchOpen(false);
+    setSearchSubmitted(false);
     window.requestAnimationFrame(() => searchTriggerRef.current?.focus());
   }
 
@@ -66,8 +73,7 @@ function NavBar() {
     event.preventDefault();
     const query = searchQuery.trim();
     if (!query) return;
-    closeSearch();
-    navigate(`/?q=${encodeURIComponent(query)}`);
+    setSearchSubmitted(true);
   }
 
   const navVariants = {
@@ -150,13 +156,30 @@ function NavBar() {
             </div>
           </button>
           <AnimatePresence>
-            {searchOpen ? (
+            {searchOpen && !searchSubmitted ? (
               <motion.form role="search" onSubmit={submitSearch} initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.96 }} className="absolute right-0 top-[calc(100%+0.75rem)] flex w-[min(86vw,22rem)] gap-2 rounded-2xl border border-white/15 bg-[#111113]/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl">
                 <input autoFocus type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search the collection" aria-label="Global search" className="min-w-0 flex-1 rounded-xl bg-white/5 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35 focus:bg-white/10" />
                 <button type="submit" aria-label="Submit search" className="cursor-pointer rounded-xl bg-white px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-white/85">Go</button>
               </motion.form>
             ) : null}
           </AnimatePresence>
+          <AnimatePresence>
+            {searchOpen && searchSubmitted ? (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[55] bg-black/75 p-4 pt-24 backdrop-blur-md sm:p-8 sm:pt-32">
+                <div className="mx-auto flex h-full max-w-6xl flex-col overflow-hidden rounded-[2rem] border border-white/15 bg-[#0d0d0f]/95 shadow-2xl shadow-black/50">
+                  <form role="search" onSubmit={submitSearch} className="flex gap-2 border-b border-white/10 p-4 sm:p-6">
+                    <input autoFocus type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search the collection" aria-label="Global search results" className="min-w-0 flex-1 rounded-2xl bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:bg-white/10" />
+                    <button type="submit" aria-label="Submit search" className="cursor-pointer rounded-2xl bg-white px-4 py-3 text-sm font-medium text-black">Search</button>
+                    <button type="button" aria-label="Close search results" onClick={closeSearch} className="cursor-pointer rounded-2xl border border-white/10 px-4 py-3 text-sm text-white/65 hover:text-white">Close</button>
+                  </form>
+                  <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+                    {loading ? <div role="status" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{Array.from({ length: 8 }, (_, index) => <div key={index} className="aspect-[4/3] animate-pulse rounded-2xl bg-white/5" />)}</div> : error ? <p role="alert" className="py-16 text-center text-sm text-red-300">Search is unavailable right now.</p> : searched && results.length === 0 ? <p className="py-16 text-center text-sm text-white/55">No images matched “{searchQuery}”.</p> : <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{results.map((photo) => <button key={photo.id} type="button" onClick={() => setSelectedSearchId(photo.id)} aria-label={`View ${clampCaption(photo.caption) ?? photo.fileName}`} className="group relative aspect-[4/3] cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-white/5 text-left focus:outline-none focus:ring-2 focus:ring-white/70"><img src={getPreviewImageUrl(photo.thumbnailUrl) ?? photo.thumbnailUrl ?? photo.url} alt={clampCaption(photo.caption) ?? photo.fileName} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" /><span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-3 pt-10 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">{clampCaption(photo.caption) ?? photo.fileName}</span></button>)}</div>}
+                  </div>
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+          {selectedSearchPhoto ? <ImageModal imageUrl={selectedSearchPhoto.url} caption={clampCaption(selectedSearchPhoto.caption)} tags={selectedSearchPhoto.tags} showTags={false} photoId={selectedSearchPhoto.id} onClose={() => setSelectedSearchId(null)} /> : null}
         </div>
       </div>
 
