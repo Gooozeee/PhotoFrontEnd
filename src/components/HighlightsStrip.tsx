@@ -6,8 +6,8 @@ import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
 import { clampCaption } from "./ImageModal";
 
 const SLOT_COUNT = 6;
-const MIN_ROTATION_MS = 3000;
-const MAX_ROTATION_MS = 5000;
+const MIN_ROTATION_MS = 7000;
+const MAX_ROTATION_MS = 10000;
 
 function randomDelay() {
   return MIN_ROTATION_MS + Math.random() * (MAX_ROTATION_MS - MIN_ROTATION_MS);
@@ -35,23 +35,16 @@ const HighlightsStrip = () => {
 
   useEffect(() => {
     if (shouldReduceMotion || paused || slides.length === 0 || photos.length < 2) return;
-    const timers = slides.map((_, slot) => {
-      let timer: number;
-      const schedule = () => {
-        timer = window.setTimeout(() => {
-          setSlides((current) => {
-            const visible = current.filter((_, index) => index !== slot);
-            const next = choosePhoto(current[slot] ?? 0, visible, photos.length);
-            return current.map((value, index) => (index === slot ? next : value));
-          });
-          schedule();
-        }, randomDelay());
-      };
-      schedule();
-      return () => window.clearTimeout(timer);
-    });
-    return () => timers.forEach((clear) => clear());
-  }, [paused, photos, shouldReduceMotion, slides.length]);
+    const timer = window.setTimeout(() => {
+      setSlides((current) => {
+        const slot = Math.floor(Math.random() * current.length);
+        const visible = current.filter((_, index) => index !== slot);
+        const next = choosePhoto(current[slot] ?? 0, visible, photos.length);
+        return current.map((value, index) => (index === slot ? next : value));
+      });
+    }, randomDelay());
+    return () => window.clearTimeout(timer);
+  }, [paused, photos, shouldReduceMotion, slides]);
 
   if (loading && photos.length === 0) {
     return <div className="bg-[#09090B] px-4 py-10 sm:px-6 md:px-8"><div role="status" className="mx-auto h-64 max-w-5xl animate-pulse rounded-[2rem] border border-white/10 bg-white/5" /></div>;
@@ -73,10 +66,9 @@ const HighlightsStrip = () => {
           {slides.map((photoIndex, slot) => {
             const photo = photos[photoIndex];
             if (!photo) return null;
-            const ratio = photo.width > 0 && photo.height > 0 ? photo.width / photo.height : 1.5;
             return (
               <div key={slot} className="min-w-0">
-                <div className="relative overflow-hidden rounded-2xl bg-white/5" style={{ aspectRatio: ratio }}>
+                <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white/5">
                   <AnimatePresence initial={false} mode="wait">
                     <motion.button
                       key={`${slot}-${photo.id}`}
