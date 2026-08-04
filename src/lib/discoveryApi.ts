@@ -4,6 +4,7 @@ export interface DiscoveryPhoto {
   id: string;
   fileName: string;
   albumId: string | null;
+  albumName?: string | null;
   url: string;
   thumbnailUrl: string | null;
   caption: string | null;

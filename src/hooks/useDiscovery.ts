@@ -216,6 +216,7 @@ function staticToDiscovery(photo: {
     id: photo.id,
     fileName: photo.fileName,
     albumId: photo.albumId,
+    albumName: null,
     url: photo.url,
     thumbnailUrl: photo.thumbnailUrl,
     caption: photo.caption,
