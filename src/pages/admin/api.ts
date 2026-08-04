@@ -101,6 +101,69 @@ export async function uploadPhoto(formData: FormData): Promise<AdminPhoto> {
   return adminFetch<AdminPhoto>("/api/photos/upload", { method: "POST", body: formData });
 }
 
+export function uploadPhotoWithProgress(
+  formData: FormData,
+  onProgress: (percent: number) => void,
+  options: AdminFetchOptions = {},
+): Promise<AdminPhoto> {
+  return new Promise((resolve, reject) => {
+    const { redirectOnAuthFailure = true } = options;
+    const token = getAccessToken();
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_BASE}/api/photos/upload`);
+    xhr.setRequestHeader("Accept", "application/json");
+    if (token) {
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    }
+
+    xhr.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable && event.total > 0) {
+        onProgress(Math.round((event.loaded / event.total) * 100));
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const text = xhr.responseText;
+        try {
+          resolve(text ? (JSON.parse(text) as AdminPhoto) : (undefined as unknown as AdminPhoto));
+        } catch {
+          reject(new Error("Upload failed"));
+        }
+        return;
+      }
+
+      if (xhr.status === 401) {
+        const error = new Error("Admin session missing or expired. Sign in again.");
+        void signOutAdmin().catch(() => undefined);
+        if (redirectOnAuthFailure) {
+          redirectToHomeWithMessage(getAdminRedirectMessage(error));
+        }
+        reject(error);
+        return;
+      }
+
+      if (xhr.status === 403) {
+        const error = new Error("Admin access denied for this account.");
+        void signOutAdmin().catch(() => undefined);
+        if (redirectOnAuthFailure) {
+          redirectToHomeWithMessage(getAdminRedirectMessage(error));
+        }
+        reject(error);
+        return;
+      }
+
+      reject(new Error(`Request failed with ${xhr.status}`));
+    });
+
+    xhr.addEventListener("error", () => reject(new Error("Upload failed")));
+    xhr.addEventListener("abort", () => reject(new Error("Upload aborted")));
+
+    xhr.send(formData);
+  });
+}
+
 export async function enqueueMetadata(): Promise<void> {
   await adminFetch<void>("/api/admin/metadata/enqueue", { method: "POST" });
 }

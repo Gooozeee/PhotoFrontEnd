@@ -9,6 +9,7 @@ import type { AdminAlbum, AdminPhoto } from './types';
 const loadAlbumsMock = vi.fn();
 const loadPhotosMock = vi.fn();
 const adminFetchMock = vi.fn();
+const uploadPhotoWithProgressMock = vi.fn();
 const createObjectUrlMock = vi.fn();
 const revokeObjectUrlMock = vi.fn();
 
@@ -22,6 +23,7 @@ vi.mock('./api', () => ({
   loadAlbums: (...args: unknown[]) => loadAlbumsMock(...args),
   loadPhotos: (...args: unknown[]) => loadPhotosMock(...args),
   adminFetch: (...args: unknown[]) => adminFetchMock(...args),
+  uploadPhotoWithProgress: (...args: unknown[]) => uploadPhotoWithProgressMock(...args),
 }));
 
 vi.mock('./AdminShell', () => ({
@@ -107,6 +109,7 @@ describe('UploadPage', () => {
     loadAlbumsMock.mockReset();
     loadPhotosMock.mockReset();
     adminFetchMock.mockReset();
+    uploadPhotoWithProgressMock.mockReset();
     createObjectUrlMock.mockReset();
     revokeObjectUrlMock.mockReset();
     createObjectUrlMock.mockImplementation((file: File) => `blob:${file.name}`);
@@ -132,7 +135,7 @@ describe('UploadPage', () => {
 
   it('uploads queued photos automatically one at a time using the selected album', async () => {
     const user = userEvent.setup();
-    adminFetchMock
+    uploadPhotoWithProgressMock
       .mockResolvedValueOnce({
         ...createPhotos()[0],
         id: 'photo-3',
@@ -164,43 +167,75 @@ describe('UploadPage', () => {
     });
 
     await waitFor(() => {
-      expect(adminFetchMock).toHaveBeenCalledTimes(2);
+      expect(uploadPhotoWithProgressMock).toHaveBeenCalledTimes(2);
     });
 
-    const [firstPath, firstInit] = adminFetchMock.mock.calls[0];
-    expect(firstPath).toBe('/api/photos/upload');
-    expect(firstInit.method).toBe('POST');
-    expect(firstInit.body).toBeInstanceOf(FormData);
-    expect(((firstInit.body as FormData).get('file') as File).name).toBe('fresh-1.jpg');
-    expect((firstInit.body as FormData).get('albumId')).toBe('album-1');
+    const [firstFormData] = uploadPhotoWithProgressMock.mock.calls[0];
+    expect(firstFormData).toBeInstanceOf(FormData);
+    expect((firstFormData.get('file') as File).name).toBe('fresh-1.jpg');
+    expect(firstFormData.get('albumId')).toBe('album-1');
 
-    const [, secondInit] = adminFetchMock.mock.calls[1];
-    expect(((secondInit.body as FormData).get('file') as File).name).toBe('fresh-2.jpg');
-    expect((secondInit.body as FormData).get('albumId')).toBe('album-1');
+    const [secondFormData] = uploadPhotoWithProgressMock.mock.calls[1];
+    expect((secondFormData.get('file') as File).name).toBe('fresh-2.jpg');
+    expect(secondFormData.get('albumId')).toBe('album-1');
 
     expect(await screen.findByText('/admin/photos?review=photo-3%2Cphoto-4')).toBeInTheDocument();
   });
 
-  it('can create a new batch album before queueing files', async () => {
+  it('shows upload progress bars while a file is uploading', async () => {
     const user = userEvent.setup();
-    adminFetchMock
-      .mockResolvedValueOnce({
-        id: 'album-2',
-        name: 'Birds',
-        description: 'Birding',
-        coverPhotoId: null,
-        coverPhotoUrl: null,
-        coverThumbnailUrl: null,
-        isPublished: false,
-        photosCount: 0,
-      })
-      .mockResolvedValueOnce({
+    let releaseUpload: (value: unknown) => void = () => undefined;
+    uploadPhotoWithProgressMock.mockImplementation((_formData: unknown, onProgress: unknown) => {
+      (onProgress as (p: number) => void)(42);
+      return new Promise((resolve) => {
+        releaseUpload = resolve;
+      });
+    });
+
+    await renderUploadPage();
+
+    await act(async () => {
+      await user.upload(screen.getByLabelText('Queue photos'), [
+        new File(['image-1'], 'prog.jpg', { type: 'image/jpeg' }),
+      ]);
+    });
+
+    expect(await screen.findByText('Batch progress')).toBeInTheDocument();
+    expect(screen.getByText('0 of 1 · 0%')).toBeInTheDocument();
+    expect(screen.getByText('Current file')).toBeInTheDocument();
+    expect(screen.getByText('42%')).toBeInTheDocument();
+    expect(screen.getByText('42% uploaded')).toBeInTheDocument();
+
+    await act(async () => {
+      releaseUpload({
         ...createPhotos()[0],
         id: 'photo-3',
-        fileName: 'bird.jpg',
-        albumId: 'album-2',
-        albumName: 'Birds',
+        fileName: 'prog.jpg',
       });
+    });
+
+    expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
+  });
+
+  it('can create a new batch album before queueing files', async () => {
+    const user = userEvent.setup();
+    adminFetchMock.mockResolvedValueOnce({
+      id: 'album-2',
+      name: 'Birds',
+      description: 'Birding',
+      coverPhotoId: null,
+      coverPhotoUrl: null,
+      coverThumbnailUrl: null,
+      isPublished: false,
+      photosCount: 0,
+    });
+    uploadPhotoWithProgressMock.mockResolvedValueOnce({
+      ...createPhotos()[0],
+      id: 'photo-3',
+      fileName: 'bird.jpg',
+      albumId: 'album-2',
+      albumName: 'Birds',
+    });
 
     await renderUploadPage();
 
@@ -218,16 +253,16 @@ describe('UploadPage', () => {
     });
 
     await waitFor(() => {
-      expect(adminFetchMock).toHaveBeenCalledTimes(2);
+      expect(uploadPhotoWithProgressMock).toHaveBeenCalledTimes(1);
     });
 
-    const [, uploadInit] = adminFetchMock.mock.calls[1];
-    expect((uploadInit.body as FormData).get('albumId')).toBe('album-2');
+    const [formData] = uploadPhotoWithProgressMock.mock.calls[0];
+    expect((formData as FormData).get('albumId')).toBe('album-2');
   });
 
   it('allows retrying a failed upload', async () => {
     const user = userEvent.setup();
-    adminFetchMock
+    uploadPhotoWithProgressMock
       .mockRejectedValueOnce(new Error('Upload failed'))
       .mockResolvedValueOnce({
         ...createPhotos()[0],
@@ -251,7 +286,7 @@ describe('UploadPage', () => {
     });
 
     await waitFor(() => {
-      expect(adminFetchMock).toHaveBeenCalledTimes(2);
+      expect(uploadPhotoWithProgressMock).toHaveBeenCalledTimes(2);
     });
 
     expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
@@ -259,7 +294,7 @@ describe('UploadPage', () => {
 
   it('marks malformed upload responses as failed instead of crashing', async () => {
     const user = userEvent.setup();
-    adminFetchMock.mockResolvedValue(undefined);
+    uploadPhotoWithProgressMock.mockResolvedValue(undefined);
 
     await renderUploadPage();
 
@@ -275,7 +310,7 @@ describe('UploadPage', () => {
 
   it('reports per-run completion counts when older uploads remain in queue history', async () => {
     const user = userEvent.setup();
-    adminFetchMock
+    uploadPhotoWithProgressMock
       .mockResolvedValueOnce({
         ...createPhotos()[0],
         id: 'photo-3',
@@ -329,7 +364,7 @@ describe('UploadPage', () => {
 
   it('opens the photo manager after a batch upload completes', async () => {
     const user = userEvent.setup();
-    adminFetchMock.mockResolvedValue({
+    uploadPhotoWithProgressMock.mockResolvedValue({
       ...createPhotos()[0],
       id: 'photo-3',
       fileName: 'review.jpg',

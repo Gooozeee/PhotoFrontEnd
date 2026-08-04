@@ -1,19 +1,20 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminShell } from "./AdminShell";
-import { adminFetch, loadAlbums, loadPhotos } from "./api";
+import { adminFetch, loadAlbums, loadPhotos, uploadPhotoWithProgress } from "./api";
 import type { AdminAlbum, AdminPhoto } from "./types";
 
-type UploadResult = AdminPhoto;
 type UploadStatus = "queued" | "uploading" | "uploaded" | "failed";
 
 type QueuedUpload = {
   id: string;
+  runId: number;
   file: File;
   previewUrl: string | null;
   albumId: string | null;
   albumName: string | null;
   status: UploadStatus;
+  progress: number;
   uploadedPhotoId: string | null;
   exifStatus: AdminPhoto["exifStatus"];
   error: string | null;
@@ -76,9 +77,11 @@ export default function UploadPage() {
   const [queue, setQueue] = useState<QueuedUpload[]>([]);
   const queueRef = useRef<QueuedUpload[]>([]);
   const uploadingRef = useRef(false);
+  const currentRunIdRef = useRef(0);
   const uploadRunSummaryRef = useRef({ uploaded: 0, failed: 0 });
   const uploadedBatchPhotoIdsRef = useRef<string[]>([]);
   const reviewNavigationTriggeredRef = useRef(false);
+  const lastProgressUpdateRef = useRef(0);
 
   const selectedPhoto = photos.find((photo) => photo.id === selectedPhotoId) ?? null;
   const queueSummary = useMemo(() => ({
@@ -88,6 +91,17 @@ export default function UploadPage() {
     failed: queue.filter((item) => item.status === "failed").length,
   }), [queue]);
   const currentUpload = queue.find((item) => item.status === "uploading") ?? queue.find((item) => item.status === "queued") ?? null;
+  const runSummary = useMemo(() => {
+    const runItems = currentRunIdRef.current ? queue.filter((item) => item.runId === currentRunIdRef.current) : [];
+    const done = runItems.filter((item) => item.status === "uploaded" || item.status === "failed").length;
+    return {
+      total: runItems.length,
+      done,
+      percent: runItems.length === 0 ? 0 : Math.round((done / runItems.length) * 100),
+    };
+  }, [queue]);
+  const activeUpload = queue.find((item) => item.status === "uploading") ?? null;
+  const activeProgress = activeUpload?.progress ?? 0;
 
   useEffect(() => {
     void refresh();
@@ -167,13 +181,19 @@ export default function UploadPage() {
 
     const batchId = Date.now();
     const selectedAlbum = albums.find((album) => album.id === selectedAlbumId) ?? null;
+    const runId = uploadingRef.current ? currentRunIdRef.current : batchId;
+    if (!uploadingRef.current) {
+      currentRunIdRef.current = runId;
+    }
     const queued = files.map((file, index) => ({
       id: `${batchId}-${index}-${file.name}`,
+      runId,
       file,
       previewUrl: createPreviewUrl(file),
       albumId: selectedAlbum?.id ?? null,
       albumName: selectedAlbum?.name ?? null,
       status: "queued" as const,
+      progress: 0,
       uploadedPhotoId: null,
       exifStatus: null,
       error: null,
@@ -266,10 +286,12 @@ export default function UploadPage() {
 
     if (!uploadingRef.current) {
       uploadRunSummaryRef.current = { uploaded: 0, failed: 0 };
+      currentRunIdRef.current = Date.now();
     }
 
+    const retryRunId = currentRunIdRef.current;
     setQueue((current) => current.map((item) => item.status === "failed"
-      ? { ...item, status: "queued", error: null }
+      ? { ...item, runId: retryRunId, status: "queued", progress: 0, error: null }
       : item));
     setError(null);
     setMessage("Retrying failed uploads one at a time.");
@@ -283,7 +305,16 @@ export default function UploadPage() {
       return;
     }
 
-    setQueue((current) => current.map((entry) => entry.id === id ? { ...entry, status: "uploading", error: null } : entry));
+    setQueue((current) => current.map((entry) => entry.id === id ? { ...entry, status: "uploading", progress: 0, error: null } : entry));
+
+    const reportProgress = (percent: number) => {
+      const now = Date.now();
+      if (now - lastProgressUpdateRef.current < 100) {
+        return;
+      }
+      lastProgressUpdateRef.current = now;
+      setQueue((current) => current.map((entry) => entry.id === id ? { ...entry, progress: percent } : entry));
+    };
 
     try {
       const uploadForm = new FormData();
@@ -293,7 +324,7 @@ export default function UploadPage() {
         uploadForm.append("albumId", item.albumId);
       }
 
-      const result = await adminFetch<UploadResult>("/api/photos/upload", { method: "POST", body: uploadForm });
+      const result = await uploadPhotoWithProgress(uploadForm, reportProgress);
       if (!result?.id) {
         throw new Error("Upload failed");
       }
@@ -308,6 +339,7 @@ export default function UploadPage() {
             status: "uploaded",
             uploadedPhotoId: result.id,
             exifStatus: result.exifStatus ?? null,
+            progress: 100,
             previewUrl: null,
             error: null,
           }
@@ -444,6 +476,35 @@ export default function UploadPage() {
               </div>
             </div>
 
+            {runSummary.total > 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-4 text-xs">
+                  <span className="text-white/45 uppercase tracking-[0.2em]">Batch progress</span>
+                  <span className="text-white/70">{runSummary.done} of {runSummary.total} · {runSummary.percent}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-emerald-400 transition-all duration-300"
+                    style={{ width: `${runSummary.percent}%` }}
+                  />
+                </div>
+                {activeUpload ? (
+                  <>
+                    <div className="flex items-center justify-between gap-4 text-xs">
+                      <span className="text-white/45 uppercase tracking-[0.2em]">Current file</span>
+                      <span className="text-white/70">{activeProgress}%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-sky-400 transition-all duration-150"
+                        style={{ width: `${activeProgress}%` }}
+                      />
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            ) : null}
+
             {currentUpload ? (
               <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
@@ -483,6 +544,14 @@ export default function UploadPage() {
                     </button>
                   </div>
                   {item.previewUrl ? <img src={item.previewUrl} alt={item.file.name} className="h-28 w-full rounded-xl object-cover bg-black/30" /> : null}
+                  {item.status === "uploading" ? (
+                    <div className="space-y-1">
+                      <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                        <div className="h-full rounded-full bg-sky-400 transition-all duration-150" style={{ width: `${item.progress}%` }} />
+                      </div>
+                      <p className="text-[11px] text-white/50">{item.progress}% uploaded</p>
+                    </div>
+                  ) : null}
                   <p className="text-xs">Album: {item.albumName ?? "No album"}</p>
                   {item.exifStatus ? (
                     <div className="text-xs space-y-1">

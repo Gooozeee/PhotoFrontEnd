@@ -1,13 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useHighlights } from "../hooks/useDiscovery";
+import type { DiscoveryPhoto } from "../lib/discoveryApi";
 import ImageModal from "./ImageModal";
 import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
 import { clampCaption } from "./ImageModal";
+import { aspectRatioOf, getHighlightRows } from "../utils/getHighlightRows";
 
-const SLOT_COUNT = 6;
+const SLOT_COUNT = 8;
 const MIN_ROTATION_MS = 4200;
 const MAX_ROTATION_MS = 6200;
+const CAPTION_HEIGHT_MOBILE = 52;
+const CAPTION_HEIGHT_DESKTOP = 60;
 
 function randomDelay() {
   return MIN_ROTATION_MS + Math.random() * (MAX_ROTATION_MS - MIN_ROTATION_MS);
@@ -24,11 +28,33 @@ const HighlightsStrip = () => {
   const { photos, loading, error } = useHighlights(12);
   const [slides, setSlides] = useState<number[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const selected = photos.find((photo) => photo.id === selectedId) ?? null;
 
   useEffect(() => {
     if (photos.length > 0) setSlides(Array.from({ length: Math.min(SLOT_COUNT, photos.length) }, (_, index) => index));
   }, [photos.length]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (typeof ResizeObserver === "undefined") {
+      setDimensions({
+        width: el.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 0),
+        height: el.clientHeight || (typeof window !== "undefined" ? window.innerHeight : 0),
+      });
+      return;
+    }
+    const observer = new ResizeObserver((entries) => {
+      const rect = entries[0]?.contentRect;
+      if (rect && rect.width > 0 && rect.height > 0) {
+        setDimensions({ width: rect.width, height: rect.height });
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (shouldReduceMotion || slides.length === 0 || photos.length < 2) return;
@@ -45,22 +71,32 @@ const HighlightsStrip = () => {
     return () => window.clearTimeout(timer);
   }, [photos.length, shouldReduceMotion, slides]);
 
-  if (loading && photos.length === 0) return <div className="bg-[#09090B] px-4 py-10 sm:px-6 md:px-8"><div role="status" className="h-[calc(100svh-90px)] min-h-[420px] animate-pulse border border-white/10 bg-white/5" /></div>;
-  if ((error && photos.length === 0) || slides.length === 0) return null;
+  const rows = useMemo(() => {
+    if (slides.length === 0) return [];
+    const sized = slides
+      .map((index) => photos[index])
+      .filter((photo): photo is DiscoveryPhoto => Boolean(photo));
+    if (sized.length === 0) return [];
+    const width = dimensions?.width || (typeof window !== "undefined" ? window.innerWidth : 0);
+    const height = dimensions?.height || (typeof window !== "undefined" ? window.innerHeight : 0);
+    const captionHeight = width < 640 ? CAPTION_HEIGHT_MOBILE : CAPTION_HEIGHT_DESKTOP;
+    return getHighlightRows(sized, width, height, { captionHeight });
+  }, [dimensions, photos, slides]);
 
-  function renderRow(row: number) {
+  if (loading && photos.length === 0) return <div className="bg-[#09090B] px-4 py-10 sm:px-6 md:px-8"><div role="status" className="h-[calc(100svh-90px)] min-h-[420px] animate-pulse border border-white/10 bg-white/5" /></div>;
+  if ((error && photos.length === 0) || slides.length === 0 || rows.length === 0) return null;
+
+  function renderRow(row: DiscoveryPhoto[], rowIndex: number) {
     return (
-      <div className="flex min-h-0 flex-1 gap-2 sm:gap-3">
-        {slides.slice(row * 3, row * 3 + 3).map((photoIndex, index) => {
-          const photo = photos[photoIndex];
-          if (!photo) return null;
-          const ratio = photo.width > 0 && photo.height > 0 ? photo.width / photo.height : 1.5;
+      <div key={`row-${rowIndex}`} className="flex min-h-0 flex-1 gap-2 sm:gap-3">
+        {row.map((photo, index) => {
+          const ratio = aspectRatioOf(photo);
           return (
-            <figure key={`${row}-${index}`} className={`flex min-w-0 flex-col ${index === 2 ? "hidden sm:flex" : ""}`} style={{ flexGrow: ratio, flexBasis: 0 }}>
+            <figure key={`${rowIndex}-${index}`} className="flex min-w-0 flex-col" style={{ flexGrow: ratio, flexBasis: 0 }}>
               <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-white/5">
                 <AnimatePresence initial={false} mode="wait">
                   <motion.button
-                    key={`${row}-${index}-${photo.id}`}
+                    key={`${rowIndex}-${index}-${photo.id}`}
                     type="button"
                     onClick={() => setSelectedId(photo.id)}
                     className="group absolute inset-0 block h-full w-full cursor-pointer overflow-hidden p-0 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white/80"
@@ -74,7 +110,7 @@ const HighlightsStrip = () => {
                   </motion.button>
                 </AnimatePresence>
               </div>
-              <figcaption className="line-clamp-2 h-10 shrink-0 px-1 pt-2 text-xs leading-relaxed text-white/70 sm:text-sm">{clampCaption(photo.caption) ?? photo.fileName}</figcaption>
+              <figcaption className="line-clamp-2 min-h-[3.25rem] shrink-0 px-1 pt-2 pb-1 text-xs leading-relaxed text-white/70 sm:min-h-[3.75rem] sm:text-sm">{clampCaption(photo.caption) ?? photo.fileName}</figcaption>
             </figure>
           );
         })}
@@ -85,9 +121,8 @@ const HighlightsStrip = () => {
   return (
     <section className="w-full bg-[#09090B] px-2 pb-8 sm:px-4 sm:pb-10">
       <div className="mb-3 flex items-center px-1 sm:px-2"><h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">Highlights</h2></div>
-      <div className="flex h-[calc(100svh-150px)] min-h-[420px] flex-col gap-2 sm:h-[calc(100svh-170px)] sm:gap-3">
-        {renderRow(0)}
-        {renderRow(1)}
+      <div ref={containerRef} className="flex h-[calc(100svh-150px)] min-h-[420px] flex-col gap-2 sm:h-[calc(100svh-170px)] sm:gap-3">
+        {rows.map((row, rowIndex) => renderRow(row, rowIndex))}
       </div>
       {selected ? <ImageModal imageUrl={selected.url} caption={clampCaption(selected.caption)} tags={selected.tags} showTags={false} photoId={selected.id} onClose={() => setSelectedId(null)} /> : null}
     </section>
