@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { aspectRatioOf, getHighlightRows } from './getHighlightRows';
+import { aspectRatioOf, cappedAspectRatio, getHighlightRows, MAX_HIGHLIGHT_ASPECT } from './getHighlightRows';
 
 function photo(id: string, width: number, height: number) {
   return { id, width, height };
@@ -15,6 +15,11 @@ describe('aspectRatioOf', () => {
     expect(aspectRatioOf(undefined)).toBe(1.5);
     expect(aspectRatioOf(photo('a', 0, 0))).toBe(1.5);
     expect(aspectRatioOf(photo('a', 1200, 0), 2)).toBe(2);
+  });
+
+  it('caps extra-wide photos for highlight layout sizing', () => {
+    expect(cappedAspectRatio(photo('pano', 4000, 1000))).toBe(MAX_HIGHLIGHT_ASPECT);
+    expect(cappedAspectRatio(photo('landscape', 1200, 800))).toBe(1.5);
   });
 });
 

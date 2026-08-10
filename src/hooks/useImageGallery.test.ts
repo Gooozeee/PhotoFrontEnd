@@ -307,6 +307,8 @@ describe('useImageGallery', () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response('', { status: 500 }));
     vi.stubGlobal('fetch', fetchMock);
     const { useImageGallery } = await import('./useImageGallery');
+    const { configureDiscoveryRetry } = await import('../lib/discoveryApi');
+    configureDiscoveryRetry({ retries: 0 });
 
     const { result } = renderHook(() => useImageGallery({ cacheTTL: 0 }));
 

@@ -5,7 +5,7 @@ import type { DiscoveryPhoto } from "../lib/discoveryApi";
 import ImageModal from "./ImageModal";
 import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
 import { clampCaption } from "./ImageModal";
-import { aspectRatioOf, getHighlightRows } from "../utils/getHighlightRows";
+import { cappedAspectRatio, getHighlightRows, MAX_HIGHLIGHT_ASPECT } from "../utils/getHighlightRows";
 
 const SLOT_COUNT = 8;
 const MIN_ROTATION_MS = 4200;
@@ -90,7 +90,7 @@ const HighlightsStrip = () => {
     return (
       <div key={`row-${rowIndex}`} className="flex min-h-0 flex-1 gap-2 sm:gap-3">
         {row.map((photo, index) => {
-          const ratio = aspectRatioOf(photo);
+          const ratio = cappedAspectRatio(photo, MAX_HIGHLIGHT_ASPECT);
           return (
             <figure key={`${rowIndex}-${index}`} className="flex min-w-0 flex-col" style={{ flexGrow: ratio, flexBasis: 0 }}>
               <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-white/5">

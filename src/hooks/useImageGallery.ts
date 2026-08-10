@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolveApiBaseUrl } from "../lib/apiBaseUrl";
+import { fetchWithRetry, isNetworkError } from "../lib/discoveryApi";
 import { getStaticGalleryData } from "./staticGalleryData";
 
 const albumCache = new Map<string, { timestamp: number; data: GalleryAlbum[] }>();
@@ -56,39 +57,12 @@ export interface UseImageGalleryOptions {
 
 const API_BASE = resolveApiBaseUrl();
 
-let serverUnreachable = false;
-
-async function fetchWithTimeout<T>(url: string, timeoutMs = 4000): Promise<T> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetchJson<T>(url, controller.signal);
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 function createScopedKey(cacheKey: string, suffix: string) {
   return `${cacheKey}:${suffix}`;
 }
 
 function getAlbumPageCacheKey(cacheKey: string, albumId: string, offset: number, limit: number) {
   return createScopedKey(cacheKey, `album:${albumId}:page:${offset}:limit:${limit}`);
-}
-
-async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-    },
-    signal,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Request failed with ${response.status}`);
-  }
-
-  return response.json() as Promise<T>;
 }
 
 async function getOrCreateCachedRequest<T>(key: string, factory: () => Promise<T>): Promise<T> {
@@ -116,6 +90,8 @@ export const useImageGallery = ({
   const [albumId, setAlbumId] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const requestIdRef = useRef(0);
+  const serverUnreachableRef = useRef(false);
+  const [reconnectToken, setReconnectToken] = useState(0);
 
   const appendPhotoPage = useCallback((page: GalleryPhotoPage, append: boolean) => {
     setPhotos((current) => {
@@ -142,7 +118,7 @@ export const useImageGallery = ({
     }
 
     return getOrCreateCachedRequest(albumsRequestKey, async () => {
-      const items = await fetchWithTimeout<GalleryAlbum[]>(`${API_BASE}/api/albums/published`);
+      const items = await fetchWithRetry<GalleryAlbum[]>(`${API_BASE}/api/albums/published`);
       albumCache.set(albumsCacheKey, { timestamp: Date.now(), data: items });
       return items;
     });
@@ -157,7 +133,7 @@ export const useImageGallery = ({
     }
 
     return getOrCreateCachedRequest(pageCacheKey, async () => {
-      const page = await fetchJson<GalleryPhotoPage>(`${API_BASE}/api/albums/${selectedAlbumId}/photos?offset=${offset}&limit=${pageSize}`);
+      const page = await fetchWithRetry<GalleryPhotoPage>(`${API_BASE}/api/albums/${selectedAlbumId}/photos?offset=${offset}&limit=${pageSize}`);
       photoPageCache.set(pageCacheKey, { timestamp: Date.now(), data: page });
       return page;
     });
@@ -166,7 +142,7 @@ export const useImageGallery = ({
   const load = useCallback(async () => {
     requestIdRef.current += 1;
     const requestId = requestIdRef.current;
-    const normalizedAlbumName = albumName?.trim();
+    const normalizedAlbumName = albumName?.trim() ?? "";
 
     setLoading(true);
     setLoadingMore(false);
@@ -180,7 +156,7 @@ export const useImageGallery = ({
       let albumsData: GalleryAlbum[];
       let staticFallback = false;
 
-      if (serverUnreachable) {
+      if (serverUnreachableRef.current) {
         const staticData = getStaticGalleryData();
         albumsData = staticData.albums;
         staticFallback = true;
@@ -188,8 +164,8 @@ export const useImageGallery = ({
         try {
           albumsData = await getPublishedAlbums();
         } catch (err) {
-          if (err instanceof TypeError || err instanceof DOMException) {
-            serverUnreachable = true;
+          if (isNetworkError(err)) {
+            serverUnreachableRef.current = true;
             const staticData = getStaticGalleryData();
             albumsData = staticData.albums;
             staticFallback = true;
@@ -236,6 +212,7 @@ export const useImageGallery = ({
       appendPhotoPage(firstPage, false);
     } catch (err) {
       if (requestIdRef.current !== requestId) return;
+      if (isNetworkError(err)) serverUnreachableRef.current = true;
       setError(err instanceof Error ? err.message : "Failed to load gallery");
     } finally {
       if (requestIdRef.current === requestId) {
@@ -247,6 +224,26 @@ export const useImageGallery = ({
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const refresh = () => setReconnectToken((current) => current + 1);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (reconnectToken === 0 || !serverUnreachableRef.current) return;
+    serverUnreachableRef.current = false;
+    void load();
+  }, [load, reconnectToken]);
 
   const clearCache = useCallback(() => {
     const scopedPrefix = `${cacheKey}:album:`;
@@ -277,6 +274,7 @@ export const useImageGallery = ({
       appendPhotoPage(page, true);
     } catch (err) {
       if (requestIdRef.current !== requestId) return;
+      if (isNetworkError(err)) serverUnreachableRef.current = true;
       setError(err instanceof Error ? err.message : "Failed to load gallery");
     } finally {
       if (requestIdRef.current === requestId) {

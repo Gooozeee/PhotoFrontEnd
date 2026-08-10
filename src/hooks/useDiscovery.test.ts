@@ -49,6 +49,8 @@ describe('useDiscovery hooks', () => {
       const fetchMock = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
       vi.stubGlobal('fetch', fetchMock);
       const { useHighlights } = await import('./useDiscovery');
+      const { configureDiscoveryRetry } = await import('../lib/discoveryApi');
+      configureDiscoveryRetry({ retries: 0 });
 
       const { result } = renderHook(() => useHighlights(10));
 
@@ -56,6 +58,24 @@ describe('useDiscovery hooks', () => {
 
       expect(result.current.photos.length).toBeGreaterThan(0);
       expect(result.current.error).toBeNull();
+    });
+
+    it('retries with the live API when the tab regains focus after a failure', async () => {
+      const fetchMock = vi.fn()
+        .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        .mockResolvedValueOnce(jsonResponse([photo('live')]));
+      vi.stubGlobal('fetch', fetchMock);
+      const { useHighlights } = await import('./useDiscovery');
+      const { configureDiscoveryRetry } = await import('../lib/discoveryApi');
+      configureDiscoveryRetry({ retries: 0 });
+
+      const { result } = renderHook(() => useHighlights(10));
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => window.dispatchEvent(new Event('focus')));
+
+      await waitFor(() => expect(result.current.photos[0]?.id).toBe('live'));
+      expect(fetchMock).toHaveBeenCalledTimes(2);
     });
   });
 
