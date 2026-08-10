@@ -10,7 +10,10 @@ export interface HighlightRowOptions {
   maxRows: number;
   maxPerRow: number;
   captionHeight: number;
+  maxAspectRatio: number;
 }
+
+export const MAX_HIGHLIGHT_ASPECT = 2;
 
 const DEFAULT_OPTIONS: HighlightRowOptions = {
   rowGap: 8,
@@ -18,11 +21,16 @@ const DEFAULT_OPTIONS: HighlightRowOptions = {
   maxRows: 2,
   maxPerRow: 6,
   captionHeight: 52,
+  maxAspectRatio: MAX_HIGHLIGHT_ASPECT,
 };
 
 export function aspectRatioOf(photo: HighlightSizedPhoto | undefined | null, fallback = 1.5): number {
   if (!photo) return fallback;
   return photo.height > 0 ? photo.width / photo.height : fallback;
+}
+
+export function cappedAspectRatio(photo: HighlightSizedPhoto | undefined | null, maxAspectRatio = MAX_HIGHLIGHT_ASPECT): number {
+  return Math.min(aspectRatioOf(photo), maxAspectRatio);
 }
 
 /**
@@ -40,7 +48,7 @@ export function getHighlightRows<T extends HighlightSizedPhoto>(
   containerHeight: number,
   options: Partial<HighlightRowOptions> = {},
 ): T[][] {
-  const { rowGap, itemGap, maxRows, maxPerRow, captionHeight } = { ...DEFAULT_OPTIONS, ...options };
+  const { rowGap, itemGap, maxRows, maxPerRow, captionHeight, maxAspectRatio } = { ...DEFAULT_OPTIONS, ...options };
 
   if (photos.length === 0 || containerWidth <= 0 || containerHeight <= 0) {
     return [];
@@ -50,7 +58,7 @@ export function getHighlightRows<T extends HighlightSizedPhoto>(
     return [[...photos]];
   }
 
-  const ratios = photos.map((photo) => aspectRatioOf(photo));
+  const ratios = photos.map((photo) => cappedAspectRatio(photo, maxAspectRatio));
   const pool = photos.slice(0, maxRows * maxPerRow);
 
   let bestRows: T[][] = [];

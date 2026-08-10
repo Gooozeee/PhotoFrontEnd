@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { getHighlights, getSimilarPhotos, searchPhotos, type DiscoveryPhoto } from "../lib/discoveryApi";
+import { getHighlights, getSimilarPhotos, isNetworkError, searchPhotos, type DiscoveryPhoto } from "../lib/discoveryApi";
 import { getStaticGalleryData } from "./staticGalleryData";
 
 const TTL = 5 * 60 * 1000;
 const MAX_QUERY_LENGTH = 120;
 const cache = new Map<string, { timestamp: number; data: DiscoveryPhoto[] }>();
-const inflight = new Map<string, Promise<DiscoveryPhoto[]>>();
-
-function isNetworkError(err: unknown) {
-  return err instanceof TypeError || err instanceof DOMException;
-}
+const inflight = new Map<string, Promise<unknown>>();
 
 async function fetchCached<T>(key: string, factory: () => Promise<T>): Promise<T> {
   const existing = inflight.get(key);
@@ -18,6 +14,26 @@ async function fetchCached<T>(key: string, factory: () => Promise<T>): Promise<T
   const promise = factory().finally(() => inflight.delete(key));
   inflight.set(key, promise);
   return promise;
+}
+
+function useReconnectToken() {
+  const [token, setToken] = useState(0);
+
+  useEffect(() => {
+    const refresh = () => setToken((current) => current + 1);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, []);
+
+  return token;
 }
 
 export interface UseDiscoveryState {
@@ -31,10 +47,12 @@ export function useHighlights(limit = 12): UseDiscoveryState {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const requestIdRef = useRef(0);
+  const failedKeysRef = useRef(new Set<string>());
+  const reconnectToken = useReconnectToken();
 
   useEffect(() => {
     const cacheKey = `highlights:${limit}`;
-    const cached = cache.get(cacheKey);
+    const cached = failedKeysRef.current.has(cacheKey) && reconnectToken > 0 ? undefined : cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < TTL) {
       setPhotos(cached.data);
       setLoading(false);
@@ -48,6 +66,7 @@ export function useHighlights(limit = 12): UseDiscoveryState {
       .then((data) => {
         if (stale || requestId !== requestIdRef.current) return;
         cache.set(cacheKey, { timestamp: Date.now(), data });
+        failedKeysRef.current.delete(cacheKey);
         setPhotos(data);
         setError(null);
       })
@@ -55,6 +74,7 @@ export function useHighlights(limit = 12): UseDiscoveryState {
         if (stale || requestId !== requestIdRef.current) return;
 
         if (isNetworkError(err)) {
+          failedKeysRef.current.add(cacheKey);
           const staticData = getStaticGalleryData();
           const fallback = Object.values(staticData.photosByAlbum)
             .flat()
@@ -73,7 +93,7 @@ export function useHighlights(limit = 12): UseDiscoveryState {
     return () => {
       stale = true;
     };
-  }, [limit]);
+  }, [limit, reconnectToken]);
 
   return { photos, loading, error };
 }
@@ -83,6 +103,8 @@ export function useSimilarPhotos(photoId: string | null): UseDiscoveryState {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestIdRef = useRef(0);
+  const failedKeysRef = useRef(new Set<string>());
+  const reconnectToken = useReconnectToken();
 
   useEffect(() => {
     if (!photoId) {
@@ -93,7 +115,7 @@ export function useSimilarPhotos(photoId: string | null): UseDiscoveryState {
     }
 
     const cacheKey = `similar:${photoId}`;
-    const cached = cache.get(cacheKey);
+    const cached = failedKeysRef.current.has(cacheKey) && reconnectToken > 0 ? undefined : cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < TTL) {
       setPhotos(cached.data);
       return;
@@ -107,12 +129,16 @@ export function useSimilarPhotos(photoId: string | null): UseDiscoveryState {
       .then((data) => {
         if (stale || requestId !== requestIdRef.current) return;
         cache.set(cacheKey, { timestamp: Date.now(), data });
+        failedKeysRef.current.delete(cacheKey);
         setPhotos(data);
         setError(null);
       })
       .catch((err: unknown) => {
         if (stale || requestId !== requestIdRef.current) return;
-        if (!isNetworkError(err)) {
+        if (isNetworkError(err)) {
+          failedKeysRef.current.add(cacheKey);
+        } else {
+          failedKeysRef.current.delete(cacheKey);
           setError(err instanceof Error ? err.message : "Failed to load similar photos");
         }
       })
@@ -123,7 +149,7 @@ export function useSimilarPhotos(photoId: string | null): UseDiscoveryState {
     return () => {
       stale = true;
     };
-  }, [photoId]);
+  }, [photoId, reconnectToken]);
 
   return { photos, loading, error };
 }
@@ -138,6 +164,8 @@ export function usePhotoSearch(query: string, { debounceMs = 350, minQueryLength
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestIdRef = useRef(0);
+  const failedKeysRef = useRef(new Set<string>());
+  const reconnectToken = useReconnectToken();
 
   const normalized = query.trim().slice(0, MAX_QUERY_LENGTH);
 
@@ -150,7 +178,7 @@ export function usePhotoSearch(query: string, { debounceMs = 350, minQueryLength
     }
 
     const cacheKey = `search:${normalized.toLowerCase()}`;
-    const cached = cache.get(cacheKey);
+    const cached = failedKeysRef.current.has(cacheKey) && reconnectToken > 0 ? undefined : cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < TTL) {
       setResults(cached.data);
       setError(null);
@@ -167,13 +195,15 @@ export function usePhotoSearch(query: string, { debounceMs = 350, minQueryLength
         .then((data) => {
           if (stale || requestId !== requestIdRef.current) return;
           cache.set(cacheKey, { timestamp: Date.now(), data });
+          failedKeysRef.current.delete(cacheKey);
           setResults(data);
           setError(null);
         })
         .catch((err: unknown) => {
           if (stale || requestId !== requestIdRef.current) return;
 
-           if (isNetworkError(err)) {
+          if (isNetworkError(err)) {
+            failedKeysRef.current.add(cacheKey);
             const staticData = getStaticGalleryData();
             const needle = normalized.toLowerCase();
             const fallback = Object.values(staticData.photosByAlbum)
@@ -183,6 +213,7 @@ export function usePhotoSearch(query: string, { debounceMs = 350, minQueryLength
             setResults(fallback);
             setError(null);
           } else {
+            failedKeysRef.current.delete(cacheKey);
             setError(err instanceof Error ? err.message : "Search failed");
           }
         })
@@ -195,7 +226,7 @@ export function usePhotoSearch(query: string, { debounceMs = 350, minQueryLength
       stale = true;
       clearTimeout(timer);
     };
-  }, [normalized, debounceMs, minQueryLength]);
+  }, [normalized, debounceMs, minQueryLength, reconnectToken]);
 
   return { results, loading, error, searched: normalized.length >= minQueryLength };
 }
