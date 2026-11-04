@@ -10,6 +10,7 @@ const loadAlbumsMock = vi.fn();
 const loadPhotosMock = vi.fn();
 const adminFetchMock = vi.fn();
 const uploadPhotoWithProgressMock = vi.fn();
+const enqueueMetadataMock = vi.fn();
 const createObjectUrlMock = vi.fn();
 const revokeObjectUrlMock = vi.fn();
 
@@ -24,6 +25,7 @@ vi.mock('./api', () => ({
   loadPhotos: (...args: unknown[]) => loadPhotosMock(...args),
   adminFetch: (...args: unknown[]) => adminFetchMock(...args),
   uploadPhotoWithProgress: (...args: unknown[]) => uploadPhotoWithProgressMock(...args),
+  enqueueMetadata: (...args: unknown[]) => enqueueMetadataMock(...args),
 }));
 
 vi.mock('./AdminShell', () => ({
@@ -110,9 +112,11 @@ describe('UploadPage', () => {
     loadPhotosMock.mockReset();
     adminFetchMock.mockReset();
     uploadPhotoWithProgressMock.mockReset();
+    enqueueMetadataMock.mockReset();
     createObjectUrlMock.mockReset();
     revokeObjectUrlMock.mockReset();
     createObjectUrlMock.mockImplementation((file: File) => `blob:${file.name}`);
+    enqueueMetadataMock.mockResolvedValue(undefined);
     loadAlbumsMock.mockResolvedValue(createAlbums());
     loadPhotosMock.mockResolvedValue(createPhotos());
   });
@@ -206,6 +210,14 @@ describe('UploadPage', () => {
     expect(screen.getByText('42%')).toBeInTheDocument();
     expect(screen.getByText('42% uploaded')).toBeInTheDocument();
 
+    // A sticky banner makes the upload obvious even when the queue is off-screen.
+    expect(screen.getByText('Upload in progress')).toBeInTheDocument();
+    expect(screen.getByText('1 file left · 0 of 1 done')).toBeInTheDocument();
+
+    const unloadWhileUploading = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(unloadWhileUploading);
+    expect(unloadWhileUploading.defaultPrevented).toBe(true);
+
     await act(async () => {
       releaseUpload({
         ...createPhotos()[0],
@@ -215,6 +227,11 @@ describe('UploadPage', () => {
     });
 
     expect(await screen.findByText('/admin/photos?review=photo-3')).toBeInTheDocument();
+    expect(enqueueMetadataMock).toHaveBeenCalledTimes(1);
+
+    const unloadAfterUpload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(unloadAfterUpload);
+    expect(unloadAfterUpload.defaultPrevented).toBe(false);
   });
 
   it('can create a new batch album before queueing files', async () => {

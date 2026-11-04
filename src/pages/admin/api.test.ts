@@ -178,8 +178,35 @@ describe('admin api', () => {
     expect(queue[0]?.state).toBe('Pending');
   });
 
-  it('posts to enqueue missing metadata', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 202 }));
+  it('normalizes numeric metadata queue states from serverless responses', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify([
+      { photoId: 'p1', state: 0 },
+      { photoId: 'p2', state: 1 },
+      { photoId: 'p3', state: 2 },
+      { photoId: 'p4', state: 3 },
+    ]), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    const mod = await import('./api');
+
+    const queue = await mod.loadMetadataQueue();
+
+    expect(queue.map((item) => item.state)).toEqual(['Pending', 'Processing', 'Completed', 'Failed']);
+  });
+
+  it('normalizes mixed-case, numeric-string, and unknown metadata states', async () => {
+    const mod = await import('./api');
+
+    expect(mod.normalizeMetadataQueueState('failed')).toBe('Failed');
+    expect(mod.normalizeMetadataQueueState(' COMPLETED ')).toBe('Completed');
+    expect(mod.normalizeMetadataQueueState('2')).toBe('Completed');
+    expect(mod.normalizeMetadataQueueState(99)).toBe('Pending');
+    expect(mod.normalizeMetadataQueueState(null)).toBe('Pending');
+    expect(mod.normalizeMetadataQueueState('something-else')).toBe('Pending');
+  });
+
+  it('posts to enqueue missing metadata', async () => {    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 202 }));
     const mod = await import('./api');
 
     await mod.enqueueMetadata();

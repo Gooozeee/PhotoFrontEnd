@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import LibraryPage from './LibraryPage';
@@ -11,7 +11,8 @@ const updateAlbumMock = vi.fn();
 const deleteAlbumMock = vi.fn();
 const updatePhotoMock = vi.fn();
 const deletePhotoMock = vi.fn();
-const uploadPhotoMock = vi.fn();
+const uploadPhotoWithProgressMock = vi.fn();
+const enqueueMetadataMock = vi.fn();
 
 vi.mock('./api', () => ({
   loadAlbums: (...args: unknown[]) => loadAlbumsMock(...args),
@@ -21,7 +22,8 @@ vi.mock('./api', () => ({
   deleteAlbum: (...args: unknown[]) => deleteAlbumMock(...args),
   updatePhoto: (...args: unknown[]) => updatePhotoMock(...args),
   deletePhoto: (...args: unknown[]) => deletePhotoMock(...args),
-  uploadPhoto: (...args: unknown[]) => uploadPhotoMock(...args),
+  uploadPhotoWithProgress: (...args: unknown[]) => uploadPhotoWithProgressMock(...args),
+  enqueueMetadata: (...args: unknown[]) => enqueueMetadataMock(...args),
 }));
 
 vi.mock('./AdminShell', () => ({
@@ -130,7 +132,9 @@ describe('LibraryPage', () => {
     deleteAlbumMock.mockReset();
     updatePhotoMock.mockReset();
     deletePhotoMock.mockReset();
-    uploadPhotoMock.mockReset();
+    uploadPhotoWithProgressMock.mockReset();
+    enqueueMetadataMock.mockReset();
+    enqueueMetadataMock.mockResolvedValue(undefined);
     loadAlbumsMock.mockResolvedValue(createAlbums());
     loadPhotosMock.mockResolvedValue(createPhotos());
   });
@@ -246,5 +250,75 @@ describe('LibraryPage', () => {
     await waitFor(() => {
       expect(updateAlbumMock).toHaveBeenCalledWith('album-1', expect.objectContaining({ name: 'Adventures' }));
     });
+  });
+
+  it('shows progress while uploading files and queues AI metadata when done', async () => {
+    const releases: Array<(value: unknown) => void> = [];
+    uploadPhotoWithProgressMock.mockImplementation((_formData: unknown, onProgress: unknown) => {
+      (onProgress as (percent: number) => void)(55);
+      return new Promise((resolve) => {
+        releases.push(resolve);
+      });
+    });
+
+    const { container } = renderLibraryPage();
+    await screen.findByRole('heading', { name: 'Library' });
+
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, {
+      target: {
+        files: [
+          new File(['one'], 'one.jpg', { type: 'image/jpeg' }),
+          new File(['two'], 'two.jpg', { type: 'image/jpeg' }),
+        ],
+      },
+    });
+
+    expect(await screen.findByText('Uploading to library')).toBeInTheDocument();
+    expect(screen.getByText('2 files left · 0 of 2 done')).toBeInTheDocument();
+    expect(screen.getByText('one.jpg')).toBeInTheDocument();
+
+    await act(async () => {
+      releases[0]?.({ ...createPhotos()[0], id: 'photo-3' });
+    });
+
+    await waitFor(() => {
+      expect(uploadPhotoWithProgressMock).toHaveBeenCalledTimes(2);
+    });
+    expect(screen.getByText('two.jpg')).toBeInTheDocument();
+
+    await act(async () => {
+      releases[1]?.({ ...createPhotos()[0], id: 'photo-4' });
+    });
+
+    expect(await screen.findByText('Uploaded 2 photos')).toBeInTheDocument();
+    expect(enqueueMetadataMock).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Uploading to library')).not.toBeInTheDocument();
+  });
+
+  it('keeps uploading the rest of the batch when one file fails', async () => {
+    uploadPhotoWithProgressMock
+      .mockRejectedValueOnce(new Error('Upload failed'))
+      .mockResolvedValueOnce({ ...createPhotos()[0], id: 'photo-3' });
+
+    const { container } = renderLibraryPage();
+    await screen.findByRole('heading', { name: 'Library' });
+
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, {
+      target: {
+        files: [
+          new File(['one'], 'broken.jpg', { type: 'image/jpeg' }),
+          new File(['two'], 'works.jpg', { type: 'image/jpeg' }),
+        ],
+      },
+    });
+
+    await waitFor(() => {
+      expect(uploadPhotoWithProgressMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(await screen.findByText('1 photo failed to upload: Upload failed')).toBeInTheDocument();
+    expect(enqueueMetadataMock).toHaveBeenCalledTimes(1);
   });
 });

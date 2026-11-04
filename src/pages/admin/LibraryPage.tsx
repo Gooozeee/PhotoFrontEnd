@@ -1,7 +1,9 @@
 import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AdminShell } from "./AdminShell";
-import { createAlbum, deleteAlbum, deletePhoto, loadAlbums, loadPhotos, updateAlbum, updatePhoto, uploadPhoto } from "./api";
+import { UploadProgressBanner } from "./UploadProgressBanner";
+import { createAlbum, deleteAlbum, deletePhoto, enqueueMetadata, loadAlbums, loadPhotos, updateAlbum, updatePhoto, uploadPhotoWithProgress } from "./api";
+import { useBeforeUnloadWarning } from "../../hooks/useBeforeUnloadWarning";
 import type { AdminAlbum, AdminPhoto, UpdateAlbumPayload } from "./types";
 import FolderTree from "../../components/admin/FolderTree";
 import ContextMenu, { type ContextMenuItem } from "../../components/admin/ContextMenu";
@@ -19,6 +21,14 @@ type ContextMenuState = {
   albumId?: string;
   path?: string[];
   moveMode?: boolean;
+} | null;
+
+type UploadProgressState = {
+  total: number;
+  completed: number;
+  failed: number;
+  currentFileName: string | null;
+  currentPercent: number;
 } | null;
 
 function pathKey(path: string[]) {
@@ -44,9 +54,12 @@ export default function LibraryPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressState>(null);
   const selectedPhotoIdsRef = useRef<string[]>([]);
   const selectedPhotoIdRef = useRef("");
   const lastSelectedPhotoIdRef = useRef<string | null>(null);
+
+  useBeforeUnloadWarning(uploadProgress !== null);
 
   const tree = useMemo(() => buildAlbumTree(albums), [albums]);
   const currentNode = useMemo(() => findNodeByPath(tree, currentPath), [tree, currentPath]);
@@ -305,6 +318,19 @@ export default function LibraryPage() {
     if (fileList.length === 0) return;
     setSaving(true);
     setError(null);
+    setMessage(null);
+    setUploadProgress({
+      total: fileList.length,
+      completed: 0,
+      failed: 0,
+      currentFileName: fileList[0]?.name ?? null,
+      currentPercent: 0,
+    });
+
+    let uploaded = 0;
+    let failed = 0;
+    let lastError: string | null = null;
+
     try {
       let targetAlbum = currentAlbum;
       if (!targetAlbum && currentPath.length > 0) {
@@ -312,19 +338,53 @@ export default function LibraryPage() {
         targetAlbum = created;
         setAlbums((current) => [...current, created]);
       }
+
       for (const file of fileList) {
-        const form = new FormData();
-        form.append("file", file);
-        if (targetAlbum) form.append("albumId", targetAlbum.id);
-        await uploadPhoto(form);
+        setUploadProgress((current) => current ? { ...current, currentFileName: file.name, currentPercent: 0 } : current);
+        try {
+          const form = new FormData();
+          form.append("file", file);
+          if (targetAlbum) form.append("albumId", targetAlbum.id);
+          await uploadPhotoWithProgress(form, (percent) => {
+            setUploadProgress((current) => current ? { ...current, currentPercent: percent } : current);
+          });
+          uploaded += 1;
+        } catch (err) {
+          failed += 1;
+          lastError = err instanceof Error ? err.message : "Upload failed";
+        } finally {
+          setUploadProgress((current) => current
+            ? { ...current, completed: current.completed + 1, currentPercent: 100 }
+            : current);
+        }
       }
-      await refresh();
-      setMessage(`Uploaded ${fileList.length} photo${fileList.length === 1 ? "" : "s"}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setSaving(false);
+      lastError = err instanceof Error ? err.message : "Upload failed";
+      failed = fileList.length - uploaded;
+      setUploadProgress((current) => current
+        ? { ...current, completed: fileList.length, failed: current.failed + failed }
+        : current);
     }
+
+    try {
+      await refresh();
+    } catch {
+      // refresh() surfaces its own error state.
+    }
+
+    if (uploaded > 0) {
+      setMessage(`Uploaded ${uploaded} photo${uploaded === 1 ? "" : "s"}${failed > 0 ? `; ${failed} failed` : ""}`);
+    }
+    if (failed > 0) {
+      setError(`${failed} photo${failed === 1 ? "" : "s"} failed to upload${lastError ? `: ${lastError}` : ""}`);
+    }
+    if (uploaded > 0) {
+      // Queue AI metadata immediately instead of waiting for the hourly worker.
+      void enqueueMetadata().catch(() => undefined);
+    }
+
+    setSaving(false);
+    setUploadProgress(null);
   }
 
   function handleFolderDrop(path: string[]) {
@@ -459,6 +519,17 @@ export default function LibraryPage() {
           {error ?? message}
         </div>
       )}
+
+      {uploadProgress ? (
+        <UploadProgressBanner
+          total={uploadProgress.total}
+          completed={uploadProgress.completed}
+          failed={uploadProgress.failed}
+          currentFileName={uploadProgress.currentFileName}
+          currentPercent={uploadProgress.currentPercent}
+          label="Uploading to library"
+        />
+      ) : null}
 
       <input
         id="file-drop-input"

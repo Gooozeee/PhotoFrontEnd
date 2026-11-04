@@ -90,7 +90,7 @@ export default function MetadataQueuePage() {
   return (
     <AdminShell
       title="AI Metadata"
-      subtitle="Photos are captioned automatically. Reset failed jobs or queue new ones here."
+      subtitle="Photos are captioned automatically. New uploads are queued instantly; use this page to reset failed jobs or queue older photos."
       active="metadata"
       stats={{ albums: albums.length, photos: photos.length, published: albums.filter((a) => a.isPublished).length }}
     >

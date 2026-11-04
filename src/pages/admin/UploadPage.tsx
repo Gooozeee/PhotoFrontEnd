@@ -1,7 +1,9 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminShell } from "./AdminShell";
-import { adminFetch, loadAlbums, loadPhotos, uploadPhotoWithProgress } from "./api";
+import { UploadProgressBanner } from "./UploadProgressBanner";
+import { adminFetch, enqueueMetadata, loadAlbums, loadPhotos, uploadPhotoWithProgress } from "./api";
+import { useBeforeUnloadWarning } from "../../hooks/useBeforeUnloadWarning";
 import type { AdminAlbum, AdminPhoto } from "./types";
 
 type UploadStatus = "queued" | "uploading" | "uploaded" | "failed";
@@ -94,14 +96,18 @@ export default function UploadPage() {
   const runSummary = useMemo(() => {
     const runItems = currentRunIdRef.current ? queue.filter((item) => item.runId === currentRunIdRef.current) : [];
     const done = runItems.filter((item) => item.status === "uploaded" || item.status === "failed").length;
+    const failed = runItems.filter((item) => item.status === "failed").length;
     return {
       total: runItems.length,
       done,
+      failed,
       percent: runItems.length === 0 ? 0 : Math.round((done / runItems.length) * 100),
     };
   }, [queue]);
   const activeUpload = queue.find((item) => item.status === "uploading") ?? null;
   const activeProgress = activeUpload?.progress ?? 0;
+
+  useBeforeUnloadWarning(uploading);
 
   useEffect(() => {
     void refresh();
@@ -148,6 +154,9 @@ export default function UploadPage() {
     const uploadedBatchPhotoIds = uploadedBatchPhotoIdsRef.current;
     if (!reviewNavigationTriggeredRef.current && uploadedBatchPhotoIds.length > 0) {
       reviewNavigationTriggeredRef.current = true;
+      // Queue AI metadata immediately instead of waiting for the hourly worker.
+      // This is a no-op for photos that already have a job.
+      void enqueueMetadata().catch(() => undefined);
       navigate(`/admin/photos?review=${encodeURIComponent(uploadedBatchPhotoIds.join(","))}`);
     }
 
@@ -305,6 +314,7 @@ export default function UploadPage() {
       return;
     }
 
+    lastProgressUpdateRef.current = 0;
     setQueue((current) => current.map((entry) => entry.id === id ? { ...entry, status: "uploading", progress: 0, error: null } : entry));
 
     const reportProgress = (percent: number) => {
@@ -364,6 +374,16 @@ export default function UploadPage() {
           {error ?? message}
         </div>
       )}
+
+      {uploading ? (
+        <UploadProgressBanner
+          total={runSummary.total}
+          completed={runSummary.done}
+          failed={runSummary.failed}
+          currentFileName={activeUpload?.file.name ?? null}
+          currentPercent={activeProgress}
+        />
+      ) : null}
 
       <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="rounded-3xl border border-white/10 bg-white/5 p-5 space-y-4">
