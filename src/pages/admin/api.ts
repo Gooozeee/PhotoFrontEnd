@@ -5,6 +5,34 @@ import type { AdminAlbum, AdminPhoto, CreateAlbumPayload, MetadataQueueItem, Upd
 
 const API_BASE = resolveApiBaseUrl();
 
+const METADATA_QUEUE_STATES: MetadataQueueItem["state"][] = ["Pending", "Processing", "Completed", "Failed"];
+
+type RawMetadataQueueItem = Omit<MetadataQueueItem, "state"> & {
+  state: string | number | null;
+};
+
+export function normalizeMetadataQueueState(state: string | number | null | undefined): MetadataQueueItem["state"] {
+  if (typeof state === "number") {
+    return METADATA_QUEUE_STATES[state] ?? "Pending";
+  }
+
+  if (typeof state === "string") {
+    const value = state.trim();
+    if (value === "") {
+      return "Pending";
+    }
+
+    const numeric = Number(value);
+    if (Number.isInteger(numeric)) {
+      return METADATA_QUEUE_STATES[numeric] ?? "Pending";
+    }
+
+    return METADATA_QUEUE_STATES.find((candidate) => candidate.toLowerCase() === value.toLowerCase()) ?? "Pending";
+  }
+
+  return "Pending";
+}
+
 type AdminFetchOptions = {
   redirectOnAuthFailure?: boolean;
 };
@@ -74,7 +102,11 @@ export async function loadPhotos(): Promise<AdminPhoto[]> {
 }
 
 export async function loadMetadataQueue(): Promise<MetadataQueueItem[]> {
-  return adminFetch<MetadataQueueItem[]>("/api/admin/metadata/queue");
+  const items = await adminFetch<RawMetadataQueueItem[]>("/api/admin/metadata/queue");
+  return items.map((item) => ({
+    ...item,
+    state: normalizeMetadataQueueState(item.state),
+  }));
 }
 
 export async function createAlbum(payload: CreateAlbumPayload): Promise<AdminAlbum> {
