@@ -7,13 +7,14 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import paiCanyon from "../../assets/Landscapes/Pai Canyon Rain 2023.webp";
 import rathlinSunset from "../../assets/Landscapes/Rathlin Island Sunset 2023.webp";
-import { DepthHero } from "./DepthHero";
 import { useArchiveSeries, type ArchiveSeries } from "./useArchiveSeries";
+
+const LazyDepthHero = lazy(() => import("./DepthHero").then((module) => ({ default: module.DepthHero })));
 
 const HOUSE_EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -245,11 +246,11 @@ function SeriesViewer({ series, onClose }: { series: Series; onClose: () => void
   );
 }
 
-export default function LightTablePoc() {
+export default function LightTablePoc({ standalone = true }: { standalone?: boolean }) {
   const reduceMotion = Boolean(useReducedMotion());
   const [compact, setCompact] = useState(false);
   const [activeSeries, setActiveSeries] = useState<Series | null>(null);
-  const { series } = useArchiveSeries();
+  const { series, loading: archiveLoading, error: archiveError } = useArchiveSeries();
   const printPositions = useMemo(() => buildPrintPositions(series.length), [series.length]);
   const heroRef = useRef<HTMLElement>(null);
   const heavyMotion = !compact && !reduceMotion;
@@ -270,11 +271,11 @@ export default function LightTablePoc() {
 
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = "The Light Table — POC";
+    document.title = standalone ? "The Light Table — POC" : "Michal Guzy — Photographer";
     return () => {
       document.title = previousTitle;
     };
-  }, []);
+  }, [standalone]);
 
   useEffect(() => {
     if (typeof window.matchMedia !== "function") return;
@@ -299,16 +300,18 @@ export default function LightTablePoc() {
 
   return (
     <main className="min-h-screen bg-[#0B0B0C] text-[#E9E2D6]">
-      <header className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[#0B0B0C]/55 px-5 py-4 backdrop-blur-xl md:px-10">
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/35">POC</span>
-          <span className="h-3 w-px bg-white/15" />
-          <span className="text-sm text-white/80">The Light Table</span>
-        </div>
-        <Link to="/" className="text-sm text-white/55 transition-colors hover:text-white">
-          Back to site
-        </Link>
-      </header>
+      {standalone ? (
+        <header className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[#0B0B0C]/55 px-5 py-4 backdrop-blur-xl md:px-10">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/35">POC</span>
+            <span className="h-3 w-px bg-white/15" />
+            <span className="text-sm text-white/80">The Light Table</span>
+          </div>
+          <Link to="/" className="text-sm text-white/55 transition-colors hover:text-white">
+            Back to site
+          </Link>
+        </header>
+      ) : null}
 
       <section ref={heroRef} className="relative h-[125vh] bg-[#0B0B0C] md:h-[145vh]">
         <div className="sticky top-0 h-screen h-[100svh] overflow-hidden">
@@ -325,7 +328,18 @@ export default function LightTablePoc() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: reduceMotion ? 0 : 1.4, delay: reduceMotion ? 0 : 0.15, ease: HOUSE_EASE }}
             >
-              <DepthHero src={paiCanyon} alt="Pai Canyon after rain, Thailand" disabled={!heavyMotion} />
+              <Suspense
+                fallback={(
+                  <img
+                    src={paiCanyon}
+                    alt="Pai Canyon after rain, Thailand"
+                    className="h-full w-full object-cover"
+                    decoding="async"
+                  />
+                )}
+              >
+                <LazyDepthHero src={paiCanyon} alt="Pai Canyon after rain, Thailand" disabled={!heavyMotion} />
+              </Suspense>
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.45)_100%)]" />
@@ -396,6 +410,11 @@ export default function LightTablePoc() {
             <p className="max-w-xl text-sm leading-6 text-black/60">
               Hover a print to pick it up. Click to open the sequence.
             </p>
+            {archiveLoading ? (
+              <p className="mt-3 text-xs text-black/45">Fetching the live archive…</p>
+            ) : archiveError ? (
+              <p className="mt-3 text-xs text-black/45">{archiveError}</p>
+            ) : null}
           </div>
 
           <div
@@ -465,9 +484,15 @@ export default function LightTablePoc() {
           </h2>
           <div className="max-w-md space-y-5 self-end text-sm leading-6 text-white/55">
             <p>I build software for a living. These are the frames I keep.</p>
-            <Link to="/" className="inline-flex items-center gap-2 border-b border-white/25 pb-1 text-white/80 transition-colors hover:border-white hover:text-white">
-              Back to the real site <span aria-hidden>→</span>
-            </Link>
+            {standalone ? (
+              <Link to="/" className="inline-flex items-center gap-2 border-b border-white/25 pb-1 text-white/80 transition-colors hover:border-white hover:text-white">
+                Back to the real site <span aria-hidden>→</span>
+              </Link>
+            ) : (
+              <Link to="/software" className="inline-flex items-center gap-2 border-b border-white/25 pb-1 text-white/80 transition-colors hover:border-white hover:text-white">
+                How this site is built <span aria-hidden>→</span>
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -492,7 +517,7 @@ export default function LightTablePoc() {
           </div>
           <div className="mt-10 flex items-center justify-between border-t border-white/10 pt-4 text-[10px] uppercase tracking-[0.25em] text-white/30">
             <span>Michal Guzy</span>
-            <span>Light table POC</span>
+            <span>{standalone ? "Light table POC" : "De Goose Productions"}</span>
           </div>
         </div>
       </section>

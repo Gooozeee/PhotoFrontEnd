@@ -13,5 +13,7 @@ export function resolveApiBaseUrl(envValue = import.meta.env.VITE_API_BASE_URL a
     throw new Error("VITE_API_BASE_URL is required for production builds.");
   }
 
-  return "http://localhost:5000";
+  // In development the Vite proxy forwards relative /api requests to the
+  // deployed backend, so localhost CORS is never involved.
+  return "";
 }

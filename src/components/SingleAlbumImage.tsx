@@ -15,6 +15,7 @@ interface Props {
   totalImages?: number;
   onImageClick?: (index: number) => void;
   blurPlaceholder?: string;
+  variant?: "default" | "print";
 }
 
 const SingleAlbumImage = ({
@@ -29,6 +30,7 @@ const SingleAlbumImage = ({
   totalImages,
   onImageClick,
   blurPlaceholder,
+  variant = "default",
 }: Props) => {
   const shouldReduceMotion = useReducedMotion();
   const [showModal, setShowModal] = useState(false);
@@ -76,6 +78,49 @@ const SingleAlbumImage = ({
   const overlayClasses = albumName 
     ? "absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent rounded flex flex-col items-center justify-end pb-6 px-4"
     : `absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded flex flex-col items-center justify-end pb-6 px-4 transition-all duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`;
+
+  if (variant === "print") {
+    return (
+      <button
+        type="button"
+        onClick={handleInteraction}
+        onKeyDown={handleKeyDown}
+        aria-label={`View ${accessibleDescription}`}
+        className="group block w-full cursor-pointer p-0 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9482B] focus-visible:ring-offset-8 focus-visible:ring-offset-[#E9E2D6]"
+      >
+        <div className="overflow-hidden bg-white p-2 shadow-[0_14px_40px_rgba(18,14,8,0.14)]">
+          <img
+            src={imageSource}
+            alt={visibleDescription || fallbackDescription}
+            onLoad={handleImageLoad}
+            className="h-auto w-full object-cover [backface-visibility:hidden]"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div className="mt-3 flex items-baseline justify-between gap-3">
+          <span className="font-display text-base leading-tight tracking-[-0.01em] text-[#0B0B0C]">
+            {visibleDescription || fallbackDescription}
+          </span>
+          {imageIndex !== undefined && totalImages ? (
+            <span className="shrink-0 text-[10px] tabular-nums text-black/35">
+              {String(imageIndex + 1).padStart(2, "0")} / {String(totalImages).padStart(2, "0")}
+            </span>
+          ) : null}
+        </div>
+        {showModal && (
+          <ImageModal
+            imageUrl={imageSource}
+            imageIndex={(imageIndex ?? 0) + 1}
+            totalImages={totalImages ?? 1}
+            caption={visibleDescription}
+            tags={imageTags}
+            onClose={() => setShowModal(false)}
+          />
+        )}
+      </button>
+    );
+  }
 
   if (albumName) {
     return (

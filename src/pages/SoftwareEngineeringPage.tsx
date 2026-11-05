@@ -1,12 +1,11 @@
-import WelcomeImage from "../components/WelcomeImage";
 import Footer from "../components/Footer";
 import HomePage from "../assets/Projects/Website/HomePage.png";
 import LandscapePage from "../assets/Projects/Website/LandscapePage.png";
 import ImageSwitcher from "../components/ImageSwitcher";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
-const FONT_HEADING = { fontFamily: "'Archivo', sans-serif" } as const;
-const FONT_BODY = { fontFamily: "'Space Grotesk', sans-serif" } as const;
+const FONT_HEADING = { fontFamily: "'Fraunces', Georgia, serif" } as const;
 
 type NavSection = { id: string; label: string };
 
@@ -142,13 +141,8 @@ const engineeringDecisions = [
 ];
 
 function Chip({ children, accent }: { children: React.ReactNode; accent?: "sky" | "emerald" | "amber" }) {
-  const accents = {
-    sky: "border-sky-400/20 bg-sky-400/10 text-sky-200",
-    emerald: "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
-    amber: "border-amber-400/20 bg-amber-400/10 text-amber-200",
-  };
   return (
-    <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] uppercase tracking-[0.15em] ${accent ? accents[accent] : "border-white/10 bg-white/5 text-white/55"}`}>
+    <span className={`inline-flex border-b pb-0.5 text-[10px] uppercase tracking-[0.18em] ${accent ? "border-[#D9482B]/50 text-[#D9482B]" : "border-white/20 text-white/50"}`}>
       {children}
     </span>
   );
@@ -156,24 +150,24 @@ function Chip({ children, accent }: { children: React.ReactNode; accent?: "sky" 
 
 function SectionHeading({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle: string }) {
   return (
-    <div className="mb-5">
-      <p className="text-white/40 text-xs uppercase tracking-[0.25em]">{eyebrow}</p>
-      <h2 className="text-white text-xl md:text-2xl font-light mt-1" style={FONT_HEADING}>
+    <div className="mb-6 border-b border-white/10 pb-4">
+      <p className="text-[10px] uppercase tracking-[0.3em] text-white/35">{eyebrow}</p>
+      <h2 className="mt-2 font-display text-[clamp(1.8rem,3.5vw,2.8rem)] leading-[1.02] tracking-[-0.03em] text-[#E9E2D6]">
         {title}
       </h2>
-      <p className="text-white/55 text-sm md:text-base mt-2 leading-relaxed">{subtitle}</p>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">{subtitle}</p>
     </div>
   );
 }
 
 function DiagramNode({ title, subtitle, detail, accent = false }: { title: string; subtitle: string; detail: string; accent?: boolean }) {
   return (
-    <div className={`flex-1 min-w-[150px] rounded-xl border p-3 ${accent ? "border-emerald-400/40 bg-emerald-400/10" : "border-white/10 bg-[#111114]"}`}>
-      <p className="text-white text-sm font-medium">{title}</p>
-      <p className="mt-0.5 text-[11px] text-white/50 leading-snug">{subtitle}</p>
-      <div className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] ${accent ? "bg-emerald-400/15 text-emerald-200" : "bg-white/5 text-white/55"}`}>
+    <div className={`flex-1 min-w-[150px] border p-3 ${accent ? "border-[#D9482B]/45 bg-[#D9482B]/[0.06]" : "border-white/12 bg-[#121110]"}`}>
+      <p className="text-sm text-[#E9E2D6]">{title}</p>
+      <p className="mt-1 text-[11px] leading-snug text-white/50">{subtitle}</p>
+      <p className={`mt-3 text-[10px] uppercase tracking-[0.18em] ${accent ? "text-[#D9482B]" : "text-white/35"}`}>
         {detail}
-      </div>
+      </p>
     </div>
   );
 }
@@ -181,7 +175,7 @@ function DiagramNode({ title, subtitle, detail, accent = false }: { title: strin
 function FlowArrow() {
   return (
     <div className="flex items-center justify-center px-1 sm:px-2" aria-hidden="true">
-      <span className="text-white/30 text-lg">▸</span>
+      <span className="text-white/25 text-lg">▸</span>
     </div>
   );
 }
@@ -230,80 +224,85 @@ const SoftwareEngineeringPage = () => {
   };
 
   return (
-    <div className="bg-[#09090B]">
-      <WelcomeImage
-        heading="Hey! I'm Michal Guzy"
-        subHeadingOne="A Full-Stack Software Engineer"
-        onScrollIndicatorClick={scrollToAbout}
-      />
-      <div id="about" className="pt-10 md:pt-12 flex flex-col items-center w-full px-4" ref={aboutRef}>
-        <h1 className="text-white font-light text-[clamp(1.5rem,4vw,2rem)] text-center" style={FONT_HEADING}>
-          About Me
-        </h1>
-        <h2 className="text-white/60 text-base font-light text-center pt-3 pb-8 px-5 max-w-xl" style={FONT_BODY}>
-          I build systems that connect UI, auth, and APIs end to end.
-        </h2>
-        <div className="w-full max-w-4xl py-8 flex flex-col md:flex-row gap-8 md:gap-12">
-          <div className="w-full md:w-1/2">
-            <h2 className="text-white text-lg font-light mb-4" style={FONT_HEADING}>
-              Get to Know Me!
+    <div className="bg-[#0B0B0C]">
+      <section className="relative min-h-[82vh] overflow-hidden bg-[#0B0B0C]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_15%,rgba(217,72,43,0.12),transparent_55%)]" />
+        <div className="relative flex min-h-[82vh] flex-col justify-end px-5 pb-12 pt-32 md:px-10 md:pb-16">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-white/35">Work</p>
+          <motion.h1
+            className="mt-5 font-display text-[clamp(3.2rem,10vw,9rem)] leading-[0.82] tracking-[-0.055em] text-[#E9E2D6]"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          >
+            How I build
+            <br />
+            this site.
+          </motion.h1>
+          <div className="mt-8 flex flex-wrap items-end justify-between gap-4 border-t border-white/15 pt-4 text-sm text-white/55">
+            <p>Full-stack engineering, in public.</p>
+            <button
+              type="button"
+              onClick={scrollToAbout}
+              className="cursor-pointer text-[10px] uppercase tracking-[0.25em] text-white/45 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            >
+              Read the breakdown ↓
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" ref={aboutRef} className="border-t border-white/10 px-5 py-20 md:px-10 md:py-28">
+        <div className="mx-auto grid max-w-[1500px] gap-10 md:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-white/35">About</p>
+            <h2 className="mt-4 font-display text-[clamp(2.5rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.04em] text-[#E9E2D6]">
+              I build systems that connect UI, auth and APIs.
             </h2>
-            <p className="text-white/70 mb-4 leading-relaxed text-sm md:text-base">
-              I'm a <span className="text-white font-medium">Backend Focused Developer</span> currently working at Simcorp as a Senior software engineer.
-            </p>
-            <p className="text-white/70 leading-relaxed text-sm md:text-base">
-              I specialise in <span className="text-white font-medium">C# ASP .Net Core</span> backend development, and I like shaping the frontend around real production workflows.
+            <p className="mt-6 max-w-xl text-sm leading-6 text-white/55">
+              Backend-focused developer at Simcorp. C# / ASP.NET Core, with enough frontend to care about the whole
+              workflow.
             </p>
           </div>
-          <div className="w-full md:w-1/2">
-            <h2 className="text-white text-lg font-light mb-4" style={FONT_HEADING}>
-              Skills
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {[
-                "C#",
-                "Asp.Net Core",
-                "SQL",
-                "Git",
-                "Azure Service Bus",
-                "RabbitMQ",
-                "Serverless",
-                "Kubernetes",
-                "JavaScript",
-                "React",
-              ].map((skill) => (
-                <div key={skill} className="text-sm font-normal bg-[#27272A] text-white/80 px-3 py-1.5 rounded transition-all duration-300 hover:bg-[#3F3F46] hover:text-white">
-                  {skill}
-                </div>
-              ))}
+          <div className="grid gap-6 self-end">
+            <div>
+              <h3 className="text-[10px] uppercase tracking-[0.3em] text-white/35">Current</h3>
+              <p className="mt-3 text-sm leading-6 text-white/70">Senior software engineer at Simcorp.</p>
+            </div>
+            <div>
+              <h3 className="text-[10px] uppercase tracking-[0.3em] text-white/35">Tools</h3>
+              <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/60">
+                {["C#", "ASP.NET Core", "SQL", "Git", "Azure Service Bus", "RabbitMQ", "Serverless", "Kubernetes", "JavaScript", "React"].map((skill) => (
+                  <li key={skill} className="border-b border-white/10 pb-1">{skill}</li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div id="projects" className="w-full flex flex-col items-center border-t border-white/[0.08] px-4">
-        <div className="w-full max-w-5xl pt-12 pb-4">
-          <p className="text-white/40 text-xs uppercase tracking-[0.25em] text-center">Portfolio project</p>
-          <h1 className="text-white font-light text-[clamp(2rem,6vw,3.25rem)] text-center mt-2" style={FONT_HEADING}>
+      <div id="projects" className="w-full border-t border-white/10 px-5 md:px-10">
+        <div className="mx-auto w-full max-w-[1500px] pt-16 pb-4 md:pt-20">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-white/35">Portfolio project</p>
+          <h2 className="mt-4 font-display text-[clamp(2.6rem,6vw,5rem)] leading-[0.92] tracking-[-0.05em] text-[#E9E2D6]">
             Photography Portfolio
-          </h1>
-          <h2 className="text-white/60 text-base font-light text-center pt-3 px-5 max-w-2xl mx-auto leading-relaxed" style={FONT_BODY}>
-            A full-stack product with AI, smart search, and a hexagonal .NET 10 backend.
           </h2>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55">
+            A full-stack product with AI, smart search and a hexagonal .NET 10 backend.
+          </p>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6 backdrop-blur-sm mt-10">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <div className="border border-white/12 bg-[#121110] p-5 md:p-6 mt-10">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center">
               <div className="w-full md:w-1/2">
                 <ImageSwitcher images={images} />
               </div>
               <div className="w-full md:w-1/2">
-                <h2 className="text-white text-lg md:text-xl font-light" style={FONT_HEADING}>
-                  The live product
-                </h2>
-                <p className="text-white/70 leading-relaxed text-sm md:text-base mt-3">
-                  The public site reads published albums and discovery endpoints from the API, while the admin area uses Supabase GitHub OAuth plus backend allowlist checks to protect uploads, edits, ratings, and deletions.
+                <h3 className="font-display text-2xl tracking-[-0.02em] text-[#E9E2D6]">The live product</h3>
+                <p className="mt-3 text-sm leading-6 text-white/60">
+                  The public site reads published albums and discovery endpoints from the API, while the admin area uses
+                  Supabase GitHub OAuth plus backend allowlist checks to protect uploads, edits, ratings, and deletions.
                 </p>
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className="mt-5 flex flex-wrap gap-4">
                   <Chip accent="emerald">Gemini AI worker</Chip>
                   <Chip accent="sky">Smart search</Chip>
                   <Chip accent="amber">Bulk uploads</Chip>
@@ -314,16 +313,16 @@ const SoftwareEngineeringPage = () => {
           </div>
         </div>
 
-        <nav aria-label="Project sections" className="sticky top-[70px] z-30 w-screen border-y border-white/[0.08] bg-[#09090B]/85 backdrop-blur-xl">
-          <div className="mx-auto max-w-5xl overflow-x-auto px-4">
-            <ul className="flex gap-1 py-2.5 min-w-max">
+        <nav aria-label="Project sections" className="sticky top-[70px] z-30 -mx-5 border-y border-white/10 bg-[#0B0B0C]/90 backdrop-blur-xl md:-mx-10">
+          <div className="mx-auto max-w-[1500px] overflow-x-auto px-5 md:px-10">
+            <ul className="flex gap-6 py-1 min-w-max">
               {navSections.map((section) => (
                 <li key={section.id}>
                   <button
                     type="button"
                     onClick={() => scrollToSection(section.id)}
-                    className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs uppercase tracking-[0.15em] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/60 ${
-                      active === section.id ? "bg-white text-black" : "text-white/55 hover:text-white hover:bg-white/10"
+                    className={`cursor-pointer border-b-2 px-0 py-3 text-[10px] uppercase tracking-[0.18em] transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${
+                      active === section.id ? "border-[#D9482B] text-white" : "border-transparent text-white/45 hover:text-white"
                     }`}
                   >
                     {section.label}
@@ -334,9 +333,9 @@ const SoftwareEngineeringPage = () => {
           </div>
         </nav>
 
-        <div className="w-full max-w-5xl py-10 space-y-4">
+        <div className="mx-auto w-full max-w-[1500px] py-10 space-y-4">
           <section id="system" className="scroll-mt-[130px]">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6 backdrop-blur-sm">
+            <div className="border border-white/12 bg-[#121110] p-5 md:p-6">
               <SectionHeading
                 eyebrow="01 · System architecture"
                 title="The whole stack, back to front"
@@ -363,7 +362,7 @@ const SoftwareEngineeringPage = () => {
           </section>
 
           <section id="ai-worker" className="scroll-mt-[130px]">
-            <div className="rounded-2xl border border-emerald-400/25 bg-emerald-400/[0.04] p-5 md:p-6 backdrop-blur-sm">
+            <div className="border border-[#D9482B]/30 bg-[#D9482B]/[0.04] p-5 md:p-6">
               <SectionHeading
                 eyebrow="02 · Background job"
                 title="The AI metadata worker"
@@ -371,24 +370,24 @@ const SoftwareEngineeringPage = () => {
               />
               <div className="grid gap-4 lg:grid-cols-2">
                 <div>
-                  <h3 className="text-white text-sm font-medium uppercase tracking-[0.15em] mb-3">State machine</h3>
-                  <div className="rounded-xl border border-white/10 bg-[#111114] p-4 space-y-3">
+                  <h3 className="text-[10px] uppercase tracking-[0.25em] text-white/35 mb-3">State machine</h3>
+                  <div className="border border-white/10 bg-[#0F0E0D] p-4 space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-lg border border-white/10 bg-black/30 px-2.5 py-1 text-[11px] text-white/70">Pending</span>
+                      <span className="border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] text-white/70">Pending</span>
                       <span className="text-white/25 text-xs" aria-hidden="true">→</span>
-                      <span className="rounded-lg border border-white/10 bg-black/30 px-2.5 py-1 text-[11px] text-white/70">Processing</span>
+                      <span className="border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] text-white/70">Processing</span>
                       <span className="text-white/25 text-xs" aria-hidden="true">→</span>
-                      <span className="rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[11px] text-emerald-200">Completed</span>
+                      <span className="border border-[#D9482B]/30 bg-[#D9482B]/10 px-2.5 py-1 text-[11px] text-[#D9482B]">Completed</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-lg border border-white/10 bg-black/30 px-2.5 py-1 text-[11px] text-white/70">Processing</span>
+                      <span className="border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] text-white/70">Processing</span>
                       <span className="text-white/25 text-xs" aria-hidden="true">→ (attempts ≥ cap)</span>
-                      <span className="rounded-lg border border-red-400/30 bg-red-400/10 px-2.5 py-1 text-[11px] text-red-200">Failed + lastError</span>
+                      <span className="border border-red-400/30 bg-red-400/10 px-2.5 py-1 text-[11px] text-red-200">Failed + lastError</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-lg border border-white/10 bg-black/30 px-2.5 py-1 text-[11px] text-white/70">Failed</span>
+                      <span className="border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] text-white/70">Failed</span>
                       <span className="text-white/25 text-xs" aria-hidden="true">→ reset (admin)</span>
-                      <span className="rounded-lg border border-white/10 bg-black/30 px-2.5 py-1 text-[11px] text-white/70">Pending</span>
+                      <span className="border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] text-white/70">Pending</span>
                     </div>
                     <p className="text-white/50 text-xs leading-relaxed mt-3">
                       The Postgres table is the source of truth. Mark Processing, attempt++, call Gemini, write the result, mark Completed. A crash mid-job leaves it in Processing, which the next run reclaims.
@@ -396,7 +395,7 @@ const SoftwareEngineeringPage = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-white text-sm font-medium uppercase tracking-[0.15em] mb-3">Why it's durable</h3>
+                  <h3 className="text-[10px] uppercase tracking-[0.25em] text-white/35 mb-3">Why it's durable</h3>
                   <div className="space-y-3">
                     <p className="text-white/70 text-sm leading-relaxed">
                       An hourly timer enqueues photos missing metadata, then a drain-all loop works through the oldest pending jobs until the queue is empty or the 10-minute budget runs out — a partial run just resumes on the next tick.
@@ -417,30 +416,30 @@ const SoftwareEngineeringPage = () => {
             <div className="flex items-end justify-between gap-4 mb-6">
               <div>
                 <p className="text-white/40 text-xs uppercase tracking-[0.25em]">03 · Deep dives</p>
-                <h2 className="text-white text-xl md:text-2xl font-light mt-1" style={FONT_HEADING}>
+                <h2 className="font-display text-[clamp(2rem,4vw,3rem)] leading-none tracking-[-0.04em] mt-1" style={FONT_HEADING}>
                   How each piece works
                 </h2>
               </div>
-              <p className="text-white/40 text-xs uppercase tracking-[0.2em] hidden md:block">10 areas</p>
+              
             </div>
           </div>
 
           <div className="space-y-4">
             {deepDives.map((item) => (
-              <section key={item.id} id={item.id} className="scroll-mt-[130px] rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6 backdrop-blur-sm">
+              <section key={item.id} id={item.id} className="scroll-mt-[130px] border border-white/12 bg-[#121110] p-5 md:p-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
-                  <div className="text-3xl font-light text-white/20 md:w-16 md:shrink-0 md:pt-1" style={FONT_HEADING}>
+                  <div className="font-display text-4xl text-[#D9482B]/60 md:w-16 md:shrink-0 md:pt-1" style={FONT_HEADING}>
                     {item.index}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-white text-lg font-medium" style={FONT_HEADING}>
+                    <h3 className="font-display text-2xl text-[#E9E2D6]" style={FONT_HEADING}>
                       {item.title}
                     </h3>
-                    <p className="text-white/50 text-sm mt-0.5 italic">{item.tagline}</p>
+                    <p className="text-white/45 text-sm mt-1">{item.tagline}</p>
                     <p className="text-white/70 leading-relaxed text-sm mt-3">{item.body}</p>
                     <div className="flex flex-wrap gap-2 mt-4">
                       {item.notes.map((note) => (
-                        <span key={note} className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.15em] text-white/55">
+                        <span key={note} className="inline-flex border-b border-white/15 pb-0.5 text-[10px] uppercase tracking-[0.18em] text-white/45">
                           {note}
                         </span>
                       ))}
@@ -452,7 +451,7 @@ const SoftwareEngineeringPage = () => {
           </div>
 
           <section id="decisions" className="scroll-mt-[130px]">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6 backdrop-blur-sm">
+            <div className="border border-white/12 bg-[#121110] p-5 md:p-6">
               <SectionHeading
                 eyebrow="04 · Engineering decisions"
                 title="A few choices that shaped the design"
@@ -460,8 +459,8 @@ const SoftwareEngineeringPage = () => {
               />
               <div className="grid gap-3 md:grid-cols-2">
                 {engineeringDecisions.map((item) => (
-                  <div key={item.title} className="rounded-xl border border-white/10 bg-[#111114] p-4">
-                    <h3 className="text-white text-sm font-medium mb-2">{item.title}</h3>
+                  <div key={item.title} className="border border-white/10 bg-[#0F0E0D] p-4">
+                    <h3 className="font-display text-lg text-[#E9E2D6] mb-2">{item.title}</h3>
                     <p className="text-white/60 text-sm leading-relaxed">{item.body}</p>
                   </div>
                 ))}
@@ -470,7 +469,7 @@ const SoftwareEngineeringPage = () => {
           </section>
 
           <div className="pt-6 pb-10">
-            <h1 className="text-white/50 font-light text-center w-full max-w-xl mx-auto px-4 text-sm md:text-base" style={FONT_BODY}>
+            <h1 className="font-display text-2xl text-white/45 text-center w-full max-w-xl mx-auto px-4">
               Thanks for reading.
             </h1>
           </div>

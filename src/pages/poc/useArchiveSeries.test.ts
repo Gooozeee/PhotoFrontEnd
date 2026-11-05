@@ -113,7 +113,7 @@ describe('archive series', () => {
     fetchWithRetryMock.mockImplementation(async (url: string) => {
       if (url.includes('/api/albums/published')) return [makeAlbum()];
       if (url.includes('/api/albums/album-1/photos')) {
-        return { items: [makePhoto('a', '/a.jpg', '2022-01-01T00:00:00Z')], hasMore: false, totalCount: 1 };
+        return [makePhoto('a', '/a.jpg', '2022-01-01T00:00:00Z')];
       }
       throw new Error(`Unexpected URL ${url}`);
     });
@@ -123,19 +123,21 @@ describe('archive series', () => {
     expect(series[0]?.images).toEqual(['/a.jpg']);
   });
 
-  it('paginates album photos until hasMore is false', async () => {
-    let page = 0;
+  it('loads all album photos from the unpaged endpoint', async () => {
+    let photoCalls = 0;
     fetchWithRetryMock.mockImplementation(async (url: string) => {
       if (url.includes('/api/albums/published')) return [makeAlbum()];
-      page += 1;
-      return page === 1
-        ? { items: [makePhoto('a', '/a.jpg', '2022-01-01T00:00:00Z')], hasMore: true, totalCount: 2 }
-        : { items: [makePhoto('b', '/b.jpg', '2023-01-01T00:00:00Z')], hasMore: false, totalCount: 2 };
+      photoCalls += 1;
+      expect(url).not.toContain('offset=');
+      return [
+        makePhoto('a', '/a.jpg', '2022-01-01T00:00:00Z'),
+        makePhoto('b', '/b.jpg', '2023-01-01T00:00:00Z'),
+      ];
     });
 
     const series = await fetchArchiveSeries();
 
-    expect(page).toBe(2);
+    expect(photoCalls).toBe(1);
     expect(series[0]?.images).toEqual(['/a.jpg', '/b.jpg']);
   });
 
@@ -144,7 +146,7 @@ describe('archive series', () => {
       if (url.includes('/api/albums/published')) {
         return [makeAlbum({ id: 'live', name: 'Live album' })];
       }
-      return { items: [makePhoto('l', '/live.jpg', '2022-01-01T00:00:00Z')], hasMore: false, totalCount: 1 };
+      return [makePhoto('l', '/live.jpg', '2022-01-01T00:00:00Z')];
     });
 
     const live = renderHook(() => useArchiveSeries());

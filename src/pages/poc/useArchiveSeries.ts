@@ -17,12 +17,6 @@ export type ArchiveSeries = {
   images: string[];
 };
 
-type PhotoPage = {
-  items: GalleryPhoto[];
-  hasMore: boolean;
-  totalCount: number;
-};
-
 function yearLabel(photos: GalleryPhoto[]) {
   const years = Array.from(new Set(
     photos
@@ -61,30 +55,24 @@ export function getStaticSeries() {
 }
 
 async function loadAlbumPhotos(albumId: string) {
-  const photos: GalleryPhoto[] = [];
-  let offset = 0;
-
-  while (photos.length < MAX_PHOTOS_PER_ALBUM) {
-    const page = await fetchWithRetry<PhotoPage>(
-      `${API_BASE}/api/albums/${albumId}/photos?offset=${offset}&limit=100`,
-    );
-
-    photos.push(...page.items);
-
-    if (!page.hasMore || page.items.length === 0) break;
-    offset += page.items.length;
-  }
-
-  return photos;
+  const photos = await fetchWithRetry<GalleryPhoto[]>(`${API_BASE}/api/albums/${albumId}/photos`);
+  return photos.slice(0, MAX_PHOTOS_PER_ALBUM);
 }
 
 export async function fetchArchiveSeries() {
   const albums = await fetchWithRetry<GalleryAlbum[]>(`${API_BASE}/api/albums/published`);
   const photosByAlbum: Record<string, GalleryPhoto[]> = {};
 
-  await Promise.all(albums.map(async (album) => {
-    photosByAlbum[album.id] = await loadAlbumPhotos(album.id);
-  }));
+  // Load albums one at a time. The deployed API occasionally returns a 500
+  // under a burst of parallel requests; sequencing keeps the archive stable
+  // and lets one bad album fail without taking down the whole homepage.
+  for (const album of albums) {
+    try {
+      photosByAlbum[album.id] = await loadAlbumPhotos(album.id);
+    } catch (err) {
+      console.warn(`archive: could not load photos for "${album.name}"`, err);
+    }
+  }
 
   return buildSeries(albums, photosByAlbum);
 }
@@ -104,6 +92,7 @@ export function useArchiveSeries() {
           setSeries(liveSeries);
         }
       } catch (err) {
+        console.warn("archive: live series failed", err);
         if (!cancelled) {
           setError(isNetworkError(err) ? "Backend unavailable — showing the local archive." : "Could not load the live archive.");
         }

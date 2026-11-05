@@ -133,9 +133,26 @@ export const useImageGallery = ({
     }
 
     return getOrCreateCachedRequest(pageCacheKey, async () => {
-      const page = await fetchWithRetry<GalleryPhotoPage>(`${API_BASE}/api/albums/${selectedAlbumId}/photos?offset=${offset}&limit=${pageSize}`);
-      photoPageCache.set(pageCacheKey, { timestamp: Date.now(), data: page });
-      return page;
+      try {
+        const page = await fetchWithRetry<GalleryPhotoPage>(`${API_BASE}/api/albums/${selectedAlbumId}/photos?offset=${offset}&limit=${pageSize}`);
+        photoPageCache.set(pageCacheKey, { timestamp: Date.now(), data: page });
+        return page;
+      } catch (err) {
+        // The deployed API's paged route can return 500 while the unpaged
+        // route still works. Fall back to the full album so browsing survives.
+        if (offset > 0) throw err;
+
+        const items = await fetchWithRetry<GalleryPhoto[]>(`${API_BASE}/api/albums/${selectedAlbumId}/photos`);
+        const page: GalleryPhotoPage = {
+          items,
+          offset: 0,
+          limit: items.length,
+          totalCount: items.length,
+          hasMore: false,
+        };
+        photoPageCache.set(pageCacheKey, { timestamp: Date.now(), data: page });
+        return page;
+      }
     });
   }, [cacheKey, cacheTTL, pageSize]);
 
