@@ -204,7 +204,7 @@ const SingleAlbumPage = () => {
       {selectedImage && (
         <ImageModal
           imageUrl={selectedImage.url}
-          imageIndex={selectedImageIndex + 1}
+          imageIndex={(selectedImageIndex ?? 0) + 1}
           totalImages={images.length}
           caption={selectedImage.caption}
           tags={selectedImage.tags}

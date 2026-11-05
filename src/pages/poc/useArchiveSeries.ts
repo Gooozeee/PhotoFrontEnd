@@ -15,6 +15,7 @@ export type ArchiveSeries = {
   cover: string;
   caption: string;
   images: string[];
+  photosCount: number;
 };
 
 function yearLabel(photos: GalleryPhoto[]) {
@@ -43,9 +44,10 @@ export function buildSeries(albums: GalleryAlbum[], photosByAlbum: Record<string
         cover: album.coverThumbnailUrl ?? album.coverUrl ?? images[0] ?? "",
         caption: album.description ?? "",
         images,
+        photosCount: album.photosCount,
       };
     })
-    .filter((series) => series.cover && series.images.length > 0)
+    .filter((series) => Boolean(series.cover) && (series.images.length > 0 || series.photosCount > 0))
     .sort((a, b) => b.images.length - a.images.length);
 }
 
@@ -59,22 +61,14 @@ async function loadAlbumPhotos(albumId: string) {
   return photos.slice(0, MAX_PHOTOS_PER_ALBUM);
 }
 
+export async function fetchSeriesImages(albumId: string) {
+  const photos = await loadAlbumPhotos(albumId);
+  return photos.map((photo) => photo.url);
+}
+
 export async function fetchArchiveSeries() {
   const albums = await fetchWithRetry<GalleryAlbum[]>(`${API_BASE}/api/albums/published`);
-  const photosByAlbum: Record<string, GalleryPhoto[]> = {};
-
-  // Load albums one at a time. The deployed API occasionally returns a 500
-  // under a burst of parallel requests; sequencing keeps the archive stable
-  // and lets one bad album fail without taking down the whole homepage.
-  for (const album of albums) {
-    try {
-      photosByAlbum[album.id] = await loadAlbumPhotos(album.id);
-    } catch (err) {
-      console.warn(`archive: could not load photos for "${album.name}"`, err);
-    }
-  }
-
-  return buildSeries(albums, photosByAlbum);
+  return buildSeries(albums, {});
 }
 
 export function useArchiveSeries() {
