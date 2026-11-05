@@ -103,8 +103,8 @@ function BestRated({ limit = 6 }: { limit?: number }) {
               >
                 <img
                   src={thumbnail}
-                  srcSet={preview !== thumbnail ? `${thumbnail} 400w, ${preview} 1280w` : undefined}
-                  sizes="(min-width: 768px) 33vw, 50vw"
+                  srcSet={preview !== thumbnail ? `${thumbnail} 300w, ${preview} 1280w` : undefined}
+                  sizes="(min-width: 1280px) 420px, (min-width: 768px) 30vw, 45vw"
                   alt={caption}
                   className="w-full object-cover transition-transform duration-500 group-hover:scale-[1.01]"
                   loading="lazy"
