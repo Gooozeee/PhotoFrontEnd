@@ -403,12 +403,12 @@ export default function LightTablePoc({ standalone = true }: { standalone?: bool
       <section className="bg-[#0B0B0C] px-5 py-24 text-[#E9E2D6] md:px-10 md:py-32">
         <div className="mx-auto grid max-w-[1500px] gap-10 md:grid-cols-[1.15fr_0.85fr]">
           <h2 className="font-display text-[clamp(2.8rem,6.5vw,6.4rem)] leading-[0.92] tracking-[-0.05em]">
-            I take photographs.
+            I photograph places
             <br />
-            Mostly outside.
+            and things that move.
           </h2>
           <div className="max-w-md space-y-5 self-end text-sm leading-6 text-white/55">
-            <p>Sometimes at a racetrack. I build software for a living.</p>
+            <p>I build software for a living. These are the frames I keep.</p>
             {standalone ? (
               <Link to="/" className="inline-flex items-center gap-2 border-b border-white/25 pb-1 text-white/80 transition-colors hover:border-white hover:text-white">
                 Back to the real site <span aria-hidden>→</span>
