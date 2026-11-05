@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
-import LightTablePoc from './LightTablePoc';
+import LightTablePoc, { SERIES } from './LightTablePoc';
 
 function renderPoc() {
   return render(
@@ -18,6 +18,15 @@ describe('LightTablePoc', () => {
     expect(await screen.findByRole('heading', { name: /Michal\s*Guzy/i })).toBeInTheDocument();
     expect(screen.getByText('Selected work')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Open .* series/ })).toHaveLength(10);
+    expect(screen.getByRole('link', { name: /Landscapes/ })).toHaveAttribute('href', '/singleAlbum?album=Landscapes');
+  });
+
+  it('does not repeat an image within a series or across covers', () => {
+    for (const series of SERIES) {
+      expect(new Set(series.images).size).toBe(series.images.length);
+    }
+
+    expect(new Set(SERIES.map((series) => series.cover)).size).toBe(SERIES.length);
   });
 
   it('opens a series and navigates it with the keyboard', async () => {

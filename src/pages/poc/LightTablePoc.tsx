@@ -22,6 +22,7 @@ import rathlinSunset from "../../assets/Landscapes/Rathlin Island Sunset 2023.we
 import dunluce from "../../assets/Landscapes/Dunluce Castle 2023.webp";
 import northCoast from "../../assets/Landscapes/North Coast 2023.webp";
 import paiCanyon from "../../assets/Landscapes/Pai Canyon Rain 2023.webp";
+import paiCanyonDry from "../../assets/Landscapes/Thailand Pai Canyon 2023.webp";
 import paiCows from "../../assets/Landscapes/Thailand Pai Cows 2023.webp";
 import kohTao from "../../assets/Landscapes/Koh Tao 2023.webp";
 import phiPhi from "../../assets/Landscapes/Phi Phi Islands 2023.webp";
@@ -45,7 +46,9 @@ type Series = {
   images: string[];
 };
 
-const SERIES: Series[] = [
+const ALBUMS = ["Landscapes", "Cities", "Birds", "Rally"];
+
+export const SERIES: Series[] = [
   {
     id: "kirkistown",
     title: "Kirkistown",
@@ -67,14 +70,14 @@ const SERIES: Series[] = [
     images: [rathlinSunset, rathlin, dunluce, northCoast],
   },
   {
-    id: "pai",
-    title: "Pai, after rain",
-    place: "Thailand",
+    id: "thailand",
+    title: "Thailand",
+    place: "Pai · Koh Tao · Phi Phi",
     year: "2023",
     count: 5,
-    cover: paiCanyon,
-    caption: "Wet stone and a valley that won't sit still.",
-    images: [paiCanyon, paiCows, kohTao, phiPhi, paiCanyon],
+    cover: paiCanyonDry,
+    caption: "Wet stone, green valleys and a boat that never left the pier.",
+    images: [paiCanyonDry, paiCows, paiCanyon, kohTao, phiPhi],
   },
   {
     id: "medina",
@@ -134,37 +137,6 @@ function useHeroPointer(enabled: boolean) {
   return { imageX, imageY, textX, textY, update, reset };
 }
 
-function CoverSheet({ reduceMotion, onDone }: { reduceMotion: boolean; onDone: () => void }) {
-  return (
-    <motion.div
-      className="absolute inset-0 z-20 overflow-hidden bg-[#0B0B0C]"
-      initial={{ y: 0 }}
-      animate={{ y: "-101%" }}
-      transition={{ duration: reduceMotion ? 0 : 1.15, delay: reduceMotion ? 0 : 0.55, ease: HOUSE_EASE }}
-      onAnimationComplete={onDone}
-    >
-      <div className="relative h-full w-full px-5 py-5 md:px-10 md:py-8">
-        <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/35">
-          <span>Contact sheet</span>
-          <span>36 exposures</span>
-        </div>
-        <div className="mt-5 grid h-[calc(100%-2.75rem)] grid-cols-6 grid-rows-6 gap-1.5 opacity-40">
-          {Array.from({ length: 36 }).map((_, index) => (
-            <div key={index} className="relative border border-white/10 bg-white/[0.015]">
-              <span className="absolute left-1 top-1 text-[8px] text-white/20">{String(index + 1).padStart(2, "0")}</span>
-            </div>
-          ))}
-        </div>
-        <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-white/15" />
-        <div className="absolute inset-x-5 bottom-5 flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-white/35 md:inset-x-10 md:bottom-8">
-          <span>De Goose</span>
-          <span>Loading light</span>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
 function Print({
   series,
   index,
@@ -187,21 +159,19 @@ function Print({
       }`}
       style={{ left: position.left, top: position.top, width: position.width }}
       initial={{ rotate: position.rotate, y: 0 }}
-      whileHover={{ y: -16, rotate: 0, scale: 1.025 }}
-      whileFocus={{ y: -16, rotate: 0, scale: 1.025 }}
-      transition={{ type: "spring", stiffness: 220, damping: 24 }}
+      whileHover={{ y: -14, scale: 1.02 }}
+      whileFocus={{ y: -14, scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 260, damping: 30 }}
     >
-      <motion.div
-        className="overflow-hidden bg-white p-2 shadow-[0_18px_50px_rgba(18,14,8,0.18)]"
-        whileHover={{ boxShadow: "0 42px 90px rgba(18,14,8,0.3)" }}
-        transition={{ type: "spring", stiffness: 220, damping: 26 }}
-      >
+      <div className="overflow-hidden bg-white p-2 shadow-[0_18px_50px_rgba(18,14,8,0.18)] [backface-visibility:hidden]">
         <img
           src={series.cover}
           alt={`${series.title} — ${series.place}`}
-          className={`w-full object-cover ${isFeature ? "aspect-[4/3]" : "aspect-[3/2]"}`}
+          className={`w-full object-cover [backface-visibility:hidden] ${isFeature ? "aspect-[4/3]" : "aspect-[3/2]"}`}
+          loading="lazy"
+          decoding="async"
         />
-      </motion.div>
+      </div>
       <div className="mt-3 flex items-baseline justify-between gap-3">
         <span className="font-display text-[clamp(1.1rem,1.6vw,1.7rem)] leading-none tracking-[-0.02em]">{series.title}</span>
         <span className="text-[11px] tabular-nums text-black/40">{series.count} frames</span>
@@ -226,7 +196,7 @@ function MobilePrint({ series, index, onOpen }: { series: Series; index: number;
       transition={{ type: "spring", stiffness: 220, damping: 24 }}
     >
       <div className="overflow-hidden bg-white p-2 shadow-[0_18px_50px_rgba(18,14,8,0.18)]">
-        <img src={series.cover} alt={`${series.title} — ${series.place}`} className="aspect-[4/3] w-full object-cover" />
+        <img src={series.cover} alt={`${series.title} — ${series.place}`} className="aspect-[4/3] w-full object-cover" loading="lazy" decoding="async" />
       </div>
       <div className="mt-3 flex items-baseline justify-between gap-3">
         <span className="font-display text-2xl leading-none tracking-[-0.02em]">{series.title}</span>
@@ -260,32 +230,43 @@ function SeriesViewer({ series, onClose }: { series: Series; onClose: () => void
     };
   }, []);
 
+  useEffect(() => {
+    // Decode the whole series up front so arrow-key navigation never waits on
+    // the network or flashes a blank frame.
+    for (const source of images) {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = source;
+    }
+  }, [images]);
+
   return (
     <motion.div
       role="dialog"
       aria-modal="true"
       aria-label={`${series.title} series`}
-      className="fixed inset-0 z-[100] bg-[#0B0B0C] text-white"
+      className="fixed inset-0 z-[100] h-[100dvh] bg-[#0B0B0C] text-white"
       initial={{ clipPath: "circle(0% at 50% 50%)" }}
       animate={{ clipPath: "circle(150% at 50% 50%)" }}
       exit={{ clipPath: "circle(0% at 50% 50%)" }}
       transition={{ duration: 0.75, ease: HOUSE_EASE }}
     >
       <div className="relative h-full w-full overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={images[index]}
-            src={images[index]}
-            alt={`${series.title} — frame ${index + 1}`}
-            className="absolute inset-0 h-full w-full object-contain p-3 md:p-8"
-            initial={{ opacity: 0, scale: 1.02 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.99 }}
-            transition={{ duration: 0.4, ease: HOUSE_EASE }}
-          />
-        </AnimatePresence>
+        <motion.img
+          key={images[index]}
+          src={images[index]}
+          alt={`${series.title} — frame ${index + 1}`}
+          className="absolute inset-0 h-full w-full object-contain px-3 pb-36 pt-20 md:p-8"
+          initial={{ opacity: 0.6 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2, ease: HOUSE_EASE }}
+          decoding="async"
+        />
 
-        <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-4 bg-gradient-to-b from-black/70 to-transparent p-5 md:p-8">
+        <div
+          className="absolute inset-x-0 top-0 flex items-start justify-between gap-4 bg-gradient-to-b from-black/70 to-transparent px-5 pb-6 md:p-8"
+          style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}
+        >
           <div>
             <p className="font-display text-2xl leading-none tracking-[-0.02em]">{series.title}</p>
             <p className="mt-2 text-xs text-white/45">{series.place} · {series.year}</p>
@@ -294,13 +275,16 @@ function SeriesViewer({ series, onClose }: { series: Series; onClose: () => void
             type="button"
             onClick={onClose}
             autoFocus
-            className="cursor-pointer rounded-full border border-white/20 px-4 py-2 text-xs text-white/70 transition hover:border-white/50 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="min-h-11 cursor-pointer rounded-full border border-white/20 px-4 py-3 text-xs text-white/70 transition hover:border-white/50 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             Close
           </button>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 md:p-8">
+        <div
+          className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-5 pt-8 md:p-8"
+          style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
+        >
           <div className="flex flex-wrap items-end justify-between gap-4">
             <p className="max-w-md text-sm leading-6 text-white/60">{series.caption}</p>
             <p className="text-sm tabular-nums text-white/60">{index + 1} / {images.length}</p>
@@ -316,7 +300,7 @@ function SeriesViewer({ series, onClose }: { series: Series; onClose: () => void
                   imageIndex === index ? "border-white opacity-100" : "border-white/15 opacity-45 hover:opacity-100"
                 }`}
               >
-                <img src={source} alt="" className="h-full w-full object-cover" />
+                <img src={source} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
               </button>
             ))}
           </div>
@@ -328,23 +312,24 @@ function SeriesViewer({ series, onClose }: { series: Series; onClose: () => void
 
 export default function LightTablePoc() {
   const reduceMotion = Boolean(useReducedMotion());
-  const [introDone, setIntroDone] = useState(false);
+  const [compact, setCompact] = useState(false);
   const [activeSeries, setActiveSeries] = useState<Series | null>(null);
   const heroRef = useRef<HTMLElement>(null);
-  const { imageX, imageY, textX, textY, update, reset } = useHeroPointer(!reduceMotion);
+  const heavyMotion = !compact && !reduceMotion;
+  const { imageX, imageY, textX, textY, update, reset } = useHeroPointer(heavyMotion);
 
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1.06, 1.16]);
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 90]);
-  const heroRotateX = useTransform(scrollYProgress, [0.5, 1], [0, -6]);
-  const heroLift = useTransform(scrollYProgress, [0.5, 1], [0, -36]);
-  const titleY = useTransform(scrollYProgress, [0, 1], [0, -70]);
+  const heroScale = useTransform(scrollYProgress, [0, 1], compact ? [1.02, 1.04] : [1.06, 1.16]);
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, compact ? 24 : 90]);
+  const heroRotateX = useTransform(scrollYProgress, [0.5, 1], [0, compact ? 0 : -6]);
+  const heroLift = useTransform(scrollYProgress, [0.5, 1], [0, compact ? 0 : -36]);
+  const titleY = useTransform(scrollYProgress, [0, 1], [0, compact ? -18 : -70]);
   const titleOpacity = useTransform(scrollYProgress, [0.55, 0.95], [1, 0]);
 
   const tableX = useMotionValue(0);
   const tableY = useMotionValue(0);
-  const tableRotateX = useSpring(useTransform(tableY, [-1, 1], [1.4, -1.4]), { stiffness: 100, damping: 20 });
-  const tableRotateY = useSpring(useTransform(tableX, [-1, 1], [-1.4, 1.4]), { stiffness: 100, damping: 20 });
+  const tableRotateX = useSpring(useTransform(tableY, [-1, 1], [0.8, -0.8]), { stiffness: 140, damping: 22 });
+  const tableRotateY = useSpring(useTransform(tableX, [-1, 1], [-0.8, 0.8]), { stiffness: 140, damping: 22 });
 
   const seriesCount = useMemo(() => SERIES.length, []);
 
@@ -357,10 +342,13 @@ export default function LightTablePoc() {
   }, []);
 
   useEffect(() => {
-    if (introDone) return;
-    const timer = window.setTimeout(() => setIntroDone(true), reduceMotion ? 0 : 1900);
-    return () => window.clearTimeout(timer);
-  }, [introDone, reduceMotion]);
+    if (typeof window.matchMedia !== "function") return;
+    const query = window.matchMedia("(max-width: 767px), (pointer: coarse)");
+    const update = () => setCompact(query.matches);
+    update();
+    query.addEventListener?.("change", update);
+    return () => query.removeEventListener?.("change", update);
+  }, []);
 
   function updateTable(event: React.PointerEvent<HTMLDivElement>) {
     if (reduceMotion) return;
@@ -387,45 +375,67 @@ export default function LightTablePoc() {
         </Link>
       </header>
 
-      <section ref={heroRef} className="relative h-[145vh] bg-[#0B0B0C]">
-        <div className="sticky top-0 h-[100svh] overflow-hidden">
+      <section ref={heroRef} className="relative h-[125vh] bg-[#0B0B0C] md:h-[145vh]">
+        <div className="sticky top-0 h-screen h-[100svh] overflow-hidden">
           <motion.div
             className="absolute inset-0"
             data-testid="hero-surface"
-            style={{ scale: heroScale, y: heroY, rotateX: heroRotateX, transformPerspective: 1400 }}
+            style={{ scale: heroScale, y: heroY, rotateX: heroRotateX, transformPerspective: 1400, willChange: "transform" }}
             onPointerMove={update}
             onPointerLeave={reset}
           >
             <motion.img
               src={paiCanyon}
               alt="Pai Canyon after rain, Thailand"
-              className="h-full w-full object-cover"
-              style={{ x: imageX, y: imageY, scale: 1.045 }}
+              className="h-full w-full object-cover [backface-visibility:hidden]"
+              style={{ x: imageX, y: imageY, willChange: "transform" }}
               initial={{ scale: 1.12 }}
               animate={{ scale: 1.045 }}
               transition={{ duration: reduceMotion ? 0 : 1.6, delay: reduceMotion ? 0 : 0.35, ease: HOUSE_EASE }}
+              decoding="async"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.45)_100%)]" />
           </motion.div>
 
-          {!introDone ? <CoverSheet reduceMotion={reduceMotion} onDone={() => setIntroDone(true)} /> : null}
+          {!reduceMotion ? (
+            <motion.div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-20 overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 1, 0] }}
+              transition={{ duration: 2.1, times: [0, 0.08, 0.7, 1], ease: "easeInOut" }}
+            >
+              <motion.div
+                className="absolute inset-y-0 w-[45%] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                initial={{ x: "-60%" }}
+                animate={{ x: "220%" }}
+                transition={{ duration: 1.7, delay: 0.15, ease: HOUSE_EASE }}
+              />
+            </motion.div>
+          ) : null}
 
           <motion.div
             className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-5 pb-10 md:px-10 md:pb-14"
             style={{ y: titleY, opacity: titleOpacity, x: textX }}
           >
-            <motion.div style={{ y: textY }}>
-              <p className="mb-4 text-sm text-white/60">Photographer, Software Engineer</p>
-              <h1 className="font-display text-[clamp(3.5rem,10vw,9rem)] leading-[0.82] tracking-[-0.055em] text-white">
-                Michal
-                <br />
-                Guzy
-              </h1>
-              <div className="mt-7 flex flex-wrap items-end justify-between gap-4 border-t border-white/15 pt-4 text-sm text-white/55">
-                <p>Landscapes, cities, birds, rally.</p>
-                <p className="tabular-nums">Pai Canyon · Thailand · 2023</p>
-              </div>
+            <motion.div
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: reduceMotion ? 0 : 0.9, delay: reduceMotion ? 0 : 0.2, ease: HOUSE_EASE }}
+            >
+              <motion.div style={{ y: textY }}>
+                <p className="mb-4 text-sm text-white/60">Photographer, Software Engineer</p>
+                <h1 className="font-display text-[clamp(3.25rem,15vw,6rem)] leading-[0.82] tracking-[-0.055em] text-white md:text-[clamp(3.5rem,10vw,9rem)]">
+                  Michal
+                  <br />
+                  Guzy
+                </h1>
+                <div className="mt-7 flex flex-wrap items-end justify-between gap-4 border-t border-white/15 pt-4 text-sm text-white/55">
+                  <p>Landscapes, cities, birds, rally.</p>
+                  <p className="tabular-nums">Pai Canyon · Thailand · 2023</p>
+                </div>
+              </motion.div>
             </motion.div>
           </motion.div>
 
@@ -451,7 +461,9 @@ export default function LightTablePoc() {
             <p className="max-w-xl text-sm leading-6 text-black/60">
               Five series, five speeds. Hover a print to pick it up. Click to open the sequence.
             </p>
-            <p className="text-[11px] uppercase tracking-[0.25em] text-black/35">The light table</p>
+            <a href="#full-archive" className="text-[11px] uppercase tracking-[0.25em] text-black/35 transition-colors hover:text-black/70">
+              Full archive ↓
+            </a>
           </div>
 
           <div
@@ -462,7 +474,7 @@ export default function LightTablePoc() {
           >
             <motion.div
               className="absolute inset-0"
-              style={{ rotateX: tableRotateX, rotateY: tableRotateY, transformStyle: "preserve-3d", transformPerspective: 1400 }}
+              style={{ rotateX: tableRotateX, rotateY: tableRotateY, transformStyle: "preserve-3d", transformPerspective: 1400, willChange: "transform" }}
             >
               {SERIES.map((series, index) => (
                 <Print key={series.id} series={series} index={index} onOpen={() => setActiveSeries(series)} />
@@ -475,6 +487,32 @@ export default function LightTablePoc() {
             {SERIES.map((series, index) => (
               <MobilePrint key={series.id} series={series} index={index} onOpen={() => setActiveSeries(series)} />
             ))}
+          </div>
+
+          <div id="full-archive" className="mt-16 scroll-mt-24 border-t border-black/10 pt-8">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.25em] text-black/35">Full archive</p>
+                <h3 className="mt-3 font-display text-[clamp(1.8rem,3.5vw,3rem)] leading-none tracking-[-0.04em]">
+                  Every frame, by folder.
+                </h3>
+              </div>
+              <p className="max-w-sm text-sm leading-6 text-black/55">
+                This homepage is a curated edit. Open an album to browse every image in the collection.
+              </p>
+            </div>
+            <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {ALBUMS.map((album) => (
+                <Link
+                  key={album}
+                  to={`/singleAlbum?album=${encodeURIComponent(album)}`}
+                  className="group flex items-center justify-between border-t border-black/15 py-4 text-sm transition-colors hover:border-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9482B] focus-visible:ring-offset-4 focus-visible:ring-offset-[#E9E2D6]"
+                >
+                  <span className="font-display text-xl tracking-[-0.02em]">{album}</span>
+                  <span aria-hidden className="text-black/35 transition-transform duration-300 group-hover:translate-x-1">→</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
