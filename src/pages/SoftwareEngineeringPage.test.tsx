@@ -8,6 +8,8 @@ describe('SoftwareEngineeringPage', () => {
 
     expect(screen.getByRole('heading', { name: /How this site works/i })).toBeInTheDocument();
     expect(screen.queryByText(/I built the whole thing/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/best rated/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/rating/i)).not.toBeInTheDocument();
     expect(screen.getByText('The pieces that run')).toBeInTheDocument();
     expect(screen.getByText('Captions leave the request path')).toBeInTheDocument();
     expect(screen.getByText('Decision, reason, cost')).toBeInTheDocument();

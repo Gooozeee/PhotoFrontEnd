@@ -310,7 +310,7 @@ const SoftwareEngineeringPage = () => {
               A photo archive with an admin side.
             </h2>
             <p className="mt-6 max-w-xl text-sm leading-6 text-white/55">
-              The public site shows albums, search and the best rated frames. The admin area uploads photos,
+              The public site shows albums, search and a short edit. The admin area uploads photos,
               edits metadata and controls what is published. Both talk to the same API.
             </p>
           </div>
