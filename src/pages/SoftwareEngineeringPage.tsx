@@ -1,22 +1,22 @@
 import Footer from "../components/Footer";
-import HomePage from "../assets/Projects/Website/HomePage.png";
-import LandscapePage from "../assets/Projects/Website/LandscapePage.png";
-import ImageSwitcher from "../components/ImageSwitcher";
 import { motion, useReducedMotion } from "framer-motion";
 import { Fragment, useEffect, useRef, useState } from "react";
 
 type NavSection = { id: string; label: string };
 
 const navSections: NavSection[] = [
-  { id: "system", label: "System" },
-  { id: "ai-worker", label: "AI worker" },
+  { id: "system", label: "Containers" },
+  { id: "ai-worker", label: "Worker" },
   { id: "frontend", label: "Frontend" },
   { id: "backend", label: "Backend" },
-  { id: "security", label: "Security" },
+  { id: "backend-api", label: "API" },
+  { id: "security", label: "Auth" },
   { id: "images", label: "Images" },
   { id: "uploads", label: "Uploads" },
   { id: "search", label: "Search" },
-  { id: "decisions", label: "Decisions" },
+  { id: "highlights", label: "Best rated" },
+  { id: "testing", label: "Tests" },
+  { id: "decisions", label: "Trade-offs" },
 ];
 
 type DeepDive = {
@@ -25,6 +25,8 @@ type DeepDive = {
   title: string;
   tagline: string;
   notes: string[];
+  body: string;
+  tradeoff: string;
 };
 
 const deepDives: DeepDive[] = [
@@ -34,6 +36,10 @@ const deepDives: DeepDive[] = [
     title: "Frontend",
     tagline: "React, paged reads, CDN images.",
     notes: ["fetch", "cache", "IntersectionObserver", "WebP variants"],
+    body:
+      "A React single page app renders the gallery, search and admin screens. Album grids request 24 photos at a time and load the next page as you scroll. Images come from the CDN at the size the layout needs.",
+    tradeoff:
+      "Paging keeps the first paint small, but a very large album still needs another round trip while you scroll.",
   },
   {
     index: "02",
@@ -41,27 +47,43 @@ const deepDives: DeepDive[] = [
     title: "Backend",
     tagline: "Hexagonal .NET 10.",
     notes: ["Domain", "Application", "Ports", "Adapters"],
+    body:
+      "The API is .NET 10 split into domain, application, ports and adapters. Controllers translate HTTP into use cases. The core does not know about HTTP, Postgres or Supabase.",
+    tradeoff:
+      "The extra layers add indirection and boilerplate, but the rules can be tested without a database or a web server.",
   },
   {
     index: "03",
     id: "backend-api",
     title: "API",
     tagline: "One contract, two hosts.",
-    notes: ["public reads", "admin writes", "JSON only", "CDN images"],
+    notes: ["public reads", "admin writes", "JSON only", "image URLs"],
+    body:
+      "Public reads and admin writes use the same REST contract. The API returns JSON and image URLs, not image bytes. Photos are served by Supabase Storage behind a CDN.",
+    tradeoff:
+      "One contract keeps both clients simple, but the API and the storage bucket have to agree on the URL shape.",
   },
   {
     index: "04",
     id: "security",
     title: "Auth",
     tagline: "Two gates before admin.",
-    notes: ["Supabase OAuth", "Bearer token", "allowlist", "401 / 403"],
+    notes: ["Supabase OAuth", "bearer token", "allowlist", "401 / 403"],
+    body:
+      "Admin signs in with Supabase OAuth. The API validates the bearer token, then checks the email against an allowlist. A missing or invalid token gets 401. A valid token without access gets 403.",
+    tradeoff:
+      "Two checks cost a little work per request, but a stolen token is not enough on its own without an allowlisted account.",
   },
   {
     index: "05",
     id: "images",
     title: "Images",
     tagline: "Three WebP sizes.",
-    notes: ["validate", "EXIF", "WebP", "thumb / preview / full"],
+    notes: ["validate", "read EXIF", "write WebP", "thumb / preview / full"],
+    body:
+      "Each upload is validated and its EXIF is read before the file is written as WebP at thumb, preview and full sizes. Grids use preview, thumbnails use thumb, and the lightbox uses full.",
+    tradeoff:
+      "Three files take more storage and encode time, but every layout downloads only the pixels it shows.",
   },
   {
     index: "06",
@@ -69,6 +91,10 @@ const deepDives: DeepDive[] = [
     title: "Uploads",
     tagline: "A sequential queue.",
     notes: ["pick files", "one at a time", "XHR progress", "retry"],
+    body:
+      "The admin picks files and the browser uploads them one at a time. XHR keeps progress accurate. A failed file can be retried without restarting the whole batch.",
+    tradeoff:
+      "One at a time is slower for large batches, but memory use and failure handling stay predictable.",
   },
   {
     index: "07",
@@ -76,20 +102,32 @@ const deepDives: DeepDive[] = [
     title: "AI captions",
     tagline: "A durable Postgres queue.",
     notes: ["enqueue", "throttle", "attempt cap", "admin reset"],
+    body:
+      "A timer enqueues photos that are missing metadata. A worker claims one row, calls Gemini with a throttle, and writes the caption and tags back to the photo. Attempts are capped so a bad photo cannot loop forever.",
+    tradeoff:
+      "Processing later keeps uploads fast, but new photos can appear without captions until the next run.",
   },
   {
     index: "08",
     id: "search",
     title: "Search",
-    tagline: "Debounced and URL-synced.",
-    notes: ["350 ms", "captions + tags", "cache", "similar"],
+    tagline: "Debounced and cached.",
+    notes: ["350 ms", "captions + tags", "five-minute cache", "similar"],
+    body:
+      "Typing waits 350 ms, then queries captions and tags through the API. A query parameter can pre-fill the search, and responses are cached for five minutes. The same photo metadata also powers the similar-photo endpoint.",
+    tradeoff:
+      "The debounce cuts requests and the cache cuts repeats, but results can lag slightly behind the last keystroke.",
   },
   {
     index: "09",
     id: "highlights",
-    title: "Highlights",
-    tagline: "Aspect-aware rows.",
-    notes: ["ResizeObserver", "real W×H", "1-6 columns", "caption slot"],
+    title: "Best rated",
+    tagline: "Rating-led discovery.",
+    notes: ["rating", "contact sheet", "more like this", "five-minute cache"],
+    body:
+      "The highlights endpoint returns the highest rated photos. The homepage picks a spread across series and shows them as a contact sheet. Each one opens in the lightbox with a more-like-this strip beside the caption.",
+    tradeoff:
+      "A rating-led edit is predictable and easy to explain, but it repeats the same strong frames and rarely surfaces a new favourite.",
   },
   {
     index: "10",
@@ -97,26 +135,46 @@ const deepDives: DeepDive[] = [
     title: "Tests",
     tagline: "Three backend suites.",
     notes: ["unit", "architecture", "Testcontainers", "deploy smoke"],
+    body:
+      "The backend has unit tests, architecture tests that enforce the dependency direction, and integration tests with Testcontainers. The frontend uses Vitest and Testing Library, and every deploy gets a smoke test.",
+    tradeoff:
+      "Integration tests are slower and need Docker, but they catch wiring problems that unit tests cannot see.",
   },
 ];
 
-const engineeringDecisions = [
+type Tradeoff = {
+  decision: string;
+  why: string;
+  cost: string;
+};
+
+const engineeringDecisions: Tradeoff[] = [
   {
-    title: "Queue in Postgres",
-    body: "Survives restarts and scale-to-zero.",
+    decision: "Queue in Postgres",
+    why: "The photos already live in Postgres. A table survives restarts and scale-to-zero, so there is no broker to run or pay for.",
+    cost: "A scheduled worker polling a table is less immediate than a dedicated queue.",
   },
   {
-    title: "Synchronous uploads",
-    body: "25 MB cap, one at a time.",
+    decision: "Synchronous uploads",
+    why: "The browser sends one file at a time, so progress is real and a failure only affects that file.",
+    cost: "Large batches take longer and the admin tab has to stay open.",
   },
   {
-    title: "Three WebP sizes",
-    body: "Thumb, preview, full.",
+    decision: "Three WebP sizes",
+    why: "Thumb, preview and full let each view download only the pixels it needs.",
+    cost: "Every photo uses more storage and takes longer to encode.",
   },
   {
-    title: "Cache and dedup",
-    body: "Five-minute TTL, one in-flight request.",
+    decision: "Cache and dedup",
+    why: "The client caches discovery responses for five minutes and shares one in-flight request for the same data.",
+    cost: "An edit can take up to five minutes to appear, and a failed request waits for the retry window.",
   },
+];
+
+const knownLimits = [
+  "Uploads stop at 25 MB per file, and the admin tab must stay open until the batch finishes.",
+  "Search is a database contains query, not a dedicated search index.",
+  "Caption generation runs on a timer, so a new photo can be uncaptioned for a while.",
 ];
 
 function Chip({ children, accent }: { children: React.ReactNode; accent?: "sky" | "emerald" | "amber" }) {
@@ -139,11 +197,24 @@ function SectionHeading({ eyebrow, title, subtitle }: { eyebrow: string; title: 
   );
 }
 
-function DiagramNode({ title, subtitle, detail, accent = false }: { title: string; subtitle: string; detail: string; accent?: boolean }) {
+function DiagramNode({
+  title,
+  subtitle,
+  detail,
+  note,
+  accent = false,
+}: {
+  title: string;
+  subtitle: string;
+  detail: string;
+  note?: string;
+  accent?: boolean;
+}) {
   return (
     <div className={`flex-1 min-w-[150px] border p-3 ${accent ? "border-[#D9482B]/45 bg-[#D9482B]/[0.06]" : "border-white/12 bg-[#121110]"}`}>
       <p className="text-sm text-[#E9E2D6]">{title}</p>
       <p className="mt-1 text-[11px] leading-snug text-white/50">{subtitle}</p>
+      {note ? <p className="mt-2 text-[11px] leading-snug text-white/40">{note}</p> : null}
       <p className={`mt-3 text-[10px] uppercase tracking-[0.18em] ${accent ? "text-[#D9482B]" : "text-white/35"}`}>
         {detail}
       </p>
@@ -190,7 +261,6 @@ function useScrollSpy(ids: string[]) {
 }
 
 const SoftwareEngineeringPage = () => {
-  const images = [HomePage, LandscapePage];
   const aboutRef = useRef<HTMLDivElement>(null);
   const active = useScrollSpy(navSections.map((section) => section.id));
   const shouldReduceMotion = useReducedMotion();
@@ -220,13 +290,13 @@ const SoftwareEngineeringPage = () => {
             works.
           </motion.h1>
           <div className="mt-8 flex flex-wrap items-end justify-between gap-4 border-t border-white/15 pt-4 text-sm text-white/55">
-            <p>React, .NET, Postgres, Azure.</p>
+            <p>React, .NET 10, Postgres, Azure. A public gallery, a private admin, and a caption worker.</p>
             <button
               type="button"
               onClick={scrollToAbout}
               className="cursor-pointer text-[10px] uppercase tracking-[0.25em] text-white/45 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             >
-              See the diagrams ↓
+              Read the diagrams ↓
             </button>
           </div>
         </div>
@@ -237,10 +307,11 @@ const SoftwareEngineeringPage = () => {
           <div>
             <p className="text-[10px] uppercase tracking-[0.3em] text-white/35">About</p>
             <h2 className="mt-4 font-display text-[clamp(2.5rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.04em] text-[#E9E2D6]">
-              I built the whole thing.
+              A photo archive with an admin side.
             </h2>
             <p className="mt-6 max-w-xl text-sm leading-6 text-white/55">
-              Backend engineer at Simcorp. C# and .NET by day. This site is React, .NET, Postgres and Azure.
+              The public site shows albums, search and the best rated frames. The admin area uploads photos,
+              edits metadata and controls what is published. Both talk to the same API.
             </p>
           </div>
           <div className="grid gap-6 self-end">
@@ -269,30 +340,9 @@ const SoftwareEngineeringPage = () => {
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55">
             React, .NET 10, Postgres, Supabase Storage, Azure Functions.
           </p>
-
-          <div className="border border-white/12 bg-[#121110] p-5 md:p-6 mt-10">
-            <div className="flex flex-col gap-5 md:flex-row md:items-center">
-              <div className="w-full md:w-1/2">
-                <ImageSwitcher images={images} />
-              </div>
-              <div className="w-full md:w-1/2">
-                <h3 className="font-display text-2xl tracking-[-0.02em] text-[#E9E2D6]">What runs</h3>
-                <p className="mt-3 text-sm leading-6 text-white/60">
-                  Public reads from the API. Admin uses Supabase OAuth plus an allowlist. Images on Supabase Storage.
-                  Captions in the background.
-                </p>
-                <div className="mt-5 flex flex-wrap gap-4">
-                  <Chip accent="emerald">Gemini worker</Chip>
-                  <Chip accent="sky">Search</Chip>
-                  <Chip accent="amber">Uploads</Chip>
-                  <Chip>Hexagonal core</Chip>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <nav aria-label="Project sections" className="sticky top-[70px] z-30 -mx-5 border-y border-white/10 bg-[#0B0B0C] md:-mx-10">
+        <nav aria-label="Project sections" className="sticky top-[80px] z-30 -mx-5 border-y border-white/10 bg-[#0B0B0C] md:-mx-10">
           <div className="mx-auto max-w-[1500px] overflow-x-auto px-5 md:px-10">
             <ul className="flex gap-6 py-1 min-w-max">
               {navSections.map((section) => (
@@ -316,45 +366,78 @@ const SoftwareEngineeringPage = () => {
           <section id="system" className="scroll-mt-[130px]">
             <div className="border border-white/12 bg-[#121110] p-5 md:p-6">
               <SectionHeading
-                eyebrow="01 · System"
-                title="The stack"
-                subtitle="Four services and one worker."
+                eyebrow="01 · Containers"
+                title="The pieces that run"
+                subtitle="This is a C4 container view. Each box is something that runs or is deployed, not a class in the code."
               />
               <div className="flex flex-col md:flex-row md:items-stretch">
-                <DiagramNode title="Browser" subtitle="Visitors & admin" detail="Desktop · mobile" />
+                <DiagramNode
+                  title="Browser"
+                  subtitle="Visitor or admin"
+                  detail="HTML, CSS, JS"
+                  note="Holds no database credentials. Only the API is called."
+                />
                 <FlowArrow />
-                <DiagramNode title="React SPA" subtitle="Azure Static Web Apps · CDN" detail="Gallery, discovery, admin" />
+                <DiagramNode
+                  title="React SPA"
+                  subtitle="Azure Static Web Apps"
+                  detail="CDN + client routing"
+                  note="Renders the gallery, search and admin screens."
+                />
                 <FlowArrow />
-                <DiagramNode title="REST API" subtitle=".NET 10 · hexagonal core" detail="Public + admin routes" />
+                <DiagramNode
+                  title="REST API"
+                  subtitle=".NET 10"
+                  detail="Public and admin routes"
+                  note="Validates input and enforces access."
+                />
                 <FlowArrow />
-                <DiagramNode title="Supabase" subtitle="PostgreSQL · Storage · Auth" detail="Photos, queue, OAuth" />
+                <DiagramNode
+                  title="Supabase"
+                  subtitle="Postgres + Storage + Auth"
+                  detail="Managed services"
+                  note="Photos, metadata, queue and sessions."
+                />
               </div>
               <div className="mt-3 flex flex-col md:flex-row md:items-stretch">
                 <div className="flex items-center justify-center md:pl-[58%]" aria-hidden="true">
                   <span className="text-white/30 text-sm">▾</span>
                 </div>
                 <div className="w-full md:w-auto md:flex-1">
-                  <DiagramNode title="Gemini AI" subtitle="Hourly background worker" detail="Captions · tags · descriptions" accent />
+                  <DiagramNode
+                    title="Gemini"
+                    subtitle="Background worker"
+                    detail="Timer, not request"
+                    note="Writes captions after the upload returns."
+                    accent
+                  />
                 </div>
               </div>
+              <p className="mt-5 max-w-3xl text-sm leading-6 text-white/50">
+                Why this shape: the browser only needs JSON and image URLs, so the database stays private and
+                the API is the only place that enforces access. The cost is one network hop for every read and
+                a second service to deploy.
+              </p>
             </div>
           </section>
 
           <section id="ai-worker" className="scroll-mt-[130px]">
             <div className="border border-[#D9482B]/30 bg-[#D9482B]/[0.04] p-5 md:p-6">
               <SectionHeading
-                eyebrow="02 · Background job"
-                title="AI captions"
-                subtitle="Timer, queue, Gemini."
+                eyebrow="02 · Background worker"
+                title="Captions leave the request path"
+                subtitle="A timer moves the AI work out of upload, without losing it."
               />
               <div className="mb-5 flex flex-col md:flex-row md:items-stretch">
-                <DiagramNode title="Timer" subtitle="Hourly" detail="enqueue missing" />
+                <DiagramNode title="Upload" subtitle="Admin" detail="returns immediately" note="Photo and metadata are saved first." />
                 <FlowArrow />
-                <DiagramNode title="Queue" subtitle="Postgres" detail="pending / failed" />
+                <DiagramNode title="Queue" subtitle="Postgres" detail="pending / failed" note="A table, not a broker." />
                 <FlowArrow />
-                <DiagramNode title="Gemini" subtitle="Throttled" detail="captions + tags" />
+                <DiagramNode title="Worker" subtitle="Hourly timer" detail="claims one row" note="Restart-safe and throttled." />
                 <FlowArrow />
-                <DiagramNode title="Photo" subtitle="Postgres" detail="caption / tags / rating" accent />
+                <DiagramNode title="Gemini" subtitle="Caption model" detail="caption + tags" note="Runs outside the request." />
+                <FlowArrow />
+                <DiagramNode title="Photo" subtitle="Postgres" detail="updated in place" note="Visible on the next read." accent />
               </div>
               <div className="grid gap-4 lg:grid-cols-2">
                 <div>
@@ -369,25 +452,32 @@ const SoftwareEngineeringPage = () => {
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] text-white/70">Processing</span>
-                      <span className="text-white/25 text-xs" aria-hidden="true">→ (attempts ≥ cap)</span>
-                      <span className="border border-red-400/30 bg-red-400/10 px-2.5 py-1 text-[11px] text-red-200">Failed + lastError</span>
+                      <span className="text-white/25 text-xs" aria-hidden="true">→ attempts at cap</span>
+                      <span className="border border-red-400/30 bg-red-400/10 px-2.5 py-1 text-[11px] text-red-200">Failed + last error</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] text-white/70">Failed</span>
-                      <span className="text-white/25 text-xs" aria-hidden="true">→ reset (admin)</span>
+                      <span className="text-white/25 text-xs" aria-hidden="true">→ admin reset</span>
                       <span className="border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] text-white/70">Pending</span>
                     </div>
                     <p className="text-white/50 text-xs leading-relaxed mt-3">
-                      Postgres is the source of truth. A crash leaves the job in Processing; the next run reclaims it.
+                      Postgres is the source of truth. A crash leaves the row in Processing, and the next run
+                      reclaims it.
                     </p>
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-[10px] uppercase tracking-[0.25em] text-white/35 mb-3">Guarantees</h3>
+                  <h3 className="text-[10px] uppercase tracking-[0.25em] text-white/35 mb-3">Why, then the cost</h3>
                   <ul className="space-y-2 text-sm leading-6 text-white/60">
-                    <li className="border-b border-white/10 pb-2">Restart-safe. The queue is a table.</li>
-                    <li className="border-b border-white/10 pb-2">A partial run resumes next tick.</li>
-                    <li>Admin can enqueue or reset from the dashboard.</li>
+                    <li className="border-b border-white/10 pb-2">
+                      Why: no extra broker to run, and the queue survives restarts and scale-to-zero.
+                    </li>
+                    <li className="border-b border-white/10 pb-2">
+                      Why: a partial run resumes on the next tick, and an admin can reset a failed photo.
+                    </li>
+                    <li>
+                      Cost: captions arrive later, and a scheduled poll is less immediate than a dedicated queue.
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -398,8 +488,11 @@ const SoftwareEngineeringPage = () => {
             <div className="mb-6">
               <p className="text-[10px] uppercase tracking-[0.3em] text-white/35">03</p>
               <h2 className="mt-2 font-display text-[clamp(2rem,4vw,3rem)] leading-none tracking-[-0.04em]">
-                The parts.
+                The parts, one at a time.
               </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55">
+                Each card says what the part does, how it works, and what the choice costs.
+              </p>
             </div>
           </div>
 
@@ -429,6 +522,11 @@ const SoftwareEngineeringPage = () => {
                     </Fragment>
                   ))}
                 </div>
+                <p className="mt-4 text-sm leading-6 text-white/60">{item.body}</p>
+                <p className="mt-3 border-l border-[#D9482B]/40 pl-3 text-sm leading-6 text-white/45">
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-[#D9482B]/80">Trade-off </span>
+                  {item.tradeoff}
+                </p>
               </motion.section>
             ))}
           </div>
@@ -437,16 +535,34 @@ const SoftwareEngineeringPage = () => {
             <div className="border border-white/12 bg-[#121110] p-5 md:p-6">
               <SectionHeading
                 eyebrow="04 · Trade-offs"
-                title="Four choices."
-                subtitle="Short version."
+                title="Decision, reason, cost"
+                subtitle="Each choice below shows why it exists and what it gives up."
               />
               <div className="grid gap-3 md:grid-cols-2">
                 {engineeringDecisions.map((item) => (
-                  <div key={item.title} className="border border-white/10 bg-[#0F0E0D] p-4">
-                    <h3 className="font-display text-lg text-[#E9E2D6] mb-1">{item.title}</h3>
-                    <p className="text-sm leading-6 text-white/55">{item.body}</p>
+                  <div key={item.decision} className="border border-white/10 bg-[#0F0E0D] p-4">
+                    <h3 className="font-display text-lg text-[#E9E2D6] mb-3">{item.decision}</h3>
+                    <dl className="space-y-2 text-sm leading-6">
+                      <div>
+                        <dt className="text-[10px] uppercase tracking-[0.18em] text-[#D9482B]/80">Why</dt>
+                        <dd className="mt-1 text-white/60">{item.why}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-[10px] uppercase tracking-[0.18em] text-white/35">Cost</dt>
+                        <dd className="mt-1 text-white/50">{item.cost}</dd>
+                      </div>
+                    </dl>
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-6 border-t border-white/10 pt-5">
+                <h3 className="text-[10px] uppercase tracking-[0.25em] text-white/35">Known limits</h3>
+                <ul className="mt-3 grid gap-2 text-sm leading-6 text-white/50 md:grid-cols-3">
+                  {knownLimits.map((limit) => (
+                    <li key={limit} className="border-l border-white/15 pl-3">{limit}</li>
+                  ))}
+                </ul>
               </div>
             </div>
           </section>

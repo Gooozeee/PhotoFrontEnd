@@ -23,13 +23,14 @@ describe('SimilarPhotosRow', () => {
     similarState.loading = true;
     const { container } = render(<SimilarPhotosRow photoId="p1" onSelect={vi.fn()} />);
     expect(container).toBeEmptyDOMElement();
+    similarState.loading = false;
   });
 
   it('renders the similar photos row', () => {
-    similarState.loading = false;
     render(<SimilarPhotosRow photoId="p1" onSelect={vi.fn()} />);
 
-    expect(screen.getByText('Similar photos')).toBeInTheDocument();
+    expect(screen.getByText('More like this')).toBeInTheDocument();
+    expect(screen.getByText('2 frames')).toBeInTheDocument();
     expect(screen.getAllByRole('button').length).toBe(2);
   });
 
@@ -40,5 +41,14 @@ describe('SimilarPhotosRow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'View similar photo similar-a.jpg' }));
 
     expect(onSelect).toHaveBeenCalledWith('s1');
+  });
+
+  it('passes the full photo to onSelectPhoto', () => {
+    const onSelectPhoto = vi.fn();
+    render(<SimilarPhotosRow photoId="p1" onSelectPhoto={onSelectPhoto} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'View similar photo similar-b.jpg' }));
+
+    expect(onSelectPhoto).toHaveBeenCalledWith(expect.objectContaining({ id: 's2', fileName: 'similar-b.jpg' }));
   });
 });
