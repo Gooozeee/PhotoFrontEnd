@@ -55,11 +55,13 @@ function pickSimilarSpread<T extends { id: string; albumId: string | null }>(pho
 
 interface Props {
   photoId: string;
+  selectedId?: string | null;
   onSelect?: (photoId: string) => void;
   onSelectPhoto?: (photo: DiscoveryPhoto) => void;
+  onReset?: () => void;
 }
 
-const SimilarPhotosRow = ({ photoId, onSelect, onSelectPhoto }: Props) => {
+const SimilarPhotosRow = ({ photoId, selectedId, onSelect, onSelectPhoto, onReset }: Props) => {
   const { photos, loading } = useSimilarPhotos(photoId, SIMILAR_POOL);
   const visible = useMemo(() => pickSimilarSpread(photos, VISIBLE_SIMILAR), [photos]);
 
@@ -71,31 +73,47 @@ const SimilarPhotosRow = ({ photoId, onSelect, onSelectPhoto }: Props) => {
     <div className="w-full border border-white/10 bg-[#0B0B0C]/95 px-4 py-3">
       <div className="mb-2 flex items-baseline justify-between gap-4">
         <p className="text-[10px] uppercase tracking-[0.25em] text-white/45">More like this</p>
-        <p className="text-[10px] uppercase tracking-[0.18em] text-white/25">Click to swap</p>
+        {onReset ? (
+          <button
+            type="button"
+            onClick={onReset}
+            className="cursor-pointer text-[10px] uppercase tracking-[0.18em] text-white/40 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+          >
+            Back to original
+          </button>
+        ) : (
+          <p className="text-[10px] uppercase tracking-[0.18em] text-white/25">Click to swap</p>
+        )}
       </div>
       <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
-        {visible.map((photo) => (
-          <motion.button
-            key={photo.id}
-            type="button"
-            onClick={() => {
-              onSelect?.(photo.id);
-              onSelectPhoto?.(photo);
-            }}
-            className="h-16 w-24 shrink-0 cursor-pointer overflow-hidden border border-white/10 bg-white/5 p-0.5 transition-colors hover:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:h-20 sm:w-32"
-            whileHover={{ y: -2 }}
-            transition={{ duration: 0.2 }}
-            aria-label={`View similar photo ${photo.fileName}`}
-          >
-            <img
-              src={photo.thumbnailUrl ?? photo.url}
-              alt={photo.fileName}
-              className="h-full w-full object-cover"
-              loading="lazy"
-              decoding="async"
-            />
-          </motion.button>
-        ))}
+        {visible.map((photo) => {
+          const isSelected = photo.id === selectedId;
+          return (
+            <motion.button
+              key={photo.id}
+              type="button"
+              onClick={() => {
+                onSelect?.(photo.id);
+                onSelectPhoto?.(photo);
+              }}
+              aria-pressed={isSelected}
+              className={`h-16 w-24 shrink-0 cursor-pointer overflow-hidden border bg-white/5 p-0.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:h-20 sm:w-32 ${
+                isSelected ? "border-white" : "border-white/10 hover:border-white/40"
+              }`}
+              whileHover={{ y: -2 }}
+              transition={{ duration: 0.2 }}
+              aria-label={`View similar photo ${photo.fileName}`}
+            >
+              <img
+                src={photo.thumbnailUrl ?? photo.url}
+                alt={photo.fileName}
+                className="h-full w-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   );

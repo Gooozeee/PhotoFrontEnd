@@ -65,6 +65,17 @@ describe('SimilarPhotosRow', () => {
     expect(screen.getAllByRole('button').length).toBe(2);
   });
 
+  it('marks the selected frame and offers a way back to the original', () => {
+    const onReset = vi.fn();
+    render(<SimilarPhotosRow photoId="p1" selectedId="similar-a" onReset={onReset} />);
+
+    expect(screen.getByRole('button', { name: 'View similar photo similar-a.jpg' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'View similar photo similar-b.jpg' })).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to original' }));
+    expect(onReset).toHaveBeenCalled();
+  });
+
   it('calls onSelect with the clicked photo id', () => {
     const onSelect = vi.fn();
     render(<SimilarPhotosRow photoId="p1" onSelect={onSelect} />);

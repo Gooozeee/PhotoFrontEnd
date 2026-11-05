@@ -51,7 +51,6 @@ const ImageModal = ({
   const currentImageUrl = similarPhoto?.url ?? imageUrl;
   const currentCaption = similarPhoto ? similarPhoto.caption : caption;
   const currentTags = showTags ? (similarPhoto ? similarPhoto.tags : tags) : [];
-  const currentPhotoId = similarPhoto ? similarPhoto.id : photoId;
   const currentAlt = similarPhoto ? (similarPhoto.caption ?? similarPhoto.fileName) : (caption ?? "Full size view");
 
   useEffect(() => {
@@ -232,9 +231,14 @@ const ImageModal = ({
           className="pointer-events-none relative z-10 shrink-0 bg-gradient-to-t from-[#0B0B0C] via-[#0B0B0C]/95 to-transparent px-5 pb-6 pt-4 md:px-10 md:pb-8"
           style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
         >
-          {currentPhotoId ? (
+          {photoId ? (
             <div className="pointer-events-auto mx-auto max-w-[1500px]">
-              <SimilarPhotosRow photoId={currentPhotoId} onSelectPhoto={setSimilarPhoto} />
+              <SimilarPhotosRow
+                photoId={photoId}
+                selectedId={similarPhoto?.id ?? null}
+                onSelectPhoto={setSimilarPhoto}
+                onReset={similarPhoto ? () => setSimilarPhoto(null) : undefined}
+              />
             </div>
           ) : null}
 

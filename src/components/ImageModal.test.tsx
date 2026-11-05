@@ -96,9 +96,16 @@ describe('ImageModal', () => {
     expect(screen.queryByText('02 / 03')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Next image')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Previous image')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View similar photo sim.webp' })).toHaveAttribute('aria-pressed', 'true');
 
     fireEvent.keyDown(document, { key: 'ArrowRight' });
     expect(onNext).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to original' }));
+
+    expect(screen.getByAltText('Original frame')).toBeInTheDocument();
+    expect(screen.getByText('02 / 03')).toBeInTheDocument();
+    expect(screen.getByLabelText('Next image')).toBeInTheDocument();
   });
 
   it('renders a short caption without internal tags', () => {
