@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useHighlights } from "../hooks/useDiscovery";
 import ImageModal from "./ImageModal";
+import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
 
 type Shot = {
   id: string;
@@ -93,6 +94,8 @@ function BestShots({ limit = 6 }: { limit?: number }) {
       <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-3">
         {shots.map((photo, index) => {
           const caption = captionFor(photo);
+          const thumbnail = photo.thumbnailUrl ?? photo.url;
+          const preview = getPreviewImageUrl(photo.thumbnailUrl) ?? thumbnail;
 
           return (
             <figure key={photo.id}>
@@ -103,7 +106,9 @@ function BestShots({ limit = 6 }: { limit?: number }) {
                 className="group relative block aspect-[4/3] w-full cursor-pointer overflow-hidden border border-black/10 bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9482B] focus-visible:ring-offset-4 focus-visible:ring-offset-[#E9E2D6]"
               >
                 <img
-                  src={photo.thumbnailUrl ?? photo.url}
+                  src={preview}
+                  srcSet={preview !== thumbnail ? `${thumbnail} 300w, ${preview} 800w` : undefined}
+                  sizes="(min-width: 768px) 33vw, 50vw"
                   alt={caption}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                   loading="lazy"
