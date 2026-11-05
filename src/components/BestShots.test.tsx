@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import BestRated from './BestRated';
+import BestShots from './BestShots';
 
 type TestPhoto = {
   id: string;
@@ -92,28 +92,28 @@ const DEFAULT_PHOTOS: TestPhoto[] = [
   }),
 ];
 
-describe('BestRated', () => {
+describe('BestShots', () => {
   beforeEach(() => {
     highlightsState.photos = DEFAULT_PHOTOS.map((photo) => ({ ...photo }));
     highlightsState.loading = false;
   });
 
-  it('renders the best rated photos with ratings and album names', () => {
-    render(<BestRated limit={2} />);
+  it('renders a short edit without exposing ratings', () => {
+    render(<BestShots limit={2} />);
 
-    expect(screen.getByText('Best rated')).toBeInTheDocument();
-    expect(screen.getByText('The highest rated frames.')).toBeInTheDocument();
+    expect(screen.getByText('Best shots')).toBeInTheDocument();
+    expect(screen.getByText('A short edit from across the archive.')).toBeInTheDocument();
     expect(screen.getByAltText('Sunset over the bay')).toBeInTheDocument();
     expect(screen.getByAltText('A quiet portrait')).toBeInTheDocument();
-    expect(screen.getByText('9 / 10')).toBeInTheDocument();
-    expect(screen.getByText('8 / 10')).toBeInTheDocument();
-    expect(screen.getByText('Landscapes')).toBeInTheDocument();
-    expect(screen.getByText('Portraits')).toBeInTheDocument();
+    expect(screen.getByText(/Landscapes/)).toBeInTheDocument();
+    expect(screen.getByText(/Portraits/)).toBeInTheDocument();
+    expect(screen.queryByText(/\d+ \/ 10/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/rated/i)).not.toBeInTheDocument();
   });
 
-  it('renders nothing when there are no rated photos', () => {
+  it('renders nothing when there are no shots', () => {
     highlightsState.photos = [];
-    const { container } = render(<BestRated />);
+    const { container } = render(<BestShots />);
 
     expect(container).toBeEmptyDOMElement();
   });
@@ -121,28 +121,28 @@ describe('BestRated', () => {
   it('shows a loading state while the request is in flight', () => {
     highlightsState.photos = [];
     highlightsState.loading = true;
-    render(<BestRated />);
+    render(<BestShots />);
 
-    expect(screen.getByText('Loading the archive edit.')).toBeInTheDocument();
+    expect(screen.getByText('Loading the short edit.')).toBeInTheDocument();
   });
 
-  it('spreads the selection across series before repeating one', () => {
+  it('spreads the edit across series before repeating one', () => {
     highlightsState.photos = [
       makePhoto({ id: 'd1', albumId: 'd', albumName: 'Daikoku', caption: 'Daikoku one' }),
       makePhoto({ id: 'd2', albumId: 'd', albumName: 'Daikoku', caption: 'Daikoku two' }),
       makePhoto({ id: 'm1', albumId: 'm', albumName: 'Malta', caption: 'Malta one' }),
     ];
 
-    render(<BestRated limit={2} />);
+    render(<BestShots limit={2} />);
 
-    const labels = screen.getAllByRole('button', { name: /View rated photo/ }).map((button) => button.getAttribute('aria-label'));
-    expect(labels).toEqual(['View rated photo Daikoku one', 'View rated photo Malta one']);
+    const labels = screen.getAllByRole('button', { name: /^Open / }).map((button) => button.getAttribute('aria-label'));
+    expect(labels).toEqual(['Open Daikoku one', 'Open Malta one']);
   });
 
-  it('opens the modal for the selected photo and navigates the rated set', () => {
-    render(<BestRated limit={2} />);
+  it('opens the modal for the selected shot and navigates the edit', () => {
+    render(<BestShots limit={2} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'View rated photo Sunset over the bay' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open Sunset over the bay' }));
 
     expect(screen.getByRole('dialog', { name: 'Image viewer' })).toBeInTheDocument();
     expect(screen.getByText('h1')).toBeInTheDocument();
@@ -159,9 +159,9 @@ describe('BestRated', () => {
   });
 
   it('closes the modal', () => {
-    render(<BestRated limit={2} />);
+    render(<BestShots limit={2} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'View rated photo A quiet portrait' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open A quiet portrait' }));
     fireEvent.click(screen.getByRole('button', { name: 'close modal' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

@@ -98,7 +98,7 @@ export function useHighlights(limit = 12): UseDiscoveryState {
   return { photos, loading, error };
 }
 
-export function useSimilarPhotos(photoId: string | null): UseDiscoveryState {
+export function useSimilarPhotos(photoId: string | null, limit = 8): UseDiscoveryState {
   const [photos, setPhotos] = useState<DiscoveryPhoto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,7 +114,7 @@ export function useSimilarPhotos(photoId: string | null): UseDiscoveryState {
       return;
     }
 
-    const cacheKey = `similar:${photoId}`;
+    const cacheKey = `similar:${photoId}:${limit}`;
     const cached = failedKeysRef.current.has(cacheKey) && reconnectToken > 0 ? undefined : cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < TTL) {
       setPhotos(cached.data);
@@ -125,7 +125,7 @@ export function useSimilarPhotos(photoId: string | null): UseDiscoveryState {
     let stale = false;
     setLoading(true);
 
-    fetchCached(cacheKey, () => getSimilarPhotos(photoId))
+    fetchCached(cacheKey, () => getSimilarPhotos(photoId, limit))
       .then((data) => {
         if (stale || requestId !== requestIdRef.current) return;
         cache.set(cacheKey, { timestamp: Date.now(), data });
@@ -149,7 +149,7 @@ export function useSimilarPhotos(photoId: string | null): UseDiscoveryState {
     return () => {
       stale = true;
     };
-  }, [photoId, reconnectToken]);
+  }, [limit, photoId, reconnectToken]);
 
   return { photos, loading, error };
 }

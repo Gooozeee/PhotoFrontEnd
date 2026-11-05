@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 import paiCanyon from "../../assets/Landscapes/Pai Canyon Rain 2023.webp";
 import rathlinSunset from "../../assets/Landscapes/Rathlin Island Sunset 2023.webp";
-import BestRated from "../../components/BestRated";
+import BestShots from "../../components/BestShots";
 import { getPreviewImageUrl } from "../../utils/getPreviewImageUrl";
 import { fetchSeriesImages, useArchiveSeries, type ArchiveSeries } from "./useArchiveSeries";
 
@@ -370,7 +370,7 @@ export default function LightTablePoc({ standalone = true }: { standalone?: bool
             ))}
           </div>
 
-          <BestRated />
+          <BestShots />
 
           <div id="full-archive" className="mt-16 scroll-mt-24 border-t border-black/10 pt-8">
             <div className="flex flex-wrap items-end justify-between gap-6">
