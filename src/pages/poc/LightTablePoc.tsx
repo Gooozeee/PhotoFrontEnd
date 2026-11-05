@@ -10,106 +10,43 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-import blueEscort from "../../assets/Rally/Blue Escort Kirkistown 2023.webp";
-import fordFiesta from "../../assets/Rally/Ford Fiesta Kirkistown 2023.webp";
-import toyotaStarlet from "../../assets/Rally/Toyota Starlet Kirkistown 2023.webp";
-import yellowEscort from "../../assets/Rally/Yellow Escort Pan Kirkistown 2023.webp";
-import yellowSlide from "../../assets/Rally/Yellow Slide Kirkistown 2023.webp";
-import agadir from "../../assets/Cities/Agadir Medina 2024.webp";
-import medina from "../../assets/Cities/Medina de Agadir 2024.webp";
-import rathlin from "../../assets/Landscapes/Rathlin Island 2023.webp";
-import rathlinSunset from "../../assets/Landscapes/Rathlin Island Sunset 2023.webp";
-import dunluce from "../../assets/Landscapes/Dunluce Castle 2023.webp";
-import northCoast from "../../assets/Landscapes/North Coast 2023.webp";
 import paiCanyon from "../../assets/Landscapes/Pai Canyon Rain 2023.webp";
-import paiCanyonDry from "../../assets/Landscapes/Thailand Pai Canyon 2023.webp";
-import paiCows from "../../assets/Landscapes/Thailand Pai Cows 2023.webp";
-import kohTao from "../../assets/Landscapes/Koh Tao 2023.webp";
-import phiPhi from "../../assets/Landscapes/Phi Phi Islands 2023.webp";
-import essaouira from "../../assets/Landscapes/Essaouira 2023.webp";
-import essaouiraSands from "../../assets/Landscapes/Essaouira Sands 2023.webp";
-import robin from "../../assets/Birds/Robin Northern Ireland 2022.webp";
-import seagull from "../../assets/Birds/Seagull Rathlin Island 2023.webp";
-import birdsInWater from "../../assets/Birds/Birds in Water 2021.webp";
-import gleno from "../../assets/Birds/Gleno Northern Ireland 2022.webp";
+import rathlinSunset from "../../assets/Landscapes/Rathlin Island Sunset 2023.webp";
+import { DepthHero } from "./DepthHero";
+import { useArchiveSeries, type ArchiveSeries } from "./useArchiveSeries";
 
 const HOUSE_EASE = [0.22, 1, 0.36, 1] as const;
 
-type Series = {
-  id: string;
-  title: string;
-  place: string;
-  year: string;
-  count: number;
-  cover: string;
-  caption: string;
-  images: string[];
-};
-
-const ALBUMS = ["Landscapes", "Cities", "Birds", "Rally"];
-
-export const SERIES: Series[] = [
-  {
-    id: "kirkistown",
-    title: "Kirkistown",
-    place: "Northern Ireland",
-    year: "2023",
-    count: 5,
-    cover: blueEscort,
-    caption: "Gravel, diesel and a 1/1000s shutter.",
-    images: [blueEscort, yellowEscort, fordFiesta, toyotaStarlet, yellowSlide],
-  },
-  {
-    id: "rathlin",
-    title: "Rathlin",
-    place: "Northern Ireland",
-    year: "2023",
-    count: 4,
-    cover: rathlinSunset,
-    caption: "The last light before the ferry.",
-    images: [rathlinSunset, rathlin, dunluce, northCoast],
-  },
-  {
-    id: "thailand",
-    title: "Thailand",
-    place: "Pai · Koh Tao · Phi Phi",
-    year: "2023",
-    count: 5,
-    cover: paiCanyonDry,
-    caption: "Wet stone, green valleys and a boat that never left the pier.",
-    images: [paiCanyonDry, paiCows, paiCanyon, kohTao, phiPhi],
-  },
-  {
-    id: "medina",
-    title: "Medina",
-    place: "Morocco",
-    year: "2024",
-    count: 4,
-    cover: medina,
-    caption: "Walls, shade and the sound of the souk.",
-    images: [medina, agadir, essaouira, essaouiraSands],
-  },
-  {
-    id: "birds",
-    title: "Birds",
-    place: "Northern Ireland",
-    year: "2021—2023",
-    count: 4,
-    cover: robin,
-    caption: "Small things, very close.",
-    images: [robin, seagull, birdsInWater, gleno],
-  },
-];
+type Series = ArchiveSeries;
 
 const PRINT_POSITIONS = [
-  { left: "2%", top: "2%", width: "30%", rotate: -3.2 },
-  { left: "35%", top: "0%", width: "24%", rotate: 2.4 },
-  { left: "63%", top: "7%", width: "28%", rotate: -1.6 },
-  { left: "8%", top: "52%", width: "26%", rotate: 1.8 },
-  { left: "42%", top: "50%", width: "34%", rotate: -2.1 },
+  { left: "3%", top: "4%", width: "33%", rotate: -3.2 },
+  { left: "41%", top: "0%", width: "26%", rotate: 2.4 },
+  { left: "70%", top: "11%", width: "25%", rotate: -1.6 },
+  { left: "24%", top: "52%", width: "39%", rotate: 1.8 },
 ];
 
-const MOBILE_PRINT_ROTATIONS = [-2.4, 1.8, -1.2, 2.2, -1.8];
+function buildPrintPositions(count: number) {
+  if (count <= PRINT_POSITIONS.length) {
+    return PRINT_POSITIONS.slice(0, count);
+  }
+
+  const columns = count <= 6 ? 3 : 4;
+  const rows = Math.ceil(count / columns);
+
+  return Array.from({ length: count }, (_, index) => {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    return {
+      left: `${(column / columns) * 100 + 2}%`,
+      top: `${(row / rows) * 86 + 2}%`,
+      width: `${100 / columns - 4}%`,
+      rotate: index % 2 === 0 ? -1.8 : 1.8,
+    };
+  });
+}
+
+const MOBILE_PRINT_ROTATIONS = [-2.4, 1.8, -1.2, 2.2];
 
 function useHeroPointer(enabled: boolean) {
   const x = useMotionValue(0);
@@ -137,18 +74,19 @@ function useHeroPointer(enabled: boolean) {
   return { imageX, imageY, textX, textY, update, reset };
 }
 
+type PrintPosition = { left: string; top: string; width: string; rotate: number };
+
 function Print({
   series,
-  index,
+  position,
+  isFeature,
   onOpen,
 }: {
   series: Series;
-  index: number;
+  position: PrintPosition;
+  isFeature: boolean;
   onOpen: () => void;
 }) {
-  const position = PRINT_POSITIONS[index % PRINT_POSITIONS.length];
-  const isFeature = index === 0;
-
   return (
     <motion.button
       type="button"
@@ -166,7 +104,7 @@ function Print({
       <div className="overflow-hidden bg-white p-2 shadow-[0_18px_50px_rgba(18,14,8,0.18)] [backface-visibility:hidden]">
         <img
           src={series.cover}
-          alt={`${series.title} — ${series.place}`}
+          alt={`${series.title} — ${series.year}`}
           className={`w-full object-cover [backface-visibility:hidden] ${isFeature ? "aspect-[4/3]" : "aspect-[3/2]"}`}
           loading="lazy"
           decoding="async"
@@ -174,12 +112,9 @@ function Print({
       </div>
       <div className="mt-3 flex items-baseline justify-between gap-3">
         <span className="font-display text-[clamp(1.1rem,1.6vw,1.7rem)] leading-none tracking-[-0.02em]">{series.title}</span>
-        <span className="text-[11px] tabular-nums text-black/40">{series.count} frames</span>
+        <span className="text-[11px] tabular-nums text-black/40">{series.year}</span>
       </div>
-      <div className="mt-1 flex items-center justify-between gap-3 text-[11px] text-black/45">
-        <span>{series.place} · {series.year}</span>
-        <span className="translate-x-[-4px] opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">Open →</span>
-      </div>
+      <p className="mt-1 line-clamp-1 text-[11px] text-black/45">{series.place}</p>
     </motion.button>
   );
 }
@@ -200,9 +135,9 @@ function MobilePrint({ series, index, onOpen }: { series: Series; index: number;
       </div>
       <div className="mt-3 flex items-baseline justify-between gap-3">
         <span className="font-display text-2xl leading-none tracking-[-0.02em]">{series.title}</span>
-        <span className="text-[11px] tabular-nums text-black/40">{series.count} frames</span>
+        <span className="text-[11px] tabular-nums text-black/40">{series.year}</span>
       </div>
-      <p className="mt-1 text-[11px] text-black/45">{series.place} · {series.year}</p>
+      <p className="mt-1 line-clamp-1 text-[11px] text-black/45">{series.place}</p>
     </motion.button>
   );
 }
@@ -269,7 +204,7 @@ function SeriesViewer({ series, onClose }: { series: Series; onClose: () => void
         >
           <div>
             <p className="font-display text-2xl leading-none tracking-[-0.02em]">{series.title}</p>
-            <p className="mt-2 text-xs text-white/45">{series.place} · {series.year}</p>
+            <p className="mt-2 text-xs text-white/45">{series.year}</p>
           </div>
           <button
             type="button"
@@ -314,9 +249,11 @@ export default function LightTablePoc() {
   const reduceMotion = Boolean(useReducedMotion());
   const [compact, setCompact] = useState(false);
   const [activeSeries, setActiveSeries] = useState<Series | null>(null);
+  const { series } = useArchiveSeries();
+  const printPositions = useMemo(() => buildPrintPositions(series.length), [series.length]);
   const heroRef = useRef<HTMLElement>(null);
   const heavyMotion = !compact && !reduceMotion;
-  const { imageX, imageY, textX, textY, update, reset } = useHeroPointer(heavyMotion);
+  const { textX, textY, update, reset } = useHeroPointer(heavyMotion);
 
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const heroScale = useTransform(scrollYProgress, [0, 1], compact ? [1.02, 1.04] : [1.06, 1.16]);
@@ -330,8 +267,6 @@ export default function LightTablePoc() {
   const tableY = useMotionValue(0);
   const tableRotateX = useSpring(useTransform(tableY, [-1, 1], [0.8, -0.8]), { stiffness: 140, damping: 22 });
   const tableRotateY = useSpring(useTransform(tableX, [-1, 1], [-0.8, 0.8]), { stiffness: 140, damping: 22 });
-
-  const seriesCount = useMemo(() => SERIES.length, []);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -384,16 +319,14 @@ export default function LightTablePoc() {
             onPointerMove={update}
             onPointerLeave={reset}
           >
-            <motion.img
-              src={paiCanyon}
-              alt="Pai Canyon after rain, Thailand"
-              className="h-full w-full object-cover [backface-visibility:hidden]"
-              style={{ x: imageX, y: imageY, willChange: "transform" }}
-              initial={{ scale: 1.12 }}
-              animate={{ scale: 1.045 }}
-              transition={{ duration: reduceMotion ? 0 : 1.6, delay: reduceMotion ? 0 : 0.35, ease: HOUSE_EASE }}
-              decoding="async"
-            />
+            <motion.div
+              className="absolute inset-0"
+              initial={{ scale: 1.08, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: reduceMotion ? 0 : 1.4, delay: reduceMotion ? 0 : 0.15, ease: HOUSE_EASE }}
+            >
+              <DepthHero src={paiCanyon} alt="Pai Canyon after rain, Thailand" disabled={!heavyMotion} />
+            </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.45)_100%)]" />
           </motion.div>
@@ -432,7 +365,7 @@ export default function LightTablePoc() {
                   Guzy
                 </h1>
                 <div className="mt-7 flex flex-wrap items-end justify-between gap-4 border-t border-white/15 pt-4 text-sm text-white/55">
-                  <p>Landscapes, cities, birds, rally.</p>
+                  <p>A personal archive.</p>
                   <p className="tabular-nums">Pai Canyon · Thailand · 2023</p>
                 </div>
               </motion.div>
@@ -455,20 +388,20 @@ export default function LightTablePoc() {
         <div className="relative mx-auto max-w-[1500px]">
           <div className="flex items-end justify-between gap-6 border-b border-black/10 pb-6">
             <h2 className="font-display text-[clamp(2.6rem,6vw,5.4rem)] leading-none tracking-[-0.045em]">Selected work</h2>
-            <p className="pb-2 text-sm tabular-nums text-black/45">2021—2026 · {seriesCount} series</p>
-          </div>
-          <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
-            <p className="max-w-xl text-sm leading-6 text-black/60">
-              Five series, five speeds. Hover a print to pick it up. Click to open the sequence.
-            </p>
-            <a href="#full-archive" className="text-[11px] uppercase tracking-[0.25em] text-black/35 transition-colors hover:text-black/70">
-              Full archive ↓
+            <a href="#full-archive" className="pb-2 text-[11px] uppercase tracking-[0.25em] text-black/35 transition-colors hover:text-black/70">
+              All images ↓
             </a>
+          </div>
+          <div className="mt-6">
+            <p className="max-w-xl text-sm leading-6 text-black/60">
+              Hover a print to pick it up. Click to open the sequence.
+            </p>
           </div>
 
           <div
             className="relative mt-14 hidden h-[72vh] min-h-[640px] md:block"
             data-testid="light-table"
+            style={{ minHeight: series.length > 8 ? 840 : undefined }}
             onPointerMove={updateTable}
             onPointerLeave={resetTable}
           >
@@ -476,16 +409,22 @@ export default function LightTablePoc() {
               className="absolute inset-0"
               style={{ rotateX: tableRotateX, rotateY: tableRotateY, transformStyle: "preserve-3d", transformPerspective: 1400, willChange: "transform" }}
             >
-              {SERIES.map((series, index) => (
-                <Print key={series.id} series={series} index={index} onOpen={() => setActiveSeries(series)} />
+              {series.map((item, index) => (
+                <Print
+                  key={item.id}
+                  series={item}
+                  position={printPositions[index]}
+                  isFeature={index === 0}
+                  onOpen={() => setActiveSeries(item)}
+                />
               ))}
             </motion.div>
             <p className="absolute bottom-0 left-0 text-[11px] text-black/35">Move across the table</p>
           </div>
 
           <div className="mt-10 grid gap-8 md:hidden">
-            {SERIES.map((series, index) => (
-              <MobilePrint key={series.id} series={series} index={index} onOpen={() => setActiveSeries(series)} />
+            {series.map((item, index) => (
+              <MobilePrint key={item.id} series={item} index={index} onOpen={() => setActiveSeries(item)} />
             ))}
           </div>
 
@@ -494,21 +433,21 @@ export default function LightTablePoc() {
               <div>
                 <p className="text-[11px] uppercase tracking-[0.25em] text-black/35">Full archive</p>
                 <h3 className="mt-3 font-display text-[clamp(1.8rem,3.5vw,3rem)] leading-none tracking-[-0.04em]">
-                  Every frame, by folder.
+                  All images.
                 </h3>
               </div>
               <p className="max-w-sm text-sm leading-6 text-black/55">
-                This homepage is a curated edit. Open an album to browse every image in the collection.
+                The light table is the short edit. Open an album below for the full set.
               </p>
             </div>
-            <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              {ALBUMS.map((album) => (
+            <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {series.map((item) => (
                 <Link
-                  key={album}
-                  to={`/singleAlbum?album=${encodeURIComponent(album)}`}
+                  key={item.id}
+                  to={`/singleAlbum?album=${encodeURIComponent(item.title)}`}
                   className="group flex items-center justify-between border-t border-black/15 py-4 text-sm transition-colors hover:border-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9482B] focus-visible:ring-offset-4 focus-visible:ring-offset-[#E9E2D6]"
                 >
-                  <span className="font-display text-xl tracking-[-0.02em]">{album}</span>
+                  <span className="font-display text-xl tracking-[-0.02em]">{item.title}</span>
                   <span aria-hidden className="text-black/35 transition-transform duration-300 group-hover:translate-x-1">→</span>
                 </Link>
               ))}
@@ -520,16 +459,12 @@ export default function LightTablePoc() {
       <section className="bg-[#0B0B0C] px-5 py-24 text-[#E9E2D6] md:px-10 md:py-32">
         <div className="mx-auto grid max-w-[1500px] gap-10 md:grid-cols-[1.15fr_0.85fr]">
           <h2 className="font-display text-[clamp(2.8rem,6.5vw,6.4rem)] leading-[0.92] tracking-[-0.05em]">
-            Sometimes 1/4s.
+            I photograph places
             <br />
-            Sometimes 1/1000s.
+            and things that move.
           </h2>
           <div className="max-w-md space-y-5 self-end text-sm leading-6 text-white/55">
-            <p>Landscapes, cities, birds and rally cars. Mostly Northern Ireland, Thailand and Morocco.</p>
-            <p>
-              I photograph the moment before the weather changes, the half-second of a car mid-slide, and the bird that
-              won't sit still long enough to be framed.
-            </p>
+            <p>I build software for a living. These are the frames I keep.</p>
             <Link to="/" className="inline-flex items-center gap-2 border-b border-white/25 pb-1 text-white/80 transition-colors hover:border-white hover:text-white">
               Back to the real site <span aria-hidden>→</span>
             </Link>
@@ -541,11 +476,14 @@ export default function LightTablePoc() {
         <img src={rathlinSunset} alt="Rathlin Island at sunset" className="absolute inset-0 h-full w-full object-cover opacity-70" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0C] via-[#0B0B0C]/30 to-transparent" />
         <div className="relative flex min-h-[72vh] flex-col justify-end p-5 md:p-10">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">End of roll · 36 / 36</p>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">End of roll</p>
           <div className="mt-4 flex flex-wrap items-end justify-between gap-5">
-            <h2 className="font-display text-[clamp(2rem,5vw,4.2rem)] leading-[0.95] tracking-[-0.04em] text-white">
-              Let's make something worth printing.
-            </h2>
+            <div>
+              <h2 className="font-display text-[clamp(2rem,5vw,4.2rem)] leading-[0.95] tracking-[-0.04em] text-white">
+                Prints and commissions.
+              </h2>
+              <p className="mt-3 max-w-sm text-sm text-white/55">For prints, a shoot, or a question, email me.</p>
+            </div>
             <div className="flex flex-wrap gap-5 pb-2 text-sm text-white/60">
               <a href="mailto:michalguzym@gmail.com" className="transition-colors hover:text-white">Email</a>
               <a href="https://github.com/Gooozeee" target="_blank" rel="noreferrer" className="transition-colors hover:text-white">GitHub</a>
