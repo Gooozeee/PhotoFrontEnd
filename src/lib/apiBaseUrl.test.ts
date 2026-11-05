@@ -6,7 +6,7 @@ describe('resolveApiBaseUrl', () => {
     expect(resolveApiBaseUrl('https://api.example.com/')).toBe('https://api.example.com');
   });
 
-  it('falls back to localhost in development', () => {
-    expect(resolveApiBaseUrl(undefined)).toBe('http://localhost:5000');
+  it('uses a relative API base in development', () => {
+    expect(resolveApiBaseUrl('')).toBe('');
   });
 });

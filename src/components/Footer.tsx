@@ -1,83 +1,65 @@
 import { FaLinkedin, FaGithub } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
-import { motion } from "framer-motion";
-import { useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+
+const socialLinks = [
+  { icon: FaLinkedin, label: "LinkedIn", href: "https://www.linkedin.com/in/michal-guzy/" },
+  { icon: FaGithub, label: "GitHub", href: "https://github.com/Gooozeee" },
+];
 
 const Footer = () => {
   const shouldReduceMotion = useReducedMotion();
 
-  const socialLinks = [
-    { icon: FaLinkedin, label: "LinkedIn", href: "https://www.linkedin.com/in/michal-guzy/" },
-    { icon: FaGithub, label: "GitHub", href: "https://github.com/Gooozeee" },
-  ];
-
   return (
-    <div className="bg-[#09090B] border-t border-white/5">
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        <motion.h3
-          className="text-center text-white/80 text-lg font-medium mb-8 tracking-wide"
-          style={{ fontFamily: "'Archivo', sans-serif" }}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          Let's create together
-        </motion.h3>
+    <footer className="border-t border-white/10 bg-[#0B0B0C]">
+      <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 md:grid-cols-[1.2fr_0.8fr] md:px-10 md:py-20">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-white/35">Prints and commissions</p>
+          <motion.h2
+            className="mt-4 max-w-2xl font-display text-[clamp(2rem,4.5vw,4rem)] leading-[0.95] tracking-[-0.04em] text-[#E9E2D6]"
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
+          >
+            For prints, a shoot, or a question, email me.
+          </motion.h2>
+        </div>
 
-        <motion.footer
-          className="flex justify-center gap-8"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-        >
-          {socialLinks.map((social, i) => (
+        <div className="flex flex-col gap-3 self-end text-sm text-white/55 md:items-end">
+          {socialLinks.map((social) => (
             <motion.a
               key={social.label}
               href={social.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-3 text-white/60 hover:text-white transition-colors duration-300 cursor-pointer"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+              className="inline-flex items-center gap-2 border-b border-white/10 pb-1 transition-colors duration-200 hover:border-white/40 hover:text-white"
+              whileHover={shouldReduceMotion ? undefined : { x: 3 }}
+              transition={{ duration: 0.2 }}
             >
-              <social.icon size={20} />
-              <span
-                className="text-sm tracking-wide"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-              >
-                {social.label}
-              </span>
+              <social.icon size={14} />
+              {social.label}
             </motion.a>
           ))}
-          <motion.button
-            onClick={() => (window.location.href = "mailto:michalguzym@gmail.com")}
-            className="group flex items-center gap-3 text-white/60 hover:text-white transition-colors duration-300 cursor-pointer bg-transparent border-none p-0"
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+          <motion.a
+            href="mailto:michalguzym@gmail.com"
+            className="inline-flex items-center gap-2 border-b border-white/10 pb-1 transition-colors duration-200 hover:border-white/40 hover:text-white"
+            whileHover={shouldReduceMotion ? undefined : { x: 3 }}
+            transition={{ duration: 0.2 }}
           >
-            <MdEmail size={20} />
-            <span
-              className="text-sm tracking-wide"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-            >
-              Email
-            </span>
-          </motion.button>
-        </motion.footer>
-
-        <motion.p
-          className="text-center text-white/30 text-xs mt-12"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          © {new Date().getFullYear()} Michal Guzy. All rights reserved.
-        </motion.p>
+            <MdEmail size={14} />
+            michalguzym@gmail.com
+          </motion.a>
+        </div>
       </div>
-    </div>
+
+      <div className="border-t border-white/10 px-5 py-5 md:px-10">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap justify-between gap-3 text-[10px] uppercase tracking-[0.25em] text-white/30">
+          <span>© {new Date().getFullYear()} Michal Guzy</span>
+          <span>De Goose Productions</span>
+        </div>
+      </div>
+    </footer>
   );
 };
 

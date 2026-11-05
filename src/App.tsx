@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -13,10 +14,20 @@ import MetadataQueuePage from "./pages/admin/MetadataQueuePage";
 import LibraryPage from "./pages/admin/LibraryPage";
 import Layout from "./components/Layout";
 
+const LightTablePoc = lazy(() => import("./pages/poc/LightTablePoc"));
+
 function App() {
   return (
     <div className="app-container">
       <Routes>
+        <Route
+          path="/poc/light-table"
+          element={
+            <Suspense fallback={<div className="min-h-screen bg-[#0B0B0C]" />}>
+              <LightTablePoc />
+            </Suspense>
+          }
+        />
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/admin" element={<AdminPage />} />

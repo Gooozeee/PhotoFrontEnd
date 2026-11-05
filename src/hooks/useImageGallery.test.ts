@@ -141,6 +141,63 @@ describe('useImageGallery', () => {
     expect(String(fetchMock.mock.calls[1]?.[0])).toContain('/api/albums/album-2/photos');
   });
 
+  it('falls back to the unpaged album endpoint when paged photos fail', async () => {
+    const photo = {
+      id: 'photo-2',
+      fileName: 'city.jpg',
+      albumId: 'album-2',
+      albumName: 'Cities',
+      url: '/photos/city.jpg',
+      thumbnailUrl: '/photos/city-thumb.jpg',
+      contentType: 'image/webp',
+      width: 900,
+      height: 600,
+      fileSizeBytes: 123,
+      description: 'Street scene',
+      caption: null,
+      takenAt: '2024-01-01T00:00:00Z',
+      importedAt: '2024-01-02T00:00:00Z',
+      location: 'Belfast',
+      cameraModel: 'Sony',
+      tags: ['urban'],
+    };
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([
+        {
+          id: 'album-2',
+          name: 'Cities',
+          description: 'Urban work',
+          coverPhotoId: 'photo-2',
+          coverUrl: '/covers/cities.jpg',
+          coverThumbnailUrl: '/covers/cities-thumb.jpg',
+          isPublished: true,
+          photosCount: 1,
+        },
+      ]), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response('', { status: 500 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([photo]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }));
+
+    vi.stubGlobal('fetch', fetchMock);
+    const { useImageGallery } = await import('./useImageGallery');
+    const { configureDiscoveryRetry } = await import('../lib/discoveryApi');
+    configureDiscoveryRetry({ retries: 0 });
+
+    const { result } = renderHook(() => useImageGallery({ albumName: 'Cities', cacheTTL: 0 }));
+
+    await waitFor(() => {
+      expect(result.current.images).toHaveLength(1);
+    });
+
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain('/api/albums/album-2/photos?offset=0&limit=24');
+    expect(String(fetchMock.mock.calls[2]?.[0])).toContain('/api/albums/album-2/photos');
+    expect(String(fetchMock.mock.calls[2]?.[0])).not.toContain('offset=');
+  });
+
   it('prefers the AI caption over the manual description for gallery images', async () => {
     const fetchMock = vi
       .fn()

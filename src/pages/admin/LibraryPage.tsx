@@ -609,7 +609,7 @@ export default function LibraryPage() {
                 })}
               </nav>
               <p className="mt-1 text-sm text-white/50">
-                {currentPath.length === 0 ? "Photos without an album live here." : currentAlbum ? `Album "${currentAlbum.name}" — ${currentPhotos.length} photo${currentPhotos.length === 1 ? "" : "s"}.` : "Intermediate folder — create an album here or keep browsing."}
+                {currentPath.length === 0 ? "Photos without an album live here." : currentAlbum ? `Album "${currentAlbum.name}", ${currentPhotos.length} photo${currentPhotos.length === 1 ? "" : "s"}.` : "Intermediate folder. Create an album here or keep browsing."}
               </p>
             </div>
 

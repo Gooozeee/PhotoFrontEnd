@@ -27,7 +27,7 @@ describe('UploadProgressBanner', () => {
       <UploadProgressBanner total={2} completed={1} currentFileName="large.jpg" currentPercent={100} />,
     );
 
-    expect(screen.getByText('Upload sent — processing on the server…')).toBeInTheDocument();
+    expect(screen.getByText('Upload sent. Processing on the server…')).toBeInTheDocument();
   });
 
   it('renders nothing when there is no batch', () => {

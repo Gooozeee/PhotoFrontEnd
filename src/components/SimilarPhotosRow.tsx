@@ -17,8 +17,8 @@ const SimilarPhotosRow = ({ photoId, onSelect, onSelectPhoto }: Props) => {
   }
 
   return (
-    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-[92%] max-w-2xl px-5 py-4 bg-black/70 backdrop-blur-md rounded-2xl">
-      <p className="mb-2.5 text-[10px] uppercase tracking-[0.25em] text-white/50" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+    <div className="absolute bottom-24 left-1/2 -translate-x-1/2 w-[92%] max-w-2xl px-5 py-4 bg-[#0B0B0C]/95 border border-white/10">
+      <p className="mb-2.5 text-[10px] uppercase tracking-[0.25em] text-white/40" style={{ fontFamily: "'Archivo', sans-serif" }}>
         Similar photos
       </p>
       <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
@@ -30,8 +30,8 @@ const SimilarPhotosRow = ({ photoId, onSelect, onSelectPhoto }: Props) => {
               onSelect(photo.id);
               onSelectPhoto?.(photo);
             }}
-            className="shrink-0 w-24 sm:w-28 aspect-[3/2] overflow-hidden rounded-lg border border-white/10 bg-white/5 cursor-pointer p-0"
-            whileHover={{ scale: 1.05 }}
+            className="shrink-0 w-24 sm:w-28 aspect-[3/2] overflow-hidden border border-white/10 bg-white/5 cursor-pointer p-0.5"
+            whileHover={{ y: -2 }}
             transition={{ duration: 0.2 }}
             aria-label={`View similar photo ${photo.fileName}`}
           >

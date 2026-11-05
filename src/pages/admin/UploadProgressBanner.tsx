@@ -78,7 +78,7 @@ export function UploadProgressBanner({
             />
           </div>
           {waitingOnServer ? (
-            <p className="text-[11px] text-sky-200/70">Upload sent — processing on the server…</p>
+            <p className="text-[11px] text-sky-200/70">Upload sent. Processing on the server…</p>
           ) : null}
         </div>
       ) : null}

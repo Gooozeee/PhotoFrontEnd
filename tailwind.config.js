@@ -9,6 +9,7 @@ export default {
       fontFamily: {
         sans: ["Space Grotesk", "sans-serif"],
         heading: ["Archivo", "sans-serif"],
+        display: ["Fraunces", "Georgia", "serif"],
       },
       colors: {
         background: "#09090B",
