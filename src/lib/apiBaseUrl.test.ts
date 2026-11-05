@@ -7,6 +7,6 @@ describe('resolveApiBaseUrl', () => {
   });
 
   it('uses a relative API base in development', () => {
-    expect(resolveApiBaseUrl(undefined)).toBe('');
+    expect(resolveApiBaseUrl('')).toBe('');
   });
 });
