@@ -12,6 +12,10 @@ vi.mock('./useArchiveSeries', async (importOriginal) => {
   };
 });
 
+vi.mock('../../hooks/useDiscovery', () => ({
+  useHighlights: () => ({ photos: [], loading: false, error: null }),
+}));
+
 const SERIES = getStaticSeries();
 
 function renderPoc() {

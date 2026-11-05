@@ -1,11 +1,10 @@
 import { motion } from "framer-motion";
 import { useSimilarPhotos } from "../hooks/useDiscovery";
 import type { DiscoveryPhoto } from "../lib/discoveryApi";
-import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
 
 interface Props {
   photoId: string;
-  onSelect: (photoId: string) => void;
+  onSelect?: (photoId: string) => void;
   onSelectPhoto?: (photo: DiscoveryPhoto) => void;
 }
 
@@ -17,29 +16,31 @@ const SimilarPhotosRow = ({ photoId, onSelect, onSelectPhoto }: Props) => {
   }
 
   return (
-    <div className="absolute bottom-24 left-1/2 -translate-x-1/2 w-[92%] max-w-2xl px-5 py-4 bg-[#0B0B0C]/95 border border-white/10">
-      <p className="mb-2.5 text-[10px] uppercase tracking-[0.25em] text-white/40" style={{ fontFamily: "'Archivo', sans-serif" }}>
-        Similar photos
-      </p>
-      <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+    <div className="w-full border border-white/10 bg-[#0B0B0C]/95 px-4 py-3">
+      <div className="mb-2 flex items-baseline justify-between gap-4">
+        <p className="text-[10px] uppercase tracking-[0.25em] text-white/45">More like this</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] tabular-nums text-white/25">{photos.length} frames</p>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
         {photos.map((photo) => (
           <motion.button
             key={photo.id}
             type="button"
             onClick={() => {
-              onSelect(photo.id);
+              onSelect?.(photo.id);
               onSelectPhoto?.(photo);
             }}
-            className="shrink-0 w-24 sm:w-28 aspect-[3/2] overflow-hidden border border-white/10 bg-white/5 cursor-pointer p-0.5"
+            className="h-16 w-24 shrink-0 cursor-pointer overflow-hidden border border-white/10 bg-white/5 p-0.5 transition-colors hover:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:h-20 sm:w-32"
             whileHover={{ y: -2 }}
             transition={{ duration: 0.2 }}
             aria-label={`View similar photo ${photo.fileName}`}
           >
             <img
-              src={getPreviewImageUrl(photo.thumbnailUrl) ?? photo.thumbnailUrl ?? photo.url}
+              src={photo.thumbnailUrl ?? photo.url}
               alt={photo.fileName}
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover"
               loading="lazy"
+              decoding="async"
             />
           </motion.button>
         ))}

@@ -2,6 +2,20 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import ImageModal, { clampCaption } from './ImageModal';
 
+const similarState = vi.hoisted(() => ({
+  photos: [
+    { id: 'sim-1', fileName: 'sim.webp', albumId: null, albumName: null, url: 'sim.webp', thumbnailUrl: null, caption: 'Similar frame', description: null, rating: 8, width: 1200, height: 800, tags: ['x'] },
+  ],
+}));
+
+vi.mock('../hooks/useDiscovery', () => ({
+  useSimilarPhotos: () => ({
+    photos: similarState.photos,
+    loading: false,
+    error: null,
+  }),
+}));
+
 vi.mock('react-icons/io5', () => ({
   IoClose: () => <span>close</span>,
   IoChevronBack: () => <span>back</span>,
@@ -52,6 +66,39 @@ describe('ImageModal', () => {
 
     expect(onNext).toHaveBeenCalled();
     expect(onPrev).toHaveBeenCalled();
+  });
+
+  it('switches to a similar photo and hides the album controls', () => {
+    const onClose = vi.fn();
+    const onNext = vi.fn();
+    const onPrev = vi.fn();
+
+    render(
+      <ImageModal
+        imageUrl="test.jpg"
+        imageIndex={2}
+        totalImages={3}
+        caption="Original frame"
+        photoId="p1"
+        onClose={onClose}
+        onNext={onNext}
+        onPrev={onPrev}
+      />
+    );
+
+    expect(screen.getByText('02 / 03')).toBeInTheDocument();
+    expect(screen.getByLabelText('Next image')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'View similar photo sim.webp' }));
+
+    expect(screen.getByAltText('Similar frame')).toBeInTheDocument();
+    expect(screen.getByText('Photograph')).toBeInTheDocument();
+    expect(screen.queryByText('02 / 03')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Next image')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Previous image')).not.toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'ArrowRight' });
+    expect(onNext).not.toHaveBeenCalled();
   });
 
   it('renders a short caption without internal tags', () => {
