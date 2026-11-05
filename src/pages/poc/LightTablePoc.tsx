@@ -1,20 +1,11 @@
-import {
-  AnimatePresence,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-} from "framer-motion";
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import paiCanyon from "../../assets/Landscapes/Pai Canyon Rain 2023.webp";
 import rathlinSunset from "../../assets/Landscapes/Rathlin Island Sunset 2023.webp";
+import { getPreviewImageUrl } from "../../utils/getPreviewImageUrl";
 import { useArchiveSeries, type ArchiveSeries } from "./useArchiveSeries";
-
-const LazyDepthHero = lazy(() => import("./DepthHero").then((module) => ({ default: module.DepthHero })));
 
 const HOUSE_EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -49,32 +40,6 @@ function buildPrintPositions(count: number) {
 
 const MOBILE_PRINT_ROTATIONS = [-2.4, 1.8, -1.2, 2.2];
 
-function useHeroPointer(enabled: boolean) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const smoothX = useSpring(x, { stiffness: 70, damping: 18, mass: 0.5 });
-  const smoothY = useSpring(y, { stiffness: 70, damping: 18, mass: 0.5 });
-
-  const imageX = useTransform(smoothX, [-1, 1], enabled ? [-12, 12] : [0, 0]);
-  const imageY = useTransform(smoothY, [-1, 1], enabled ? [-9, 9] : [0, 0]);
-  const textX = useTransform(smoothX, [-1, 1], enabled ? [5, -5] : [0, 0]);
-  const textY = useTransform(smoothY, [-1, 1], enabled ? [3, -3] : [0, 0]);
-
-  function update(event: React.PointerEvent<HTMLElement>) {
-    if (!enabled) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    x.set(((event.clientX - rect.left) / rect.width) * 2 - 1);
-    y.set(((event.clientY - rect.top) / rect.height) * 2 - 1);
-  }
-
-  function reset() {
-    x.set(0);
-    y.set(0);
-  }
-
-  return { imageX, imageY, textX, textY, update, reset };
-}
-
 type PrintPosition = { left: string; top: string; width: string; rotate: number };
 
 function Print({
@@ -105,7 +70,7 @@ function Print({
       <div className="overflow-hidden bg-white p-2 shadow-[0_18px_50px_rgba(18,14,8,0.18)] [backface-visibility:hidden]">
         <img
           src={series.cover}
-          alt={`${series.title} — ${series.year}`}
+          alt={`${series.title}, ${series.year}`}
           className={`w-full object-cover [backface-visibility:hidden] ${isFeature ? "aspect-[4/3]" : "aspect-[3/2]"}`}
           loading="lazy"
           decoding="async"
@@ -132,7 +97,7 @@ function MobilePrint({ series, index, onOpen }: { series: Series; index: number;
       transition={{ type: "spring", stiffness: 220, damping: 24 }}
     >
       <div className="overflow-hidden bg-white p-2 shadow-[0_18px_50px_rgba(18,14,8,0.18)]">
-        <img src={series.cover} alt={`${series.title} — ${series.place}`} className="aspect-[4/3] w-full object-cover" loading="lazy" decoding="async" />
+        <img src={series.cover} alt={`${series.title}, ${series.place}`} className="aspect-[4/3] w-full object-cover" loading="lazy" decoding="async" />
       </div>
       <div className="mt-3 flex items-baseline justify-between gap-3">
         <span className="font-display text-2xl leading-none tracking-[-0.02em]">{series.title}</span>
@@ -167,14 +132,15 @@ function SeriesViewer({ series, onClose }: { series: Series; onClose: () => void
   }, []);
 
   useEffect(() => {
-    // Decode the whole series up front so arrow-key navigation never waits on
-    // the network or flashes a blank frame.
-    for (const source of images) {
+    // Decode only the current and next frame so opening a series does not
+    // download every full-size image at once.
+    const sources = [images[index], images[(index + 1) % images.length]].filter(Boolean);
+    for (const source of sources) {
       const image = new Image();
       image.decoding = "async";
       image.src = source;
     }
-  }, [images]);
+  }, [images, index]);
 
   return (
     <motion.div
@@ -191,7 +157,7 @@ function SeriesViewer({ series, onClose }: { series: Series; onClose: () => void
         <motion.img
           key={images[index]}
           src={images[index]}
-          alt={`${series.title} — frame ${index + 1}`}
+          alt={`${series.title}, frame ${index + 1}`}
           className="absolute inset-0 h-full w-full object-contain px-3 pb-36 pt-20 md:p-8"
           initial={{ opacity: 0.6 }}
           animate={{ opacity: 1 }}
@@ -236,7 +202,7 @@ function SeriesViewer({ series, onClose }: { series: Series; onClose: () => void
                   imageIndex === index ? "border-white opacity-100" : "border-white/15 opacity-45 hover:opacity-100"
                 }`}
               >
-                <img src={source} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                <img src={getPreviewImageUrl(source) ?? source} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
               </button>
             ))}
           </div>
@@ -248,60 +214,22 @@ function SeriesViewer({ series, onClose }: { series: Series; onClose: () => void
 
 export default function LightTablePoc({ standalone = true }: { standalone?: boolean }) {
   const reduceMotion = Boolean(useReducedMotion());
-  const [compact, setCompact] = useState(false);
   const [activeSeries, setActiveSeries] = useState<Series | null>(null);
   const { series, loading: archiveLoading, error: archiveError } = useArchiveSeries();
   const printPositions = useMemo(() => buildPrintPositions(series.length), [series.length]);
-  const heroRef = useRef<HTMLElement>(null);
-  const heavyMotion = !compact && !reduceMotion;
-  const { textX, textY, update, reset } = useHeroPointer(heavyMotion);
-
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroScale = useTransform(scrollYProgress, [0, 1], compact ? [1.02, 1.04] : [1.06, 1.16]);
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, compact ? 24 : 90]);
-  const heroRotateX = useTransform(scrollYProgress, [0.5, 1], [0, compact ? 0 : -6]);
-  const heroLift = useTransform(scrollYProgress, [0.5, 1], [0, compact ? 0 : -36]);
-  const titleY = useTransform(scrollYProgress, [0, 1], [0, compact ? -18 : -70]);
-  const titleOpacity = useTransform(scrollYProgress, [0.55, 0.95], [1, 0]);
-
-  const tableX = useMotionValue(0);
-  const tableY = useMotionValue(0);
-  const tableRotateX = useSpring(useTransform(tableY, [-1, 1], [0.8, -0.8]), { stiffness: 140, damping: 22 });
-  const tableRotateY = useSpring(useTransform(tableX, [-1, 1], [-0.8, 0.8]), { stiffness: 140, damping: 22 });
 
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = standalone ? "The Light Table — POC" : "Michal Guzy — Photographer";
+    document.title = standalone ? "The Light Table POC" : "Michal Guzy, Photographer";
     return () => {
       document.title = previousTitle;
     };
   }, [standalone]);
 
-  useEffect(() => {
-    if (typeof window.matchMedia !== "function") return;
-    const query = window.matchMedia("(max-width: 767px), (pointer: coarse)");
-    const update = () => setCompact(query.matches);
-    update();
-    query.addEventListener?.("change", update);
-    return () => query.removeEventListener?.("change", update);
-  }, []);
-
-  function updateTable(event: React.PointerEvent<HTMLDivElement>) {
-    if (reduceMotion) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    tableX.set(((event.clientX - rect.left) / rect.width) * 2 - 1);
-    tableY.set(((event.clientY - rect.top) / rect.height) * 2 - 1);
-  }
-
-  function resetTable() {
-    tableX.set(0);
-    tableY.set(0);
-  }
-
   return (
     <main className="min-h-screen bg-[#0B0B0C] text-[#E9E2D6]">
       {standalone ? (
-        <header className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[#0B0B0C]/55 px-5 py-4 backdrop-blur-xl md:px-10">
+        <header className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[#0B0B0C]/90 px-5 py-4 md:px-10">
           <div className="flex items-center gap-3">
             <span className="text-[10px] uppercase tracking-[0.3em] text-white/35">POC</span>
             <span className="h-3 w-px bg-white/15" />
@@ -313,87 +241,58 @@ export default function LightTablePoc({ standalone = true }: { standalone?: bool
         </header>
       ) : null}
 
-      <section ref={heroRef} className="relative h-[125vh] bg-[#0B0B0C] md:h-[145vh]">
-        <div className="sticky top-0 h-screen h-[100svh] overflow-hidden">
+      <section className="relative min-h-[100svh] overflow-hidden bg-[#0B0B0C]">
+        <motion.img
+          src={paiCanyon}
+          alt="Pai Canyon after rain, Thailand"
+          className="absolute inset-0 h-full w-full object-cover"
+          initial={{ scale: 1.06, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: reduceMotion ? 0 : 1.1, ease: HOUSE_EASE }}
+          decoding="async"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.45)_100%)]" />
+
+        {!reduceMotion ? (
           <motion.div
-            className="absolute inset-0"
-            data-testid="hero-surface"
-            style={{ scale: heroScale, y: heroY, rotateX: heroRotateX, transformPerspective: 1400, willChange: "transform" }}
-            onPointerMove={update}
-            onPointerLeave={reset}
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-20 overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 2.1, times: [0, 0.08, 0.7, 1], ease: "easeInOut" }}
           >
             <motion.div
-              className="absolute inset-0"
-              initial={{ scale: 1.08, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: reduceMotion ? 0 : 1.4, delay: reduceMotion ? 0 : 0.15, ease: HOUSE_EASE }}
-            >
-              <Suspense
-                fallback={(
-                  <img
-                    src={paiCanyon}
-                    alt="Pai Canyon after rain, Thailand"
-                    className="h-full w-full object-cover"
-                    decoding="async"
-                  />
-                )}
-              >
-                <LazyDepthHero src={paiCanyon} alt="Pai Canyon after rain, Thailand" disabled={!heavyMotion} />
-              </Suspense>
-            </motion.div>
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.45)_100%)]" />
-          </motion.div>
-
-          {!reduceMotion ? (
-            <motion.div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 z-20 overflow-hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 1, 0] }}
-              transition={{ duration: 2.1, times: [0, 0.08, 0.7, 1], ease: "easeInOut" }}
-            >
-              <motion.div
-                className="absolute inset-y-0 w-[45%] bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                initial={{ x: "-60%" }}
-                animate={{ x: "220%" }}
-                transition={{ duration: 1.7, delay: 0.15, ease: HOUSE_EASE }}
-              />
-            </motion.div>
-          ) : null}
-
-          <motion.div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-5 pb-10 md:px-10 md:pb-14"
-            style={{ y: titleY, opacity: titleOpacity, x: textX }}
-          >
-            <motion.div
-              initial={{ y: 24, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: reduceMotion ? 0 : 0.9, delay: reduceMotion ? 0 : 0.2, ease: HOUSE_EASE }}
-            >
-              <motion.div style={{ y: textY }}>
-                <p className="mb-4 text-sm text-white/60">Photographer, Software Engineer</p>
-                <h1 className="font-display text-[clamp(3.25rem,15vw,6rem)] leading-[0.82] tracking-[-0.055em] text-white md:text-[clamp(3.5rem,10vw,9rem)]">
-                  Michal
-                  <br />
-                  Guzy
-                </h1>
-                <div className="mt-7 flex flex-wrap items-end justify-between gap-4 border-t border-white/15 pt-4 text-sm text-white/55">
-                  <p>A personal archive.</p>
-                  <p className="tabular-nums">Pai Canyon · Thailand · 2023</p>
-                </div>
-              </motion.div>
-            </motion.div>
-          </motion.div>
-
-          <div className="pointer-events-none absolute right-5 top-1/2 z-10 hidden -translate-y-1/2 flex-col items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-white/35 md:flex md:right-10">
-            <span style={{ writingMode: "vertical-rl" }}>Scroll</span>
-            <motion.span
-              className="block h-10 w-px bg-white/30"
-              animate={reduceMotion ? undefined : { scaleY: [0.4, 1, 0.4], originY: 0 }}
-              transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+              className="absolute inset-y-0 w-[45%] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+              initial={{ x: "-60%" }}
+              animate={{ x: "220%" }}
+              transition={{ duration: 1.7, delay: 0.15, ease: HOUSE_EASE }}
             />
-          </div>
+          </motion.div>
+        ) : null}
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-5 pb-10 md:px-10 md:pb-14">
+          <motion.div
+            initial={{ y: 24, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: reduceMotion ? 0 : 0.9, delay: reduceMotion ? 0 : 0.2, ease: HOUSE_EASE }}
+          >
+            <p className="mb-4 text-sm text-white/60">Photographer, Software Engineer</p>
+            <h1 className="font-display text-[clamp(3.25rem,15vw,6rem)] leading-[0.82] tracking-[-0.055em] text-white md:text-[clamp(3.5rem,10vw,9rem)]">
+              Michal
+              <br />
+              Guzy
+            </h1>
+            <div className="mt-7 flex flex-wrap items-end justify-between gap-4 border-t border-white/15 pt-4 text-sm text-white/55">
+              <p>Mostly outside.</p>
+              <p className="tabular-nums">Pai Canyon · Thailand · 2023</p>
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="pointer-events-none absolute right-5 top-1/2 z-10 hidden -translate-y-1/2 flex-col items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-white/35 md:flex md:right-10">
+          <span style={{ writingMode: "vertical-rl" }}>Scroll</span>
+          <span className="block h-10 w-px bg-white/30" />
         </div>
       </section>
 
@@ -421,13 +320,8 @@ export default function LightTablePoc({ standalone = true }: { standalone?: bool
             className="relative mt-14 hidden h-[72vh] min-h-[640px] md:block"
             data-testid="light-table"
             style={{ minHeight: series.length > 8 ? 840 : undefined }}
-            onPointerMove={updateTable}
-            onPointerLeave={resetTable}
           >
-            <motion.div
-              className="absolute inset-0"
-              style={{ rotateX: tableRotateX, rotateY: tableRotateY, transformStyle: "preserve-3d", transformPerspective: 1400, willChange: "transform" }}
-            >
+            <div className="absolute inset-0">
               {series.map((item, index) => (
                 <Print
                   key={item.id}
@@ -437,8 +331,8 @@ export default function LightTablePoc({ standalone = true }: { standalone?: bool
                   onOpen={() => setActiveSeries(item)}
                 />
               ))}
-            </motion.div>
-            <p className="absolute bottom-0 left-0 text-[11px] text-black/35">Move across the table</p>
+            </div>
+            <p className="absolute bottom-0 left-0 text-[11px] text-black/35">Hover a print</p>
           </div>
 
           <div className="mt-10 grid gap-8 md:hidden">
@@ -478,12 +372,12 @@ export default function LightTablePoc({ standalone = true }: { standalone?: bool
       <section className="bg-[#0B0B0C] px-5 py-24 text-[#E9E2D6] md:px-10 md:py-32">
         <div className="mx-auto grid max-w-[1500px] gap-10 md:grid-cols-[1.15fr_0.85fr]">
           <h2 className="font-display text-[clamp(2.8rem,6.5vw,6.4rem)] leading-[0.92] tracking-[-0.05em]">
-            I photograph places
+            I take photographs.
             <br />
-            and things that move.
+            Mostly outside.
           </h2>
           <div className="max-w-md space-y-5 self-end text-sm leading-6 text-white/55">
-            <p>I build software for a living. These are the frames I keep.</p>
+            <p>Sometimes at a racetrack. I build software for a living.</p>
             {standalone ? (
               <Link to="/" className="inline-flex items-center gap-2 border-b border-white/25 pb-1 text-white/80 transition-colors hover:border-white hover:text-white">
                 Back to the real site <span aria-hidden>→</span>

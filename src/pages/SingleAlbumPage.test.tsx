@@ -123,7 +123,7 @@ describe('SingleAlbumPage', () => {
 
     render(<SingleAlbumPage />);
 
-    expect(screen.getByText('Waiting for the images to wake up...')).toBeInTheDocument();
+    expect(screen.getByText('Loading photographs...')).toBeInTheDocument();
   });
 
   it('shows progressive loading status for large collections', () => {

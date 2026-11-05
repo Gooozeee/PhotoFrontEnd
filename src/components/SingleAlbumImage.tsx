@@ -88,7 +88,7 @@ const SingleAlbumImage = ({
         aria-label={`View ${accessibleDescription}`}
         className="group block w-full cursor-pointer p-0 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9482B] focus-visible:ring-offset-8 focus-visible:ring-offset-[#E9E2D6]"
       >
-        <div className="overflow-hidden bg-white p-2 shadow-[0_14px_40px_rgba(18,14,8,0.14)]">
+        <div className="overflow-hidden bg-white p-2 shadow-[0_14px_40px_rgba(18,14,8,0.14)] transition-transform duration-500 group-hover:-translate-y-1 group-focus-visible:-translate-y-1">
           <img
             src={imageSource}
             alt={visibleDescription || fallbackDescription}

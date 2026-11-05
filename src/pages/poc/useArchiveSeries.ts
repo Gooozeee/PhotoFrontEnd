@@ -40,7 +40,7 @@ export function buildSeries(albums: GalleryAlbum[], photosByAlbum: Record<string
         title: album.name,
         place: album.description ?? "",
         year: yearLabel(photos),
-        cover: album.coverUrl ?? images[0] ?? "",
+        cover: album.coverThumbnailUrl ?? album.coverUrl ?? images[0] ?? "",
         caption: album.description ?? "",
         images,
       };

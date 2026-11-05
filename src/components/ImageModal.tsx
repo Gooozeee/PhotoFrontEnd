@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { IoClose, IoChevronBack, IoChevronForward, IoExpand, IoContract } from "react-icons/io5";
+import { IoChevronBack, IoChevronForward, IoExpand, IoContract } from "react-icons/io5";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import SimilarPhotosRow from "./SimilarPhotosRow";
 import type { DiscoveryPhoto } from "../lib/discoveryApi";
@@ -45,10 +45,8 @@ const ImageModal = ({
   const [isZoomed, setIsZoomed] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [similarPhoto, setSimilarPhoto] = useState<DiscoveryPhoto | null>(null);
-  const [direction, setDirection] = useState(0);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const hideControlsTimer = useRef<NodeJS.Timeout | null>(null);
-  const prevImageUrl = useRef(imageUrl);
   const currentImageUrl = similarPhoto?.url ?? imageUrl;
   const currentCaption = similarPhoto ? similarPhoto.caption : caption;
   const currentTags = showTags ? (similarPhoto ? similarPhoto.tags : tags) : [];
@@ -77,14 +75,11 @@ const ImageModal = ({
       if (e.key === "Escape") {
         handleClose();
       } else if (e.key === "ArrowRight" && onNext) {
-        setDirection(1);
         onNext();
       } else if (e.key === "ArrowLeft" && onPrev) {
-        setDirection(-1);
         onPrev();
       } else if (e.key === " " && onNext) {
         e.preventDefault();
-        setDirection(1);
         onNext();
       }
     };
@@ -108,10 +103,6 @@ const ImageModal = ({
   }, [imageUrl, photoId]);
 
   useEffect(() => {
-    if (prevImageUrl.current !== currentImageUrl) {
-      setDirection(prevImageUrl.current < currentImageUrl ? 1 : -1);
-      prevImageUrl.current = currentImageUrl;
-    }
     setImageLoaded(false);
   }, [currentImageUrl]);
 
@@ -119,7 +110,7 @@ const ImageModal = ({
     setIsClosing(true);
     setTimeout(() => {
       onClose();
-    }, shouldReduceMotion ? 0 : 350);
+    }, shouldReduceMotion ? 0 : 550);
   };
 
   const handleImageLoad = () => {
@@ -135,7 +126,7 @@ const ImageModal = ({
     <dialog
       ref={dialogRef}
       aria-label="Image viewer"
-      className="fixed inset-0 bg-[#09090B]/95 z-50 p-0 m-0 border-none max-w-none max-h-none overflow-hidden"
+      className="fixed inset-0 z-50 m-0 max-h-none max-w-none overflow-hidden border-none bg-transparent p-0 [&::backdrop]:bg-black/70"
       style={{
         width: "100vw",
         height: "100vh",
@@ -143,33 +134,29 @@ const ImageModal = ({
       onMouseMove={handleMouseMove}
     >
       <motion.div
-        className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 overflow-auto touch-pinch-zoom"
-        initial={{ opacity: 1 }}
-        animate={{ opacity: isClosing ? 0 : 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
+        className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[#0B0B0C] px-3 py-16 sm:px-8"
+        initial={{ clipPath: "circle(0% at 50% 50%)" }}
+        animate={{
+          clipPath: isClosing ? "circle(0% at 50% 50%)" : "circle(150% at 50% 50%)",
+          opacity: isClosing ? 0 : 1,
+        }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }}
       >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(233,226,214,0.06),transparent_62%)]" />
+
         <motion.div
-           key={currentImageUrl}
-          initial={{ opacity: 0, x: direction * 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: direction * -100 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.3, ease: [0.22, 1, 0.36, 1] }}
-          className="relative max-w-full max-h-full"
+          key={currentImageUrl}
+          initial={{ opacity: 0, scale: 1.02 }}
+          animate={{ opacity: imageLoaded ? 1 : 0, scale: isZoomed ? 1.15 : 1 }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="relative max-h-full max-w-full"
         >
-          <motion.img
-             src={currentImageUrl}
+          <img
+            src={currentImageUrl}
             alt={currentAlt}
-            className={`max-w-full max-h-[80vh] object-contain select-none transition-transform duration-300 ${
+            className={`max-h-[76vh] max-w-full object-contain select-none transition-transform duration-300 ${
               isZoomed ? "cursor-zoom-out" : "cursor-zoom-in"
             }`}
-            animate={{
-              scale: isZoomed ? 1.5 : 1,
-            }}
-            transition={{
-              duration: shouldReduceMotion ? 0 : 0.3,
-              ease: [0.22, 1, 0.36, 1],
-            }}
             onClick={toggleZoom}
             onLoad={handleImageLoad}
             style={{
@@ -179,37 +166,35 @@ const ImageModal = ({
           />
         </motion.div>
 
-        {/* Image counter */}
-        {totalImages > 1 && (
-          <div
-            className={`absolute top-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/60 backdrop-blur-sm rounded-full text-white text-sm tracking-wide transition-opacity duration-300 ${
-              showControls ? "opacity-100" : "opacity-0"
-            }`}
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-          >
-            {imageIndex} / {totalImages}
-          </div>
-        )}
-
-        {/* Close button */}
-        <motion.button
-          className="absolute top-6 right-6 z-[9999] bg-black/40 backdrop-blur-sm border-none cursor-pointer text-white hover:text-white/70 transition-colors duration-200 p-3 rounded-full hover:bg-white/10"
-          onClick={handleClose}
-          aria-label="Close image"
-          tabIndex={showControls ? 0 : -1}
+        <motion.div
+          className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-4 bg-gradient-to-b from-black/70 to-transparent px-5 pb-8 pt-5 md:px-10 md:pt-8"
           animate={{ opacity: showControls ? 1 : 0 }}
           transition={{ duration: 0.2 }}
+          style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}
         >
-          <IoClose size={28} />
-        </motion.button>
+          <div className="text-[10px] uppercase tracking-[0.25em] text-white/45">
+            {totalImages > 1 ? (
+              <span className="tabular-nums">{String(imageIndex).padStart(2, "0")} / {String(totalImages).padStart(2, "0")}</span>
+            ) : (
+              <span>Photograph</span>
+            )}
+          </div>
+          <motion.button
+            className="pointer-events-auto min-h-11 cursor-pointer border-b border-white/20 pb-1 text-[10px] uppercase tracking-[0.25em] text-white/55 transition-colors hover:border-white/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            onClick={handleClose}
+            aria-label="Close image"
+            tabIndex={showControls ? 0 : -1}
+          >
+            Close
+          </motion.button>
+        </motion.div>
 
-        {/* Navigation arrows */}
-        {onNext && onPrev && totalImages > 1 && (
+        {onNext && onPrev && totalImages > 1 ? (
           <>
             <motion.button
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-[9999] bg-black/40 backdrop-blur-sm border-none cursor-pointer text-white hover:text-white/70 transition-colors duration-200 p-3 rounded-full hover:bg-white/10"
-              onClick={(e) => {
-                e.stopPropagation();
+              className="absolute left-0 top-1/2 z-10 -translate-y-1/2 cursor-pointer p-5 text-white/35 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 sm:left-2 sm:p-7"
+              onClick={(event) => {
+                event.stopPropagation();
                 onPrev();
               }}
               aria-label="Previous image"
@@ -217,13 +202,13 @@ const ImageModal = ({
               animate={{ opacity: showControls ? 1 : 0 }}
               transition={{ duration: 0.2 }}
             >
-              <IoChevronBack size={32} />
+              <IoChevronBack size={30} />
             </motion.button>
 
             <motion.button
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-[9999] bg-black/40 backdrop-blur-sm border-none cursor-pointer text-white hover:text-white/70 transition-colors duration-200 p-3 rounded-full hover:bg-white/10"
-              onClick={(e) => {
-                e.stopPropagation();
+              className="absolute right-0 top-1/2 z-10 -translate-y-1/2 cursor-pointer p-5 text-white/35 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 sm:right-2 sm:p-7"
+              onClick={(event) => {
+                event.stopPropagation();
                 onNext();
               }}
               aria-label="Next image"
@@ -231,56 +216,43 @@ const ImageModal = ({
               animate={{ opacity: showControls ? 1 : 0 }}
               transition={{ duration: 0.2 }}
             >
-              <IoChevronForward size={32} />
+              <IoChevronForward size={30} />
             </motion.button>
           </>
-        )}
+        ) : null}
 
-        {/* Zoom toggle */}
-        <motion.button
-          className="absolute bottom-6 right-6 z-[9999] bg-black/40 backdrop-blur-sm border-none cursor-pointer text-white hover:text-white/70 transition-colors duration-200 p-3 rounded-full hover:bg-white/10"
-          onClick={toggleZoom}
-          aria-label={isZoomed ? "Zoom out" : "Zoom in"}
-          tabIndex={showControls ? 0 : -1}
+        <motion.div
+          className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0B0B0C] via-[#0B0B0C]/72 to-transparent px-5 pb-6 pt-20 md:px-10 md:pb-8"
           animate={{ opacity: showControls ? 1 : 0 }}
           transition={{ duration: 0.2 }}
+          style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
         >
-          {isZoomed ? <IoContract size={24} /> : <IoExpand size={24} />}
-        </motion.button>
-
-        {/* Caption + tags */}
-        {currentCaption || currentTags.length > 0 ? (
-          <motion.div
-            className={`absolute left-1/2 w-[min(90vw,42rem)] -translate-x-1/2 rounded-3xl border border-white/15 bg-black/65 px-5 py-4 text-center shadow-2xl backdrop-blur-xl sm:px-7 ${currentPhotoId ? "bottom-44" : "bottom-20"}`}
-            animate={{ opacity: showControls ? 1 : 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            {currentCaption ? (
-                <p className="text-white text-base font-medium tracking-wide line-clamp-2 sm:text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <div className="mx-auto flex max-w-[1500px] items-end justify-between gap-6">
+            <div className="max-w-xl">
+              {currentCaption ? (
+                <p className="font-display text-[clamp(1.35rem,2.5vw,2.1rem)] leading-[1.02] tracking-[-0.02em] text-[#E9E2D6]">
                   {clampCaption(currentCaption)}
                 </p>
               ) : null}
-            {currentTags.length > 0 ? (
-              <div className="mt-2 flex flex-wrap justify-center gap-1.5">
-                {currentTags.map((tag) => (
-                  <span key={tag} className="rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.15em] text-white/60">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </motion.div>
-        ) : null}
-
-        {/* Keyboard hints - hidden on mobile */}
-        <motion.div
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/40 text-xs tracking-wide flex gap-4 hidden md:flex"
-          animate={{ opacity: showControls ? 1 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <span>ESC close</span>
-          <span>← → navigate</span>
-          <span>space next</span>
+              {currentTags.length > 0 ? (
+                <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-white/40">
+                  {currentTags.join(" · ")}
+                </p>
+              ) : null}
+            </div>
+            <div className="pointer-events-auto flex shrink-0 items-center gap-4 pb-1 text-[10px] uppercase tracking-[0.2em] text-white/35">
+              <button
+                type="button"
+                className="cursor-pointer transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                onClick={toggleZoom}
+                aria-label={isZoomed ? "Zoom out" : "Zoom in"}
+                tabIndex={showControls ? 0 : -1}
+              >
+                {isZoomed ? <IoContract size={18} /> : <IoExpand size={18} />}
+              </button>
+              <span className="hidden md:inline">Esc to close</span>
+            </div>
+          </div>
         </motion.div>
 
         {currentPhotoId ? <SimilarPhotosRow photoId={currentPhotoId} onSelect={() => undefined} onSelectPhoto={setSimilarPhoto} /> : null}

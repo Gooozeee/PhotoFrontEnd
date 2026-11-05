@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import SingleAlbumImage from "../components/SingleAlbumImage";
 import ImageModal from "../components/ImageModal";
 import Footer from "../components/Footer";
 import { useImageGallery } from "../hooks/useImageGallery";
 import { getAlbumGridLayout } from "../utils/getAlbumGridLayout";
+import { getPreviewImageUrl } from "../utils/getPreviewImageUrl";
 
 const SingleAlbumPage = () => {
   const queryParameters = new URLSearchParams(globalThis.location.search);
@@ -27,6 +28,7 @@ const SingleAlbumPage = () => {
 
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const shouldReduceMotion = useReducedMotion();
   const albumSelectionError = missingAlbumName ? "Album link is missing or invalid." : error;
   const isAlbumSelectionError = missingAlbumName || Boolean(error?.startsWith("Album"));
   const statusText = loading
@@ -95,13 +97,14 @@ const SingleAlbumPage = () => {
       {images.map((img, index) => (
         <motion.div
           key={img.id}
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, delay: Math.min(index * 0.015, 0.18) }}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-8% 0px" }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.5, delay: Math.min(index * 0.03, 0.2), ease: [0.22, 1, 0.36, 1] }}
           className="mb-6 break-inside-avoid"
         >
           <SingleAlbumImage
-            imageSource={img.url}
+            imageSource={getPreviewImageUrl(img.blurPlaceholder) ?? img.blurPlaceholder ?? img.url}
             imageDescription={img.caption ?? "Untitled"}
             imageTags={img.tags}
             unitWidth={img.unitWidth}
@@ -123,7 +126,12 @@ const SingleAlbumPage = () => {
     <div className="min-h-screen overflow-x-hidden bg-[#0B0B0C] text-[#E9E2D6]">
       <section className="relative min-h-[72vh] overflow-hidden">
         {cover ? (
-          <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" decoding="async" />
+          <img
+            src={cover}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover opacity-60"
+            decoding="async"
+          />
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#1a1815_0%,#0B0B0C_70%)]" />
         )}
@@ -137,7 +145,7 @@ const SingleAlbumPage = () => {
             className="mt-10 font-display text-[clamp(3rem,9vw,8rem)] leading-[0.85] tracking-[-0.05em] text-white"
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
             {albumName || "Album"}
           </motion.h1>
@@ -146,7 +154,7 @@ const SingleAlbumPage = () => {
               className="mt-4 max-w-xl text-sm leading-6 text-white/60"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.15 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.6, delay: shouldReduceMotion ? 0 : 0.15 }}
             >
               {album.description}
             </motion.p>
@@ -157,7 +165,7 @@ const SingleAlbumPage = () => {
       <section className="bg-[#E9E2D6] px-5 py-16 text-[#0B0B0C] md:px-10 md:py-24">
         <div className="mx-auto max-w-[1600px]">
           <div className="mb-8 flex items-end justify-between gap-6 border-b border-black/10 pb-4">
-            <h2 className="font-display text-[clamp(1.8rem,3.5vw,3rem)] leading-none tracking-[-0.04em]">The prints</h2>
+            <h2 className="font-display text-[clamp(1.8rem,3.5vw,3rem)] leading-none tracking-[-0.04em]">Photographs</h2>
             <p className="text-xs tabular-nums text-black/45">{loading ? "Loading" : `${images.length} photographs`}</p>
           </div>
 
@@ -169,16 +177,16 @@ const SingleAlbumPage = () => {
           ) : loading && images.length === 0 ? (
             <div className="space-y-6">
               <div role="status" className="max-w-3xl py-10">
-                <p className="text-xs uppercase tracking-[0.3em] text-black/40">Waking up</p>
-                <p className="mt-4 font-display text-[clamp(1.5rem,3vw,2.2rem)]">Waiting for the images to wake up...</p>
-                <p className="mt-3 text-sm text-black/55">The image service can take a moment to come back after sitting idle.</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-black/40">Loading</p>
+                <p className="mt-4 font-display text-[clamp(1.5rem,3vw,2.2rem)]">Loading photographs...</p>
+                <p className="mt-3 text-sm text-black/55">The API may need a few seconds to start.</p>
               </div>
               {renderLoadingGrid()}
             </div>
           ) : error && images.length === 0 ? (
             <div className="max-w-3xl border-t border-black/15 py-10">
-              <p className="font-display text-3xl">Gallery unavailable right now</p>
-              <p className="mt-3 text-sm text-black/60">Waiting for the images to wake up...</p>
+              <p className="font-display text-3xl">Could not load the album.</p>
+              <p className="mt-3 text-sm text-black/60">The API did not respond.</p>
             </div>
           ) : (
             <>

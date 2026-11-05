@@ -1,5 +1,5 @@
 import degooseLogoWhite from "../assets/degooseLogoWhite.webp";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { IoSearch } from "react-icons/io5";
@@ -11,7 +11,6 @@ import { clampCaption } from "./ImageModal";
 
 function NavBar() {
   const shouldReduceMotion = useReducedMotion();
-  const [scrolledDown, setScrolledDown] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,32 +44,6 @@ function NavBar() {
     window.requestAnimationFrame(() => searchTriggerRef.current?.focus());
   }
 
-  const listenScrollEvent = useCallback(() => {
-    const isScrolled = window.scrollY > 20;
-    setScrolledDown(isScrolled);
-  }, []);
-
-  useEffect(() => {
-    let ticking = false;
-
-    const onScroll = () => {
-      if (!ticking) {
-        globalThis.requestAnimationFrame(() => {
-          listenScrollEvent();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    listenScrollEvent();
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, [listenScrollEvent]);
-
   function submitSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const query = searchQuery.trim();
@@ -96,16 +69,12 @@ function NavBar() {
       variants={navVariants}
       initial="initial"
       animate="animate"
-      className="fixed top-0 w-full z-50 flex flex-col bg-[#09090B]/40 backdrop-blur-xl border-b border-white/[0.08] transition-all duration-500"
+      className="fixed top-0 w-full z-50 flex flex-col bg-[#0B0B0C]/95 border-b border-white/[0.08]"
     >
-      <div className={`flex justify-between items-center px-6 md:px-10 transition-all duration-500 ${
-        scrolledDown ? "h-[70px]" : "h-[90px]"
-      }`}>
+      <div className="flex justify-between items-center px-6 md:px-10 h-[80px]">
         <Link
           to="/"
-          className={`flex-shrink-0 cursor-pointer transition-all duration-300 ease-out hover:scale-105 active:scale-98 z-10 ${
-            scrolledDown ? "w-[120px]" : "w-[160px]"
-          }`}
+          className="flex-shrink-0 cursor-pointer z-10 w-[140px]"
         >
           <img
             src={degooseLogoWhite}

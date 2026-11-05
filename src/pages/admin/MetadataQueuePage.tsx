@@ -135,7 +135,7 @@ export default function MetadataQueuePage() {
           <div className="mb-2 flex items-center justify-between text-xs text-white/50">
             <span className="inline-flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Live — refreshes automatically every 10s
+              Live. Refreshes automatically every 10s
             </span>
             <span>Queue done: {queue.length === 0 ? 0 : Math.round((counts.completed / queue.length) * 100)}%</span>
           </div>

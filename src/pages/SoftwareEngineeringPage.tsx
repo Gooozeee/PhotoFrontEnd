@@ -2,10 +2,8 @@ import Footer from "../components/Footer";
 import HomePage from "../assets/Projects/Website/HomePage.png";
 import LandscapePage from "../assets/Projects/Website/LandscapePage.png";
 import ImageSwitcher from "../components/ImageSwitcher";
-import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-
-const FONT_HEADING = { fontFamily: "'Fraunces', Georgia, serif" } as const;
+import { motion, useReducedMotion } from "framer-motion";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 type NavSection = { id: string; label: string };
 
@@ -26,7 +24,6 @@ type DeepDive = {
   id: string;
   title: string;
   tagline: string;
-  body: string;
   notes: string[];
 };
 
@@ -34,109 +31,91 @@ const deepDives: DeepDive[] = [
   {
     index: "01",
     id: "frontend",
-    title: "Frontend architecture",
-    tagline: "A data-driven React app, served from the edge.",
-    body: "React 18 + Vite + TypeScript + Tailwind served from Azure Static Web Apps behind a CDN. The gallery fetches published albums, pages each album with offset/limit, and appends results through an IntersectionObserver sentinel for infinite scroll. Read responses are cached in memory with a 5-minute TTL and in-flight requests are de-duplicated, so a hot path — or a fast back-navigation — never fires the same request twice. Images render progressively from a small thumb, up to a preview, then the full variant when on screen.",
-    notes: ["IntersectionObserver paging", "offset / limit", "5-min TTL cache", "in-flight dedup", "thumb → preview → full"],
+    title: "Frontend",
+    tagline: "React, paged reads, CDN images.",
+    notes: ["fetch", "cache", "IntersectionObserver", "WebP variants"],
   },
   {
     index: "02",
     id: "backend",
-    title: "Backend — hexagonal .NET 10",
-    tagline: "Business logic that doesn't depend on infrastructure.",
-    body: "A modular monolith in C#/.NET 10 with a strict dependency rule. Core.Domain holds entities and value objects, Core.Application holds vertical-slice use-cases (commands, queries, validators, mappings) per feature, and Core.Abstractions defines the ports — repository, image processor, blob storage, unit of work. Adapters sit at the edge: EF Core on Supabase Postgres, Supabase Storage, and the HTTP host. Because the core only depends on ports, infrastructure is swappable — which is exactly what let the API move from a VM to serverless without touching business logic. Architecture tests enforce the dependency direction.",
-    notes: ["ports & adapters", "vertical slices", "dependency rule", "architecture tests", "swappable infrastructure"],
+    title: "Backend",
+    tagline: "Hexagonal .NET 10.",
+    notes: ["Domain", "Application", "Ports", "Adapters"],
   },
   {
     index: "03",
     id: "backend-api",
-    title: "API surface & hosting",
-    tagline: "One contract, portable across hosts.",
-    body: "A .NET 10 minimal API with public read routes (published albums, paged photos, search, similar, highlights) and admin-only routes behind an auth gate. Public routes return JSON only — image bytes are served from the Supabase CDN, never relayed through the API. The same codebase has run on a self-hosted VM and now on Azure Functions (Windows Consumption), preserving the /api route prefix byte-for-byte, so the frontend never changed during the move.",
-    notes: ["public vs admin routes", "JSON-only responses", "CDN-served images", "serverless host", "byte-for-byte contract"],
+    title: "API",
+    tagline: "One contract, two hosts.",
+    notes: ["public reads", "admin writes", "JSON only", "CDN images"],
   },
   {
     index: "04",
     id: "security",
-    title: "Authentication & security",
-    tagline: "Two independent gates between a visitor and the admin area.",
-    body: "Admins sign in with Supabase GitHub OAuth. The SPA holds the session and sends it as a Bearer token; every protected route validates that token against Supabase /auth/v1/user and only an allowlisted ADMIN_USER_ID with the GitHub provider passes. The client maps 401 to a sign-out plus an explainer banner, and 403 to a denied message, so auth failures are legible rather than silent. Secrets are injected through GitHub Actions and Azure app settings — the shipped bundle contains no keys.",
-    notes: ["GitHub OAuth", "Bearer validation", "ADMIN_USER_ID allowlist", "401 / 403 semantics", "no client-side secrets"],
+    title: "Auth",
+    tagline: "Two gates before admin.",
+    notes: ["Supabase OAuth", "Bearer token", "allowlist", "401 / 403"],
   },
   {
     index: "05",
     id: "images",
-    title: "Image processing pipeline",
-    tagline: "One upload, three CDN-served WebP variants.",
-    body: "Uploads are multipart, capped at 25 MB, and processed synchronously so the request contract stays simple. The pipeline validates the file, extracts EXIF (taken date, location, camera model), re-encodes to WebP — roughly 30–50% smaller than JPEG — and writes three derived sizes (thumb 300px, preview 800px, full 1920px) into Supabase Storage under photos/{id}/. A single Postgres row references all three variants plus the real width and height, which the frontend uses to build distortion-free layouts.",
-    notes: ["25 MB cap", "EXIF extraction", "WebP ~30–50% smaller", "thumb / preview / full", "real W×H stored"],
+    title: "Images",
+    tagline: "Three WebP sizes.",
+    notes: ["validate", "EXIF", "WebP", "thumb / preview / full"],
   },
   {
     index: "06",
     id: "uploads",
-    title: "Bulk uploads with real progress",
-    tagline: "A batch tool rather than a form.",
-    body: "Pick any number of files, assign one album, and the client builds a live queue. Uploads run sequentially — one request at a time — to keep memory predictable on the app host. Each file drives an XMLHttpRequest whose upload.onprogress feeds byte-accurate progress bars for the current file, the batch, and every card in the queue. Statuses move queued → uploading → uploaded / failed, failures show their reason with a one-click retry, and a completed run deep-links into the photo manager at ?review=<ids> so you land exactly on what you just shipped.",
-    notes: ["sequential queue", "XHR byte progress", "per-file status cards", "retry + clear", "review deep-link"],
+    title: "Uploads",
+    tagline: "A sequential queue.",
+    notes: ["pick files", "one at a time", "XHR progress", "retry"],
   },
   {
     index: "07",
     id: "ai-worker",
-    title: "AI metadata — the background worker",
-    tagline: "Gemini runs in the background, without blocking the API.",
-    body: "Captions, descriptions, and tags are generated in the background. The queue is a durable Postgres table (PhotoMetadataJobs) with Pending / Processing / Completed / Failed states, attempt counts, and lastError — there is no in-memory state, so nothing is lost on a restart or a scale-to-zero. An hourly timer enqueues photos missing metadata, then runs a drain-all loop: mark Processing, attempt++, call Gemini throttled to ~4 s, write the result, mark Completed. Failures record the reason and stop retrying past an attempt cap. The admin dashboard polls every 10 s and can enqueue missing or reset failed jobs from the UI.",
-    notes: ["durable Postgres queue", "hourly timer + time budget", "Gemini throttle ~4 s", "attempt cap + lastError", "admin enqueue / reset"],
+    title: "AI captions",
+    tagline: "A durable Postgres queue.",
+    notes: ["enqueue", "throttle", "attempt cap", "admin reset"],
   },
   {
     index: "08",
     id: "search",
-    title: "Smart search & discovery",
-    tagline: "Search the collection like a search engine.",
-    body: "The search box runs a debounced (350 ms, min 2 chars) live query against AI-generated captions, descriptions, tags, and places, cached by a normalized query string with the same 5-minute TTL. Results auto-open and are URL-synced, so a search is shareable and back-navigation restores state. A photo's lightbox pulls similar photos — neighbours chosen by shared tags and metadata — and the homepage highlights strip surfaces the top-rated work.",
-    notes: ["debounced 350 ms", "normalized-query cache", "URL-synced results", "similar photos", "ratings-driven highlights"],
+    title: "Search",
+    tagline: "Debounced and URL-synced.",
+    notes: ["350 ms", "captions + tags", "cache", "similar"],
   },
   {
     index: "09",
     id: "highlights",
-    title: "Highlights grid — no distortion",
-    tagline: "Column count adapts to the screen.",
-    body: "The homepage highlights strip uses a justified layout instead of a fixed column count. It measures its container with a ResizeObserver, then packs a variable number of photos per row — one to six depending on screen size and real aspect ratios — so every image's box stays within a few percent of its natural aspect ratio. Each photo record stores its real width and height, so the grid never guesses. Captions reserve a fixed two-line slot, so a long caption cannot cut off or shift the layout.",
-    notes: ["ResizeObserver", "aspect-ratio-aware packing", "1–6 columns adaptive", "real W×H, no guessing", "caption-safe rows"],
+    title: "Highlights",
+    tagline: "Aspect-aware rows.",
+    notes: ["ResizeObserver", "real W×H", "1-6 columns", "caption slot"],
   },
   {
     index: "10",
     id: "testing",
-    title: "Testing & CI/CD",
-    tagline: "Tests that catch real problems, deploys that check themselves.",
-    body: "The backend has three test suites: unit tests in the core against in-memory ports (no mocking frameworks), architecture tests that assert the hexagonal dependency rule, and integration tests that spin up real Postgres in Docker via Testcontainers. The frontend runs 200+ vitest + Testing Library tests covering hooks, layouts, admin flows, and the adaptive grid. GitHub Actions builds, tests, deploys, and then health-checks the live site on every push to main.",
-    notes: ["unit in core", "architecture tests", "Testcontainers Postgres", "200+ frontend tests", "build → test → deploy → health"],
+    title: "Tests",
+    tagline: "Three backend suites.",
+    notes: ["unit", "architecture", "Testcontainers", "deploy smoke"],
   },
 ];
 
 const engineeringDecisions = [
   {
-    title: "Durable queue, not in-memory",
-    body: "The metadata queue lives in PostgreSQL, so a restart or scale-to-zero never loses a job — the next run just resumes from the table.",
+    title: "Queue in Postgres",
+    body: "Survives restarts and scale-to-zero.",
   },
   {
-    title: "Throttled AI on a timer",
-    body: "A ~4-second gap between Gemini calls respects the API's rate limits while the hourly drain-all clears the whole backlog in one bounded run.",
+    title: "Synchronous uploads",
+    body: "25 MB cap, one at a time.",
   },
   {
-    title: "Synchronous uploads on purpose",
-    body: "Admin-only, ≤25 MB, sequential — keeping processing in the request path preserves a simple contract and bounded memory.",
+    title: "Three WebP sizes",
+    body: "Thumb, preview, full.",
   },
   {
-    title: "Justified layout, not fixed columns",
-    body: "The highlights grid re-packs itself per screen size using real photo dimensions, eliminating distorted crops on every viewport.",
-  },
-  {
-    title: "WebP ×3, served from a CDN",
-    body: "Re-encoding to WebP and generating three sizes cuts payloads 30–50% and lets the browser ask for the smallest variant it needs.",
-  },
-  {
-    title: "Read cache + dedup",
-    body: "A 5-minute TTL with in-flight de-duplication means a hot gallery path and a fast back-navigation never fire the same request twice.",
+    title: "Cache and dedup",
+    body: "Five-minute TTL, one in-flight request.",
   },
 ];
 
@@ -214,6 +193,7 @@ const SoftwareEngineeringPage = () => {
   const images = [HomePage, LandscapePage];
   const aboutRef = useRef<HTMLDivElement>(null);
   const active = useScrollSpy(navSections.map((section) => section.id));
+  const shouldReduceMotion = useReducedMotion();
 
   const scrollToAbout = () => {
     aboutRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -233,20 +213,20 @@ const SoftwareEngineeringPage = () => {
             className="mt-5 font-display text-[clamp(3.2rem,10vw,9rem)] leading-[0.82] tracking-[-0.055em] text-[#E9E2D6]"
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
-            How I build
+            How this site
             <br />
-            this site.
+            works.
           </motion.h1>
           <div className="mt-8 flex flex-wrap items-end justify-between gap-4 border-t border-white/15 pt-4 text-sm text-white/55">
-            <p>Full-stack engineering, in public.</p>
+            <p>React, .NET, Postgres, Azure.</p>
             <button
               type="button"
               onClick={scrollToAbout}
               className="cursor-pointer text-[10px] uppercase tracking-[0.25em] text-white/45 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             >
-              Read the breakdown ↓
+              See the diagrams ↓
             </button>
           </div>
         </div>
@@ -257,11 +237,10 @@ const SoftwareEngineeringPage = () => {
           <div>
             <p className="text-[10px] uppercase tracking-[0.3em] text-white/35">About</p>
             <h2 className="mt-4 font-display text-[clamp(2.5rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.04em] text-[#E9E2D6]">
-              I build systems that connect UI, auth and APIs.
+              I built the whole thing.
             </h2>
             <p className="mt-6 max-w-xl text-sm leading-6 text-white/55">
-              Backend-focused developer at Simcorp. C# / ASP.NET Core, with enough frontend to care about the whole
-              workflow.
+              Backend engineer at Simcorp. C# and .NET by day. This site is React, .NET, Postgres and Azure.
             </p>
           </div>
           <div className="grid gap-6 self-end">
@@ -285,10 +264,10 @@ const SoftwareEngineeringPage = () => {
         <div className="mx-auto w-full max-w-[1500px] pt-16 pb-4 md:pt-20">
           <p className="text-[10px] uppercase tracking-[0.3em] text-white/35">Portfolio project</p>
           <h2 className="mt-4 font-display text-[clamp(2.6rem,6vw,5rem)] leading-[0.92] tracking-[-0.05em] text-[#E9E2D6]">
-            Photography Portfolio
+            This site.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55">
-            A full-stack product with AI, smart search and a hexagonal .NET 10 backend.
+            React, .NET 10, Postgres, Supabase Storage, Azure Functions.
           </p>
 
           <div className="border border-white/12 bg-[#121110] p-5 md:p-6 mt-10">
@@ -297,15 +276,15 @@ const SoftwareEngineeringPage = () => {
                 <ImageSwitcher images={images} />
               </div>
               <div className="w-full md:w-1/2">
-                <h3 className="font-display text-2xl tracking-[-0.02em] text-[#E9E2D6]">The live product</h3>
+                <h3 className="font-display text-2xl tracking-[-0.02em] text-[#E9E2D6]">What runs</h3>
                 <p className="mt-3 text-sm leading-6 text-white/60">
-                  The public site reads published albums and discovery endpoints from the API, while the admin area uses
-                  Supabase GitHub OAuth plus backend allowlist checks to protect uploads, edits, ratings, and deletions.
+                  Public reads from the API. Admin uses Supabase OAuth plus an allowlist. Images on Supabase Storage.
+                  Captions in the background.
                 </p>
                 <div className="mt-5 flex flex-wrap gap-4">
-                  <Chip accent="emerald">Gemini AI worker</Chip>
-                  <Chip accent="sky">Smart search</Chip>
-                  <Chip accent="amber">Bulk uploads</Chip>
+                  <Chip accent="emerald">Gemini worker</Chip>
+                  <Chip accent="sky">Search</Chip>
+                  <Chip accent="amber">Uploads</Chip>
                   <Chip>Hexagonal core</Chip>
                 </div>
               </div>
@@ -313,7 +292,7 @@ const SoftwareEngineeringPage = () => {
           </div>
         </div>
 
-        <nav aria-label="Project sections" className="sticky top-[70px] z-30 -mx-5 border-y border-white/10 bg-[#0B0B0C]/90 backdrop-blur-xl md:-mx-10">
+        <nav aria-label="Project sections" className="sticky top-[70px] z-30 -mx-5 border-y border-white/10 bg-[#0B0B0C] md:-mx-10">
           <div className="mx-auto max-w-[1500px] overflow-x-auto px-5 md:px-10">
             <ul className="flex gap-6 py-1 min-w-max">
               {navSections.map((section) => (
@@ -337,9 +316,9 @@ const SoftwareEngineeringPage = () => {
           <section id="system" className="scroll-mt-[130px]">
             <div className="border border-white/12 bg-[#121110] p-5 md:p-6">
               <SectionHeading
-                eyebrow="01 · System architecture"
-                title="The whole stack, back to front"
-                subtitle="Four layers and one background AI worker."
+                eyebrow="01 · System"
+                title="The stack"
+                subtitle="Four services and one worker."
               />
               <div className="flex flex-col md:flex-row md:items-stretch">
                 <DiagramNode title="Browser" subtitle="Visitors & admin" detail="Desktop · mobile" />
@@ -365,9 +344,18 @@ const SoftwareEngineeringPage = () => {
             <div className="border border-[#D9482B]/30 bg-[#D9482B]/[0.04] p-5 md:p-6">
               <SectionHeading
                 eyebrow="02 · Background job"
-                title="The AI metadata worker"
-                subtitle="The most infrastructure-heavy part of the project — captions and tags arrive from Gemini in the background."
+                title="AI captions"
+                subtitle="Timer, queue, Gemini."
               />
+              <div className="mb-5 flex flex-col md:flex-row md:items-stretch">
+                <DiagramNode title="Timer" subtitle="Hourly" detail="enqueue missing" />
+                <FlowArrow />
+                <DiagramNode title="Queue" subtitle="Postgres" detail="pending / failed" />
+                <FlowArrow />
+                <DiagramNode title="Gemini" subtitle="Throttled" detail="captions + tags" />
+                <FlowArrow />
+                <DiagramNode title="Photo" subtitle="Postgres" detail="caption / tags / rating" accent />
+              </div>
               <div className="grid gap-4 lg:grid-cols-2">
                 <div>
                   <h3 className="text-[10px] uppercase tracking-[0.25em] text-white/35 mb-3">State machine</h3>
@@ -390,88 +378,88 @@ const SoftwareEngineeringPage = () => {
                       <span className="border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] text-white/70">Pending</span>
                     </div>
                     <p className="text-white/50 text-xs leading-relaxed mt-3">
-                      The Postgres table is the source of truth. Mark Processing, attempt++, call Gemini, write the result, mark Completed. A crash mid-job leaves it in Processing, which the next run reclaims.
+                      Postgres is the source of truth. A crash leaves the job in Processing; the next run reclaims it.
                     </p>
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-[10px] uppercase tracking-[0.25em] text-white/35 mb-3">Why it's durable</h3>
-                  <div className="space-y-3">
-                    <p className="text-white/70 text-sm leading-relaxed">
-                      An hourly timer enqueues photos missing metadata, then a drain-all loop works through the oldest pending jobs until the queue is empty or the 10-minute budget runs out — a partial run just resumes on the next tick.
-                    </p>
-                    <p className="text-white/70 text-sm leading-relaxed">
-                      The queue lives in PostgreSQL, so a restart or a scale-to-zero never loses a job. On serverless the timer only fires while the host is awake, and an overdue run fires on the next wake.
-                    </p>
-                    <p className="text-white/70 text-sm leading-relaxed">
-                      The admin dashboard polls every 10 s and can enqueue missing metadata or reset failed jobs from the UI.
-                    </p>
-                  </div>
+                  <h3 className="text-[10px] uppercase tracking-[0.25em] text-white/35 mb-3">Guarantees</h3>
+                  <ul className="space-y-2 text-sm leading-6 text-white/60">
+                    <li className="border-b border-white/10 pb-2">Restart-safe. The queue is a table.</li>
+                    <li className="border-b border-white/10 pb-2">A partial run resumes next tick.</li>
+                    <li>Admin can enqueue or reset from the dashboard.</li>
+                  </ul>
                 </div>
               </div>
             </div>
           </section>
 
           <div className="pt-6">
-            <div className="flex items-end justify-between gap-4 mb-6">
-              <div>
-                <p className="text-white/40 text-xs uppercase tracking-[0.25em]">03 · Deep dives</p>
-                <h2 className="font-display text-[clamp(2rem,4vw,3rem)] leading-none tracking-[-0.04em] mt-1" style={FONT_HEADING}>
-                  How each piece works
-                </h2>
-              </div>
-              
+            <div className="mb-6">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-white/35">03</p>
+              <h2 className="mt-2 font-display text-[clamp(2rem,4vw,3rem)] leading-none tracking-[-0.04em]">
+                The parts.
+              </h2>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
             {deepDives.map((item) => (
-              <section key={item.id} id={item.id} className="scroll-mt-[130px] border border-white/12 bg-[#121110] p-5 md:p-6">
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
-                  <div className="font-display text-4xl text-[#D9482B]/60 md:w-16 md:shrink-0 md:pt-1" style={FONT_HEADING}>
-                    {item.index}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-display text-2xl text-[#E9E2D6]" style={FONT_HEADING}>
-                      {item.title}
-                    </h3>
-                    <p className="text-white/45 text-sm mt-1">{item.tagline}</p>
-                    <p className="text-white/70 leading-relaxed text-sm mt-3">{item.body}</p>
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {item.notes.map((note) => (
-                        <span key={note} className="inline-flex border-b border-white/15 pb-0.5 text-[10px] uppercase tracking-[0.18em] text-white/45">
-                          {note}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+              <motion.section
+                key={item.id}
+                id={item.id}
+                className="scroll-mt-[130px] border border-white/10 bg-[#121110] p-5"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-10% 0px" }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="flex items-baseline gap-3">
+                  <span className="font-display text-3xl text-[#D9482B]/60">{item.index}</span>
+                  <h3 className="font-display text-2xl text-[#E9E2D6]">{item.title}</h3>
                 </div>
-              </section>
+                <p className="mt-2 text-sm text-white/45">{item.tagline}</p>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  {item.notes.map((note, noteIndex) => (
+                    <Fragment key={note}>
+                      {noteIndex > 0 ? <span className="text-white/20" aria-hidden="true">→</span> : null}
+                      <span className="border border-white/10 bg-[#0F0E0D] px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-white/55">
+                        {note}
+                      </span>
+                    </Fragment>
+                  ))}
+                </div>
+              </motion.section>
             ))}
           </div>
 
           <section id="decisions" className="scroll-mt-[130px]">
             <div className="border border-white/12 bg-[#121110] p-5 md:p-6">
               <SectionHeading
-                eyebrow="04 · Engineering decisions"
-                title="A few choices that shaped the design"
-                subtitle="The trade-offs behind how the pieces fit together."
+                eyebrow="04 · Trade-offs"
+                title="Four choices."
+                subtitle="Short version."
               />
               <div className="grid gap-3 md:grid-cols-2">
                 {engineeringDecisions.map((item) => (
                   <div key={item.title} className="border border-white/10 bg-[#0F0E0D] p-4">
-                    <h3 className="font-display text-lg text-[#E9E2D6] mb-2">{item.title}</h3>
-                    <p className="text-white/60 text-sm leading-relaxed">{item.body}</p>
+                    <h3 className="font-display text-lg text-[#E9E2D6] mb-1">{item.title}</h3>
+                    <p className="text-sm leading-6 text-white/55">{item.body}</p>
                   </div>
                 ))}
               </div>
             </div>
           </section>
 
-          <div className="pt-6 pb-10">
-            <h1 className="font-display text-2xl text-white/45 text-center w-full max-w-xl mx-auto px-4">
-              Thanks for reading.
-            </h1>
+          <div className="pt-6 pb-10 text-center">
+            <a
+              href="https://github.com/Gooozeee/PersonalBackEnd"
+              target="_blank"
+              rel="noreferrer"
+              className="font-display text-2xl text-white/50 border-b border-white/15 pb-1 transition-colors hover:border-white/50 hover:text-white"
+            >
+              Source on GitHub
+            </a>
           </div>
         </div>
       </div>

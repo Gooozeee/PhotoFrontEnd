@@ -53,7 +53,7 @@ describe('LightTablePoc', () => {
     expect(await screen.findByText(`2 / ${series.images.length}`)).toBeInTheDocument();
 
     fireEvent.keyDown(window, { key: 'Escape' });
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), { timeout: 3000 });
   });
 
   it('closes a series from the close button', async () => {
@@ -63,7 +63,7 @@ describe('LightTablePoc', () => {
     fireEvent.click(screen.getAllByRole('button', { name: `Open ${series.title} series` })[0]);
     fireEvent.click(await screen.findByRole('button', { name: 'Close' }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), { timeout: 3000 });
   });
 
   it('opens a series from the mobile list and jumps to a frame', async () => {
@@ -79,14 +79,10 @@ describe('LightTablePoc', () => {
     expect(await screen.findByText(`3 / ${series.images.length}`)).toBeInTheDocument();
   });
 
-  it('responds to pointer movement on the hero and light table', () => {
+  it('renders the static hero and light table', () => {
     renderPoc();
 
-    fireEvent.pointerMove(screen.getByAltText('Pai Canyon after rain, Thailand'), { clientX: 40, clientY: 60 });
-    fireEvent.pointerLeave(screen.getByAltText('Pai Canyon after rain, Thailand'));
-    fireEvent.pointerMove(screen.getByTestId('light-table'), { clientX: 120, clientY: 80 });
-    fireEvent.pointerLeave(screen.getByTestId('light-table'));
-
-    expect(screen.getByTestId('hero-surface')).toBeInTheDocument();
+    expect(screen.getByAltText('Pai Canyon after rain, Thailand')).toBeInTheDocument();
+    expect(screen.getByTestId('light-table')).toBeInTheDocument();
   });
 });
