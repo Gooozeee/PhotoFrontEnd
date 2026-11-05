@@ -14,7 +14,7 @@ const navSections: NavSection[] = [
   { id: "images", label: "Images" },
   { id: "uploads", label: "Uploads" },
   { id: "search", label: "Search" },
-  { id: "highlights", label: "Best rated" },
+  { id: "best-shots", label: "Best shots" },
   { id: "testing", label: "Tests" },
   { id: "decisions", label: "Trade-offs" },
 ];
@@ -120,14 +120,14 @@ const deepDives: DeepDive[] = [
   },
   {
     index: "09",
-    id: "highlights",
-    title: "Best rated",
-    tagline: "Rating-led discovery.",
-    notes: ["rating", "contact sheet", "more like this", "five-minute cache"],
+    id: "best-shots",
+    title: "Best shots",
+    tagline: "A short edit from the archive.",
+    notes: ["ranked set", "one per series", "uniform grid", "five-minute cache"],
     body:
-      "The highlights endpoint returns the highest rated photos. The homepage picks a spread across series and shows them as a contact sheet. Each one opens in the lightbox with a more-like-this strip beside the caption.",
+      "The highlights endpoint returns a ranked set of photos. The homepage picks a spread across series so one album does not take over the edit, then shows them as a uniform contact sheet. Each one opens with a more-like-this strip.",
     tradeoff:
-      "A rating-led edit is predictable and easy to explain, but it repeats the same strong frames and rarely surfaces a new favourite.",
+      "A short edit is predictable and easy to explain, but it repeats the same strong frames and rarely surfaces a new favourite.",
   },
   {
     index: "10",
