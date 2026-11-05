@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GalleryAlbum, GalleryPhoto } from '../../hooks/useImageGallery';
-import { buildSeries, fetchArchiveSeries, getStaticSeries, useArchiveSeries } from './useArchiveSeries';
+import { buildSeries, fetchArchiveSeries, fetchSeriesImages, getStaticSeries, useArchiveSeries } from './useArchiveSeries';
 
 const fetchWithRetryMock = vi.hoisted(() => vi.fn());
 
@@ -19,7 +19,7 @@ function makeAlbum(overrides: Partial<GalleryAlbum> = {}): GalleryAlbum {
     coverUrl: '/cover.jpg',
     coverThumbnailUrl: null,
     isPublished: true,
-    photosCount: 0,
+    photosCount: 1,
     ...overrides,
   };
 }
@@ -82,8 +82,8 @@ describe('archive series', () => {
   it('drops empty albums and sorts by image count', () => {
     const albums = [
       makeAlbum({ id: 'small', name: 'Small' }),
-      makeAlbum({ id: 'empty', name: 'Empty' }),
-      makeAlbum({ id: 'large', name: 'Large' }),
+      makeAlbum({ id: 'empty', name: 'Empty', photosCount: 0 }),
+      makeAlbum({ id: 'large', name: 'Large', photosCount: 2 }),
     ];
 
     const series = buildSeries(albums, {
@@ -109,25 +109,26 @@ describe('archive series', () => {
     }
   });
 
-  it('fetches album photos from the live API', async () => {
-    fetchWithRetryMock.mockImplementation(async (url: string) => {
-      if (url.includes('/api/albums/published')) return [makeAlbum()];
-      if (url.includes('/api/albums/album-1/photos')) {
-        return [makePhoto('a', '/a.jpg', '2022-01-01T00:00:00Z')];
-      }
-      throw new Error(`Unexpected URL ${url}`);
-    });
+  it('builds the live archive from albums without loading every photo', async () => {
+    fetchWithRetryMock.mockResolvedValue([makeAlbum()]);
 
     const series = await fetchArchiveSeries();
 
-    expect(series[0]?.images).toEqual(['/a.jpg']);
+    expect(fetchWithRetryMock).toHaveBeenCalledTimes(1);
+    expect(series[0]?.images).toEqual([]);
+    expect(series[0]?.cover).toBe('/cover.jpg');
+  });
+
+  it('fetches album photos from the live API when a series opens', async () => {
+    fetchWithRetryMock.mockResolvedValue([makePhoto('a', '/a.jpg', '2022-01-01T00:00:00Z')]);
+
+    const images = await fetchSeriesImages('album-1');
+
+    expect(images).toEqual(['/a.jpg']);
   });
 
   it('loads all album photos from the unpaged endpoint', async () => {
-    let photoCalls = 0;
     fetchWithRetryMock.mockImplementation(async (url: string) => {
-      if (url.includes('/api/albums/published')) return [makeAlbum()];
-      photoCalls += 1;
       expect(url).not.toContain('offset=');
       return [
         makePhoto('a', '/a.jpg', '2022-01-01T00:00:00Z'),
@@ -135,10 +136,9 @@ describe('archive series', () => {
       ];
     });
 
-    const series = await fetchArchiveSeries();
+    const images = await fetchSeriesImages('album-1');
 
-    expect(photoCalls).toBe(1);
-    expect(series[0]?.images).toEqual(['/a.jpg', '/b.jpg']);
+    expect(images).toEqual(['/a.jpg', '/b.jpg']);
   });
 
   it('loads live data in the hook and keeps the local archive on failure', async () => {

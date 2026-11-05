@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import paiCanyon from "../../assets/Landscapes/Pai Canyon Rain 2023.webp";
 import rathlinSunset from "../../assets/Landscapes/Rathlin Island Sunset 2023.webp";
 import { getPreviewImageUrl } from "../../utils/getPreviewImageUrl";
-import { useArchiveSeries, type ArchiveSeries } from "./useArchiveSeries";
+import { fetchSeriesImages, useArchiveSeries, type ArchiveSeries } from "./useArchiveSeries";
 
 const HOUSE_EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -46,11 +46,13 @@ function Print({
   series,
   position,
   isFeature,
+  loading = false,
   onOpen,
 }: {
   series: Series;
   position: PrintPosition;
   isFeature: boolean;
+  loading?: boolean;
   onOpen: () => void;
 }) {
   return (
@@ -76,6 +78,11 @@ function Print({
           decoding="async"
         />
       </div>
+      {loading ? (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#0B0B0C]/60 text-[10px] uppercase tracking-[0.2em] text-white">
+          Loading
+        </div>
+      ) : null}
       <div className="mt-3 flex items-baseline justify-between gap-3">
         <span className="font-display text-[clamp(1.1rem,1.6vw,1.7rem)] leading-none tracking-[-0.02em]">{series.title}</span>
         <span className="text-[11px] tabular-nums text-black/40">{series.year}</span>
@@ -215,8 +222,28 @@ function SeriesViewer({ series, onClose }: { series: Series; onClose: () => void
 export default function LightTablePoc({ standalone = true }: { standalone?: boolean }) {
   const reduceMotion = Boolean(useReducedMotion());
   const [activeSeries, setActiveSeries] = useState<Series | null>(null);
+  const [openingSeriesId, setOpeningSeriesId] = useState<string | null>(null);
   const { series, loading: archiveLoading, error: archiveError } = useArchiveSeries();
   const printPositions = useMemo(() => buildPrintPositions(series.length), [series.length]);
+
+  async function openSeries(item: Series) {
+    if (item.images.length > 0) {
+      setActiveSeries(item);
+      return;
+    }
+
+    if (openingSeriesId) return;
+
+    setOpeningSeriesId(item.id);
+    try {
+      const images = await fetchSeriesImages(item.id);
+      setActiveSeries({ ...item, images: images.length > 0 ? images : [item.cover] });
+    } catch {
+      setActiveSeries({ ...item, images: [item.cover] });
+    } finally {
+      setOpeningSeriesId(null);
+    }
+  }
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -328,7 +355,8 @@ export default function LightTablePoc({ standalone = true }: { standalone?: bool
                   series={item}
                   position={printPositions[index]}
                   isFeature={index === 0}
-                  onOpen={() => setActiveSeries(item)}
+                  loading={openingSeriesId === item.id}
+                  onOpen={() => void openSeries(item)}
                 />
               ))}
             </div>
@@ -337,7 +365,7 @@ export default function LightTablePoc({ standalone = true }: { standalone?: bool
 
           <div className="mt-10 grid gap-8 md:hidden">
             {series.map((item, index) => (
-              <MobilePrint key={item.id} series={item} index={index} onOpen={() => setActiveSeries(item)} />
+              <MobilePrint key={item.id} series={item} index={index} onOpen={() => void openSeries(item)} />
             ))}
           </div>
 
