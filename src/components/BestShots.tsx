@@ -48,7 +48,7 @@ function captionFor(photo: { caption: string | null; description: string | null;
 }
 
 function BestShots({ limit = 6 }: { limit?: number }) {
-  const { photos, loading } = useHighlights(Math.max(limit * 2, 12));
+  const { photos, loading, error } = useHighlights(Math.max(limit * 2, 12));
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const shots = useMemo(() => pickShotSpread(photos, limit), [photos, limit]);
   const selected = selectedIndex === null ? null : shots[selectedIndex] ?? null;
@@ -74,7 +74,22 @@ function BestShots({ limit = 6 }: { limit?: number }) {
     );
   }
 
-  if (shots.length === 0) return null;
+  if (shots.length === 0) {
+    if (error) {
+      return (
+        <section id="best-shots" className="mt-16 scroll-mt-24 border-t border-black/10 pt-8">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-black/35">Best shots</p>
+            <h3 className="mt-3 font-display text-[clamp(1.8rem,3.5vw,3rem)] leading-none tracking-[-0.04em]">
+              A short edit from across the archive.
+            </h3>
+          </div>
+          <p className="mt-5 max-w-xl text-sm leading-6 text-black/55">{error}</p>
+        </section>
+      );
+    }
+    return null;
+  }
 
   const showNext = () => setSelectedIndex((current) => (current === null ? null : (current + 1) % shots.length));
   const showPrev = () => setSelectedIndex((current) => (current === null ? null : (current - 1 + shots.length) % shots.length));

@@ -45,7 +45,7 @@ describe('useDiscovery hooks', () => {
       );
     });
 
-    it('falls back to static data when the server is unreachable', async () => {
+    it('reports an error when the server is unreachable', async () => {
       const fetchMock = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
       vi.stubGlobal('fetch', fetchMock);
       const { useHighlights } = await import('./useDiscovery');
@@ -56,8 +56,8 @@ describe('useDiscovery hooks', () => {
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
-      expect(result.current.photos.length).toBeGreaterThan(0);
-      expect(result.current.error).toBeNull();
+      expect(result.current.photos).toEqual([]);
+      expect(result.current.error).toContain('Could not load the edit');
     });
 
     it('retries with the live API when the tab regains focus after a failure', async () => {

@@ -21,6 +21,7 @@ const SingleAlbumPage = () => {
     hasMore,
     totalCount,
     loadMore,
+    retry,
   } = useImageGallery({
     albumName: albumName || undefined,
     cacheKey: `album-${albumName || "unknown"}`,
@@ -186,7 +187,14 @@ const SingleAlbumPage = () => {
           ) : error && images.length === 0 ? (
             <div className="max-w-3xl border-t border-black/15 py-10">
               <p className="font-display text-3xl">Could not load the album.</p>
-              <p className="mt-3 text-sm text-black/60">The API did not respond.</p>
+              <p className="mt-3 text-sm text-black/60">The API may still be waking up.</p>
+              <button
+                type="button"
+                onClick={() => void retry()}
+                className="mt-6 cursor-pointer border-b border-black/30 pb-1 font-display text-xl text-black/70 transition-colors hover:border-black hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9482B] focus-visible:ring-offset-4 focus-visible:ring-offset-[#E9E2D6]"
+              >
+                Try again
+              </button>
             </div>
           ) : (
             <>
