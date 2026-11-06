@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GalleryAlbum, GalleryPhoto } from '../../hooks/useImageGallery';
 import { buildSeries, fetchArchiveSeries, fetchSeriesImages, getStaticSeries, useArchiveSeries } from './useArchiveSeries';
@@ -141,7 +141,7 @@ describe('archive series', () => {
     expect(images).toEqual(['/a.jpg', '/b.jpg']);
   });
 
-  it('loads live data in the hook and keeps the local archive on failure', async () => {
+  it('loads live data in the hook and reports a failure without static images', async () => {
     fetchWithRetryMock.mockImplementation(async (url: string) => {
       if (url.includes('/api/albums/published')) {
         return [makeAlbum({ id: 'live', name: 'Live album' })];
@@ -156,7 +156,21 @@ describe('archive series', () => {
     fetchWithRetryMock.mockRejectedValue(new TypeError('network'));
     const failed = renderHook(() => useArchiveSeries());
     await waitFor(() => expect(failed.result.current.loading).toBe(false));
-    expect(failed.result.current.error).toContain('Backend unavailable');
-    expect(failed.result.current.series.length).toBeGreaterThan(0);
+    expect(failed.result.current.error).toContain('Could not reach the archive');
+    expect(failed.result.current.series).toEqual([]);
+  });
+
+  it('retries after a failed connection', async () => {
+    fetchWithRetryMock
+      .mockRejectedValueOnce(new TypeError('network'))
+      .mockResolvedValueOnce([makeAlbum({ id: 'live', name: 'Live album' })]);
+
+    const hook = renderHook(() => useArchiveSeries());
+    await waitFor(() => expect(hook.result.current.error).not.toBeNull());
+
+    act(() => hook.result.current.retry());
+
+    await waitFor(() => expect(hook.result.current.series.some((item) => item.id === 'live')).toBe(true));
+    expect(hook.result.current.error).toBeNull();
   });
 });

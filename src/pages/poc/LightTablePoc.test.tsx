@@ -1,14 +1,21 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LightTablePoc from './LightTablePoc';
 import { getStaticSeries } from './useArchiveSeries';
+
+const archiveState = vi.hoisted(() => ({
+  series: [] as import('./useArchiveSeries').ArchiveSeries[],
+  loading: false,
+  error: null as string | null,
+  retry: vi.fn(),
+}));
 
 vi.mock('./useArchiveSeries', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./useArchiveSeries')>();
   return {
     ...actual,
-    useArchiveSeries: () => ({ series: actual.getStaticSeries(), loading: false, error: null }),
+    useArchiveSeries: () => archiveState,
   };
 });
 
@@ -27,6 +34,31 @@ function renderPoc() {
 }
 
 describe('LightTablePoc', () => {
+  beforeEach(() => {
+    archiveState.series = SERIES;
+    archiveState.loading = false;
+    archiveState.error = null;
+    archiveState.retry.mockClear();
+  });
+
+  it('shows a connecting screen while the archive loads', () => {
+    archiveState.series = [];
+    archiveState.loading = true;
+    renderPoc();
+
+    expect(screen.getByRole('heading', { name: 'Connecting to the archive.' })).toBeInTheDocument();
+  });
+
+  it('shows a retry screen when the archive fails', () => {
+    archiveState.series = [];
+    archiveState.error = 'Could not reach the archive.';
+    renderPoc();
+
+    expect(screen.getByRole('heading', { name: 'Could not reach the archive.' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(archiveState.retry).toHaveBeenCalled();
+  });
+
   it('renders the hero, light table and every series', async () => {
     renderPoc();
 

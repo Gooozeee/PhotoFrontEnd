@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import paiCanyon from "../../assets/Landscapes/Pai Canyon Rain 2023.webp";
 import rathlinSunset from "../../assets/Landscapes/Rathlin Island Sunset 2023.webp";
 import BestShots from "../../components/BestShots";
+import ArchiveState from "../../components/ArchiveState";
 import { getPreviewImageUrl } from "../../utils/getPreviewImageUrl";
 import { fetchSeriesImages, useArchiveSeries, type ArchiveSeries } from "./useArchiveSeries";
 
@@ -224,7 +225,7 @@ export default function LightTablePoc({ standalone = true }: { standalone?: bool
   const reduceMotion = Boolean(useReducedMotion());
   const [activeSeries, setActiveSeries] = useState<Series | null>(null);
   const [openingSeriesId, setOpeningSeriesId] = useState<string | null>(null);
-  const { series, loading: archiveLoading, error: archiveError } = useArchiveSeries();
+  const { series, loading: archiveLoading, error: archiveError, retry } = useArchiveSeries();
   const printPositions = useMemo(() => buildPrintPositions(series.length), [series.length]);
 
   async function openSeries(item: Series) {
@@ -253,6 +254,26 @@ export default function LightTablePoc({ standalone = true }: { standalone?: bool
       document.title = previousTitle;
     };
   }, [standalone]);
+
+  if (archiveLoading && series.length === 0) {
+    return (
+      <ArchiveState
+        loading
+        title="Connecting to the archive."
+        message="The first request can take a few seconds while the API wakes up."
+      />
+    );
+  }
+
+  if (archiveError && series.length === 0) {
+    return (
+      <ArchiveState
+        title="Could not reach the archive."
+        message="The API may still be waking up. Try again in a moment."
+        onRetry={retry}
+      />
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#0B0B0C] text-[#E9E2D6]">

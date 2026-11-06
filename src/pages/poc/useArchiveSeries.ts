@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getStaticGalleryData } from "../../hooks/staticGalleryData";
 import type { GalleryAlbum, GalleryPhoto } from "../../hooks/useImageGallery";
 import { resolveApiBaseUrl } from "../../lib/apiBaseUrl";
@@ -72,23 +72,37 @@ export async function fetchArchiveSeries() {
 }
 
 export function useArchiveSeries() {
-  const [series, setSeries] = useState<ArchiveSeries[]>(() => getStaticSeries());
+  const [series, setSeries] = useState<ArchiveSeries[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+
+  const retry = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    setReloadToken((token) => token + 1);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
+    setLoading(true);
+    setError(null);
+
     void (async () => {
       try {
         const liveSeries = await fetchArchiveSeries();
-        if (!cancelled && liveSeries.length > 0) {
+        if (cancelled) return;
+
+        if (liveSeries.length > 0) {
           setSeries(liveSeries);
+        } else {
+          setError("No published albums were found.");
         }
       } catch (err) {
         console.warn("archive: live series failed", err);
         if (!cancelled) {
-          setError(isNetworkError(err) ? "Backend unavailable — showing the local archive." : "Could not load the live archive.");
+          setError(isNetworkError(err) ? "Could not reach the archive." : "Could not load the live archive.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -98,7 +112,7 @@ export function useArchiveSeries() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadToken]);
 
-  return { series, loading, error };
+  return { series, loading, error, retry };
 }

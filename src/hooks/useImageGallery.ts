@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolveApiBaseUrl } from "../lib/apiBaseUrl";
-import { fetchWithRetry, isNetworkError } from "../lib/discoveryApi";
-import { getStaticGalleryData } from "./staticGalleryData";
+import { fetchWithRetry } from "../lib/discoveryApi";
 
 const albumCache = new Map<string, { timestamp: number; data: GalleryAlbum[] }>();
 const photoPageCache = new Map<string, { timestamp: number; data: GalleryPhotoPage }>();
@@ -90,7 +89,7 @@ export const useImageGallery = ({
   const [albumId, setAlbumId] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const requestIdRef = useRef(0);
-  const serverUnreachableRef = useRef(false);
+  const failedRef = useRef(false);
   const [reconnectToken, setReconnectToken] = useState(0);
 
   const appendPhotoPage = useCallback((page: GalleryPhotoPage, append: boolean) => {
@@ -170,32 +169,12 @@ export const useImageGallery = ({
     setTotalCount(0);
 
     try {
-      let albumsData: GalleryAlbum[];
-      let staticFallback = false;
-
-      if (serverUnreachableRef.current) {
-        const staticData = getStaticGalleryData();
-        albumsData = staticData.albums;
-        staticFallback = true;
-      } else {
-        try {
-          albumsData = await getPublishedAlbums();
-        } catch (err) {
-          if (isNetworkError(err)) {
-            serverUnreachableRef.current = true;
-            const staticData = getStaticGalleryData();
-            albumsData = staticData.albums;
-            staticFallback = true;
-          } else {
-            throw err;
-          }
-        }
-      }
-
+      const albumsData = await getPublishedAlbums();
       if (requestIdRef.current !== requestId) return;
       setAlbums(albumsData);
 
       if (!includePhotos) {
+        failedRef.current = false;
         return;
       }
 
@@ -207,29 +186,14 @@ export const useImageGallery = ({
 
       setAlbumId(album.id);
 
-      if (staticFallback) {
-        const staticData = getStaticGalleryData();
-        const staticPhotos = staticData.photosByAlbum[album.id];
-        if (staticPhotos) {
-          const page: GalleryPhotoPage = {
-            items: staticPhotos,
-            offset: 0,
-            limit: staticPhotos.length,
-            totalCount: staticPhotos.length,
-            hasMore: false,
-          };
-          appendPhotoPage(page, false);
-        }
-        return;
-      }
-
       const firstPage = await getAlbumPhotoPage(album.id, 0);
       if (requestIdRef.current !== requestId) return;
 
       appendPhotoPage(firstPage, false);
+      failedRef.current = false;
     } catch (err) {
       if (requestIdRef.current !== requestId) return;
-      if (isNetworkError(err)) serverUnreachableRef.current = true;
+      failedRef.current = true;
       setError(err instanceof Error ? err.message : "Failed to load gallery");
     } finally {
       if (requestIdRef.current === requestId) {
@@ -257,8 +221,8 @@ export const useImageGallery = ({
   }, []);
 
   useEffect(() => {
-    if (reconnectToken === 0 || !serverUnreachableRef.current) return;
-    serverUnreachableRef.current = false;
+    if (reconnectToken === 0 || !failedRef.current) return;
+    failedRef.current = false;
     void load();
   }, [load, reconnectToken]);
 
@@ -291,7 +255,7 @@ export const useImageGallery = ({
       appendPhotoPage(page, true);
     } catch (err) {
       if (requestIdRef.current !== requestId) return;
-      if (isNetworkError(err)) serverUnreachableRef.current = true;
+      failedRef.current = true;
       setError(err instanceof Error ? err.message : "Failed to load gallery");
     } finally {
       if (requestIdRef.current === requestId) {
@@ -327,5 +291,6 @@ export const useImageGallery = ({
     totalCount,
     loadMore,
     clearCache,
+    retry: load,
   };
 };
